@@ -4,13 +4,6 @@ class CandlePatterns:
     """
 
     # --------------------------------------------------------------------------
-    # Listas de Nombres de Patrones
-    # --------------------------------------------------------------------------
-    one_candle = ["Doji", "Doji clásico", "Doji libélula", "Doji lápida", "Doji de piernas largas", "Marubozu", "Hammer", "Inverted hammer", "Hanging man", "Shooting star"]
-    two_candles = ["Engulfing", "Harami", "Piercing line", "Dark cloud cover", "Tweezer tops/bottoms"]
-    three_candles = ["Morning star", "Evening star", "Three white soldiers", "Three black crows", "Three inside up/down", "Three outside up/down"]
-    
-    # --------------------------------------------------------------------------
     # Métodos Estáticos para la Detección de Patrones
     # --------------------------------------------------------------------------
 

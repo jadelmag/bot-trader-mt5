@@ -114,24 +114,6 @@
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0
         },
-        "strategy_conceptual_grid_trading": {
-            "selected": true,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
-        },
-        "strategy_conceptual_hedging": {
-            "selected": true,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
-        },
-        "strategy_conceptual_news_trading": {
-            "selected": true,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
-        },
         "strategy_fibonacci_reversal": {
             "selected": true,
             "percent_ratio": 1.0,

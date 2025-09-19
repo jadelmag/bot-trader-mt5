@@ -576,31 +576,20 @@ class App:
 
     def _display_strategy_summary(self, stats):
         """Formatea y muestra el resumen del análisis de estrategias en el logger."""
-        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE ESTRATEGIAS " + "="*15)
-        
-        header = f"{'ESTRATEGIA':<35} | {'APLICACIONES':>12} | {'BENEFICIOS':>15} | {'PÉRDIDAS':>15}"
-        self._log_info(header)
-        self._log_info("-"*len(header))
+        if StrategyAnalyzer is None:
+            return
 
-        total_profit_all = 0
-        total_loss_all = 0
+        summary_lines, total_profit, total_loss = StrategyAnalyzer.format_strategy_summary(stats)
 
-        for strategy, data in stats.items():
-            strategy_name = strategy.replace('strategy_', '').replace('_', ' ').title()
-            applications = data['applications']
-            benefits = f"{data['money_generated']:.2f} $"
-            losses = f"{data['money_lost']:.2f} $"
+        for line in summary_lines:
+            if "RESUMEN" in line or "="*15 in line:
+                self._log_success(line)
+            else:
+                self._log_info(line)
 
-            total_profit_all += data['money_generated']
-            total_loss_all += data['money_lost']
-
-            line = f"{strategy_name:<35} | {applications:>12} | {benefits:>15} | {losses:>15}"
-            self._log_info(line)
-
-        self._log_info("-"*len(header))
         self.logger.log_summary(
-            f"BENEFICIO TOTAL (TODAS LAS ESTRATEGIAS): {total_profit_all:.2f} $",
-            f"PÉRDIDA TOTAL (TODAS LAS ESTRATEGIAS): {total_loss_all:.2f} $"
+            f"BENEFICIO TOTAL (TODAS LAS ESTRATEGIAS): {total_profit:.2f} $",
+            f"PÉRDIDA TOTAL (TODAS LAS ESTRATEGIAS): {total_loss:.2f} $"
         )
         self._log_success("="*75 + "\n")
 

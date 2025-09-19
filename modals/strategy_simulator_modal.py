@@ -310,7 +310,6 @@ class StrategySimulatorModal(tk.Toplevel):
             widgets['checkbox_var'].set(False)
 
     def _load_all_candle_strategies(self):
-        #print("Acción: Cargar todas las estrategias de velas")
         for pattern_name in self.candle_patterns:
             self._load_candle_strategy(pattern_name, update_ui=True)
 
@@ -326,7 +325,6 @@ class StrategySimulatorModal(tk.Toplevel):
     def _load_candle_strategy(self, pattern_name, update_ui=False):
         config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
         if os.path.exists(config_path):
-            # print(f"Cargando estrategia para: {pattern_name} desde {config_path}")
             # Aquí iría la lógica para leer y procesar el JSON
             
             # Cambiar dropdown a Custom
@@ -336,7 +334,7 @@ class StrategySimulatorModal(tk.Toplevel):
             # No hacer nada si se llama desde 'Cargar Todas' y el archivo no existe
             pass
         else:
-            print(f"No se encontró archivo de configuración para: {pattern_name}")
+            pass
 
     def _apply_and_run_simulation(self):
         """Recopila la config, la guarda, inicia la simulación y cierra el modal."""
@@ -369,7 +367,6 @@ class StrategySimulatorModal(tk.Toplevel):
         try:
             with open(output_path, 'w') as f:
                 json.dump(config_to_save, f, indent=4)
-            # print(f"Configuración guardada correctamente en {output_path}")
         except Exception as e:
             self.logger.error(f"Error al guardar la configuración: {e}")
 

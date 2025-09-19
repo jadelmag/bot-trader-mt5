@@ -11,8 +11,6 @@ class LoginMT5:
         self.account = int(os.getenv("MT5_ACCOUNT", 0))
         self.password = os.getenv("MT5_PASSWORD", "")
         self.server = os.getenv("MT5_SERVER", "")
-        # La contraseña de inversor no parece usarse en el login, la omitimos por ahora
-        # self.inversor = "Tb@jPqA7"
         mt5.initialize()
 
     def login(self):
