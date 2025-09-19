@@ -28,3 +28,27 @@ El modal contendra los siguiente:
 5. Finalmente tendra dos botones en una misma fila, alineados en el centro. 
     - un boton de guardar, que aplicara todas las configuraciones seleccionadas a los patrones de vela.
     - un boton de cancelar, que cerrara el modal.
+
+
+
+
+Ahora vamos a pasar a cuando se pulsa en detectar estrategias forex.
+
+Cuando se pulsa en detectar estrategias forex se muestra el modal detect_all_forex_modal.py.
+
+Este modal tendra:
+1. un titulo
+2. dos botones en una misma fila alineados a la derecha, seleccionar todos,  deseleccionar todos y cargar todas las estrategias.
+3. una lista con todas las estrategias forex que hay en forex_list.py
+4. cada fila tendra un checkbox, un label del nombre de la estrategia forex.
+
+5. Finalmente tendra dos botones en una misma fila, alineados en el centro. 
+    - un boton de cancelar, que cerrara el modal. (a la izquierda)
+    - un boton de iniciar, que detectara todas las estrategias seleccionadas y las aplicara en la grafica. (a la derecha)
+6. Se mostrara un resumen de las estrategias seleccionadas. apply_strategies.py
+    - Tendra la siguiente estructura:
+        - nombre de la estrategia forex | numero de veces que se ha podido aplicar | beneficios: dinero que hubiese generado si se hubiese aplicado | perdidas: dinero que hubiese perdido si se hubiese aplicado mal o en el peor de los casos.
+        - Dinero general de todas las estrategias
+        - Dinero perdido de todas las estrategias
+
+

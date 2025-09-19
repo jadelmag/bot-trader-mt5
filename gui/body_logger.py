@@ -57,3 +57,8 @@ class BodyLogger(ttk.Frame):
 
     def warn(self, message: str):
         self._append(message, "WARN")
+
+    def log_summary(self, success_msg: str, error_msg: str):
+        """Muestra un resumen con un mensaje de éxito y uno de error."""
+        self.success(success_msg)
+        self.error(error_msg)

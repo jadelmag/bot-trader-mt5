@@ -14,20 +14,24 @@ if _project_root not in sys.path:
 try:
     from modals.loggin_modal import LoginModal
     from modals.detect_all_candles_modal import DetectAllCandlesModal
+    from modals.detect_all_forex_modal import DetectAllForexModal
     from loggin.loggin import LoginMT5
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
     from backtesting.detect_candles import CandleDetector
+    from backtesting.apply_strategies import StrategyAnalyzer
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
     # Fallback: delayed import inside handler if needed
     LoginModal = None
     DetectAllCandlesModal = None
+    DetectAllForexModal = None
     LoginMT5 = None
     BodyGraphic = None
     BodyLogger = None
     CandleDetector = None
+    StrategyAnalyzer = None
 
 # Optional: try to import MetaTrader5 to fetch symbol list after login
 try:
@@ -89,7 +93,7 @@ class App:
         self.analysis_tools_btn["menu"] = tools_menu
         tools_menu.add_command(label="Analizar gráfica", command=self._log_analysis_action)
         tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
-        tools_menu.add_command(label="Detectar Estrategias forex", command=self._log_forex_strategy_action)
+        tools_menu.add_command(label="Detectar Estrategias forex", command=self._open_detect_forex_modal)
         tools_menu.add_separator()
         tools_menu.add_command(label="Iniciar Backtesting", command=self._log_backtesting_action)
         self.analysis_tools_btn.state(["disabled"])
@@ -401,9 +405,29 @@ class App:
         else:
             self._log_info("Detección de patrones cancelada.")
 
+    def _open_detect_forex_modal(self):
+        """Abre el modal para seleccionar y analizar estrategias de Forex."""
+        global DetectAllForexModal
+        if DetectAllForexModal is None:
+            try:
+                from modals.detect_all_forex_modal import DetectAllForexModal as DAFM
+                DetectAllForexModal = DAFM
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el modal de estrategias: {e}")
+                return
+        
+        modal = DetectAllForexModal(self.root)
+        self.root.wait_window(modal)
+
+        if hasattr(modal, 'result') and modal.result:
+            self._log_info(f"Iniciando análisis para las siguientes estrategias: {', '.join(modal.result)}")
+            self._run_strategy_analysis(modal.result)
+        else:
+            self._log_info("Análisis de estrategias cancelado.")
+
     def _run_pattern_analysis(self, selected_patterns):
         """Ejecuta el análisis de patrones y muestra los resultados."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df'):
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
             self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
             return
         
@@ -424,9 +448,35 @@ class App:
         except Exception as e:
             self._log_error(f"Ocurrió un error durante el análisis de patrones: {e}")
 
+    def _run_strategy_analysis(self, selected_strategies):
+        """Ejecuta el análisis de estrategias y muestra los resultados."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
+            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
+            return
+        
+        if StrategyAnalyzer is None:
+            self._log_error("El analizador de estrategias no está disponible.")
+            return
+
+        try:
+            # Crear una copia para no modificar el DataFrame original
+            candles_df_copy = self.graphic.candles_df.copy()
+            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
+            
+            # Aquí podrías añadir indicadores necesarios para las estrategias
+            # Ejemplo: df['ema_fast'] = df['close'].ewm(span=12, adjust=False).mean()
+
+            analyzer = StrategyAnalyzer(candles_df_copy)
+            stats = analyzer.analyze_strategies(selected_strategies)
+
+            self._display_strategy_summary(stats)
+
+        except Exception as e:
+            self._log_error(f"Ocurrió un error durante el análisis de estrategias: {e}")
+
     def _display_analysis_summary(self, stats):
         """Formatea y muestra el resumen del análisis en el logger."""
-        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS " + "="*15)
+        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE PATRONES " + "="*15)
         
         header = f"{'PATRÓN':<25} | {'DIRECCIÓN':<12} | {'APARICIONES':>12} | {'GANANCIA LONG':>15} | {'GANANCIA SHORT':>15} | {'GANANCIA TOTAL':>16} | {'PÉRDIDA TOTAL':>15}"
         self._log_info(header)
@@ -454,6 +504,36 @@ class App:
         self._log_success(f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit_all_patterns:.2f} $")
         self._log_error(f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss_all_patterns:.2f} $")
         self._log_success("="*52 + "\n")
+
+    def _display_strategy_summary(self, stats):
+        """Formatea y muestra el resumen del análisis de estrategias en el logger."""
+        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE ESTRATEGIAS " + "="*15)
+        
+        header = f"{'ESTRATEGIA':<35} | {'APLICACIONES':>12} | {'BENEFICIOS':>15} | {'PÉRDIDAS':>15}"
+        self._log_info(header)
+        self._log_info("-"*len(header))
+
+        total_profit_all = 0
+        total_loss_all = 0
+
+        for strategy, data in stats.items():
+            strategy_name = strategy.replace('strategy_', '').replace('_', ' ').title()
+            applications = data['applications']
+            benefits = f"{data['money_generated']:.2f} $"
+            losses = f"{data['money_lost']:.2f} $"
+
+            total_profit_all += data['money_generated']
+            total_loss_all += data['money_lost']
+
+            line = f"{strategy_name:<35} | {applications:>12} | {benefits:>15} | {losses:>15}"
+            self._log_info(line)
+
+        self._log_info("-"*len(header))
+        self.logger.log_summary(
+            f"BENEFICIO TOTAL (TODAS LAS ESTRATEGIAS): {total_profit_all:.2f} $",
+            f"PÉRDIDA TOTAL (TODAS LAS ESTRATEGIAS): {total_loss_all:.2f} $"
+        )
+        self._log_success("="*75 + "\n")
 
     def _log_candle_pattern_action(self):
         self._log_info("Acción de patrón de velas")
