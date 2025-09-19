@@ -238,6 +238,19 @@ class BodyGraphic(ttk.Frame):
         self.fig.tight_layout()
         self.canvas.draw()
 
+    def _get_timeframe_delta(self):
+        """Convierte el string del timeframe en un objeto pd.Timedelta."""
+        mapping = {
+            "M1": pd.Timedelta(minutes=1),
+            "M5": pd.Timedelta(minutes=5),
+            "M15": pd.Timedelta(minutes=15),
+            "M30": pd.Timedelta(minutes=30),
+            "H1": pd.Timedelta(hours=1),
+            "H4": pd.Timedelta(hours=4),
+            "D1": pd.Timedelta(days=1),
+        }
+        return mapping.get(self.timeframe.upper())
+
     def _schedule_live_update(self, delay_ms: int = 1000):
         if self._after_job is not None:
             try:
@@ -263,6 +276,20 @@ class BodyGraphic(ttk.Frame):
             if tick is None:
                 self._schedule_live_update()
                 return
+
+            # --- Lógica de detección de nueva vela ---
+            if self.candles_df is not None and not self.candles_df.empty:
+                last_candle_time = self.candles_df.index[-1]
+                timeframe_delta = self._get_timeframe_delta()
+                current_tick_time = pd.to_datetime(tick.time, unit='s')
+
+                if timeframe_delta and current_tick_time >= (last_candle_time + timeframe_delta):
+                    if self.logger:
+                        self.logger.success(f"Nueva vela detectada para {self.timeframe}. Refrescando gráfico...")
+                    self.refresh() # Llama a refresh y termina este ciclo de actualización
+                    return
+            # --- Fin de la lógica ---
+
             price = getattr(tick, 'last', None)
             if price is None or price == 0:
                 price = getattr(tick, 'bid', None)
