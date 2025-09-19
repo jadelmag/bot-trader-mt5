@@ -1,7 +1,5 @@
 
 
-1. quiero que en el modal strategy_simulator_modal.py cuando se pulse iniciar coga todas las estrategias seleccionadas, forex y candle con sus respectivas configuraciones, y abra operaciones short y long tanto de forex como de candle, cuando crea conveniente para sacar el mayor beneficio posible y sobre todo evitar el mayor numero de perdidas, sobre la grafica desde su inicio hasta su fin. Y se realizara en el archivo strategy_simulator.py
-
 
   # --- Botón de Simulación (Columna 1) ---
         self.simulation_btn = ttk.Menubutton(header, text="Simulación")

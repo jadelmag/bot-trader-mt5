@@ -18,17 +18,21 @@ class StrategySimulator:
     """ 
     Clase encargada de ejecutar la simulación de estrategias de trading sobre datos históricos.
     """
-    def __init__(self, simulation_config, candles_df, logger):
+    def __init__(self, simulation_config, candles_df, logger, initial_capital=1000.0):
         """
         Inicializa el simulador con la configuración proporcionada.
         """
         self.config = simulation_config
         self.candles_df = candles_df.copy() # Usar una copia para no modificar el original
         self.logger = logger
+        self.initial_capital = initial_capital
+        self.current_balance = initial_capital
         self.open_trades = []
         self.closed_trades = []
-        self.balance = 10000 # Saldo inicial de ejemplo
-        self.pip_value = 0.0001 # Para EURUSD, 1 pip = 0.0001. Debería ser dinámico por símbolo.
+        
+        # --- Constantes de Trading --- 
+        self.pip_value = 0.0001 # Valor de 1 pip para un par como EUR/USD
+        self.pip_value_per_lot = 10 # Valor monetario de 1 pip por lote estándar (ej: $10)
 
         # Mapeo de nombres de estrategias a funciones reales
         self.candle_strategy_functions = {name.replace('is_', ''): func for name, func in vars(CandlePatterns).items() if name.startswith('is_')}
@@ -109,6 +113,22 @@ class StrategySimulator:
         self.candles_df.reset_index(inplace=True, drop=True) # drop=True para no guardar el viejo índice
         self.logger.log(f"Indicadores calculados. Velas disponibles para simulación: {len(self.candles_df)}")
 
+    def _calculate_lot_size(self, stop_loss_pips, risk_percent):
+        """Calcula el tamaño del lote basado en el capital actual, el riesgo y el SL."""
+        if stop_loss_pips <= 0:
+            return 0.01 # Retornar un lote mínimo si el SL es inválido
+
+        capital_at_risk = self.current_balance * (risk_percent / 100.0)
+        sl_value_per_lot = stop_loss_pips * self.pip_value_per_lot
+        
+        if sl_value_per_lot <= 0:
+            return 0.01 # Evitar división por cero
+
+        lot_size = capital_at_risk / sl_value_per_lot
+        
+        # Redondear al tamaño de lote más cercano (ej. 0.01)
+        return max(0.01, round(lot_size, 2))
+
     def run_simulation(self):
         """
         Ejecuta la simulación de backtesting iterando sobre cada vela.
@@ -185,19 +205,30 @@ class StrategySimulator:
 
     def _open_trade(self, entry_index, entry_price, signal, source, strategy_name, config):
         """Abre una nueva operación y la añade a la lista de operaciones abiertas."""
-        # Para EURUSD, 1 pip = 0.0001. Esto debería ser dinámico por símbolo.
-        pip_value = self.pip_value
-        
+        stop_loss_pips = 0
+        risk_percent = 1.0 # Riesgo por defecto del 1% para velas
+
         if source == 'forex':
-            sl_pips = config.get('stop_loss_pips', 20)
+            stop_loss_pips = config.get('stop_loss_pips', 20)
             rr_ratio = config.get('rr_ratio', 2.0)
-            stop_loss_amount = sl_pips * pip_value
-            take_profit_amount = stop_loss_amount * rr_ratio
+            risk_percent = config.get('percent_ratio', 1.0)
         else: # 'candle'
-            # Para velas, usamos un SL basado en ATR y un RR fijo
             atr = self.candles_df.iloc[entry_index]['atr']
-            stop_loss_amount = atr * 1.5 # Ejemplo: SL a 1.5x ATR
-            take_profit_amount = stop_loss_amount * 2.0 # Ejemplo: RR de 2.0
+            # Convertir el SL basado en ATR a pips
+            stop_loss_pips = (atr * 1.5) / self.pip_value
+            rr_ratio = 2.0 # RR fijo para velas
+
+        if stop_loss_pips <= 0:
+            self.logger.error(f"    -> Trade RECHAZADO: Stop loss inválido ({stop_loss_pips} pips) para {strategy_name}")
+            return
+
+        lot_size = self._calculate_lot_size(stop_loss_pips, risk_percent)
+        if self.current_balance < (lot_size * stop_loss_pips * self.pip_value_per_lot):
+            self.logger.log(f"    -> Trade RECHAZADO: Balance insuficiente para cubrir el riesgo.")
+            return
+
+        stop_loss_amount = stop_loss_pips * self.pip_value
+        take_profit_amount = (stop_loss_pips * rr_ratio) * self.pip_value
 
         if signal == 'long':
             stop_loss = entry_price - stop_loss_amount
@@ -205,6 +236,8 @@ class StrategySimulator:
         else: # 'short'
             stop_loss = entry_price + stop_loss_amount
             take_profit = entry_price - take_profit_amount
+
+        risked_amount = lot_size * stop_loss_pips * self.pip_value_per_lot
 
         trade = {
             'entry_index': entry_index,
@@ -214,10 +247,12 @@ class StrategySimulator:
             'source': source,
             'strategy_name': strategy_name,
             'stop_loss': stop_loss,
-            'take_profit': take_profit
+            'take_profit': take_profit,
+            'lot_size': lot_size,
+            'risked_amount': risked_amount
         }
         self.open_trades.append(trade)
-        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f}, TP: {take_profit:.5f}")
+        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | Lote: {lot_size:.2f} | Riesgo: ${risked_amount:.2f}")
 
     def _manage_open_trades(self, current_index, current_candle):
         """Gestiona las operaciones abiertas, comprobando si se deben cerrar."""
@@ -252,14 +287,17 @@ class StrategySimulator:
                 trade['exit_price'] = exit_price
                 trade['close_reason'] = close_reason
                 
-                # Calcular P/L (en pips para simplificar)
+                # Calcular P/L en pips y en dinero
                 pnl_pips = (exit_price - trade['entry_price']) / self.pip_value if trade['type'] == 'long' else (trade['entry_price'] - exit_price) / self.pip_value
+                pnl_money = pnl_pips * trade['lot_size'] * self.pip_value_per_lot
+                
                 trade['pnl_pips'] = pnl_pips
-                self.balance += pnl_pips # Asumiendo 1 pip = 1 unidad de la moneda de la cuenta
+                trade['pnl_money'] = pnl_money
+                self.current_balance += pnl_money
 
                 trades_to_close.append(trade)
-                log_msg = f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {close_reason}. P/L: {pnl_pips:.2f} pips. Balance: {self.balance:.2f}"
-                if pnl_pips > 0:
+                log_msg = f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {close_reason}. P/L: ${pnl_money:.2f} ({pnl_pips:.2f} pips). Balance: ${self.current_balance:.2f}"
+                if pnl_money > 0:
                     self.logger.success(log_msg)
                 else:
                     self.logger.error(log_msg)
@@ -277,23 +315,32 @@ class StrategySimulator:
             self.logger.log("No se realizaron operaciones.")
             return
 
-        wins = [t for t in self.closed_trades if t['pnl_pips'] > 0]
-        losses = [t for t in self.closed_trades if t['pnl_pips'] <= 0]
+        wins = [t for t in self.closed_trades if t['pnl_money'] > 0]
+        losses = [t for t in self.closed_trades if t['pnl_money'] <= 0]
         win_rate = (len(wins) / total_trades) * 100 if total_trades > 0 else 0
         
-        total_pnl = sum(t['pnl_pips'] for t in self.closed_trades)
-        avg_win = sum(t['pnl_pips'] for t in wins) / len(wins) if wins else 0
-        avg_loss = sum(t['pnl_pips'] for t in losses) / len(losses) if losses else 0
+        total_pnl_money = sum(t['pnl_money'] for t in self.closed_trades)
+        total_profits = sum(t['pnl_money'] for t in wins)
+        total_losses = sum(t['pnl_money'] for t in losses)
+        total_risked = sum(t['risked_amount'] for t in self.closed_trades)
+
+        avg_win = total_profits / len(wins) if wins else 0
+        avg_loss = total_losses / len(losses) if losses else 0
         risk_reward_ratio = abs(avg_win / avg_loss) if avg_loss != 0 else float('inf')
 
+        self.logger.log(f"Capital Inicial: ${self.initial_capital:.2f}")
+        self.logger.log(f"Capital Final: ${self.current_balance:.2f}")
+        self.logger.log(f"Beneficio Neto: ${total_pnl_money:.2f}")
+        self.logger.log(f"Total Ganancias: ${total_profits:.2f}")
+        self.logger.log(f"Total Pérdidas: ${total_losses:.2f}")
+        self.logger.log(f"Total Arriesgado: ${total_risked:.2f}")
+        self.logger.log("-"*35)
         self.logger.log(f"Operaciones Totales: {total_trades}")
         self.logger.log(f"Ganadoras: {len(wins)}")
         self.logger.log(f"Perdedoras: {len(losses)}")
         self.logger.log(f"Tasa de Acierto: {win_rate:.2f}%")
-        self.logger.log(f"P/L Total (pips): {total_pnl:.2f}")
-        self.logger.log(f"Balance Final: {self.balance:.2f}")
-        self.logger.log(f"Ganancia Promedio (pips): {avg_win:.2f}")
-        self.logger.log(f"Pérdida Promedio (pips): {avg_loss:.2f}")
+        self.logger.log(f"Ganancia Promedio: ${avg_win:.2f}")
+        self.logger.log(f"Pérdida Promedio: ${avg_loss:.2f}")
         self.logger.log(f"Ratio Riesgo/Beneficio Real: {risk_reward_ratio:.2f}")
         self.logger.log("="*75 + "\n")
 
@@ -337,5 +384,5 @@ if __name__ == '__main__':
     handler.setFormatter(logging.Formatter('%(message)s'))
     logger.addHandler(handler)
 
-    simulator = StrategySimulator(mock_config, mock_df, logger)
+    simulator = StrategySimulator(mock_config, mock_df, logger, initial_capital=10000)
     simulator.run_simulation()
