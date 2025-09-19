@@ -5,24 +5,29 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 
+# --- Configuración robusta de sys.path ---
+# Esto asegura que el script encuentre los módulos sin importar desde dónde se ejecute.
+_project_root = os.path.dirname(os.path.abspath(__file__))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 try:
-    # Allow running this file directly by ensuring project root is on sys.path
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    if CURRENT_DIR not in sys.path:
-        sys.path.append(CURRENT_DIR)
-    PROJECT_ROOT = CURRENT_DIR
-    if PROJECT_ROOT not in sys.path:
-        sys.path.append(PROJECT_ROOT)
     from modals.loggin_modal import LoginModal
+    from modals.detect_all_candles_modal import DetectAllCandlesModal
     from loggin.loggin import LoginMT5
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
-except Exception:
+    from backtesting.detect_candles import CandleDetector
+except Exception as e:
+    # Imprimir el error de importación para facilitar la depuración
+    print(f"Error al importar módulos: {e}")
     # Fallback: delayed import inside handler if needed
     LoginModal = None
+    DetectAllCandlesModal = None
     LoginMT5 = None
     BodyGraphic = None
     BodyLogger = None
+    CandleDetector = None
 
 # Optional: try to import MetaTrader5 to fetch symbol list after login
 try:
@@ -83,7 +88,7 @@ class App:
         tools_menu = tk.Menu(self.analysis_tools_btn, tearoff=False)
         self.analysis_tools_btn["menu"] = tools_menu
         tools_menu.add_command(label="Analizar gráfica", command=self._log_analysis_action)
-        tools_menu.add_command(label="Detectar patrones de velas", command=self._log_candle_pattern_action)
+        tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
         tools_menu.add_command(label="Detectar Estrategias forex", command=self._log_forex_strategy_action)
         tools_menu.add_separator()
         tools_menu.add_command(label="Iniciar Backtesting", command=self._log_backtesting_action)
@@ -376,6 +381,79 @@ class App:
 
     def _log_analysis_action(self):
         self._log_info("Acción de análisis")
+
+    def _open_detect_candle_modal(self):
+        global DetectAllCandlesModal
+        if DetectAllCandlesModal is None:
+            try:
+                from modals.detect_all_candles_modal import DetectAllCandlesModal as DACM
+                DetectAllCandlesModal = DACM
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el modal de detección de velas: {e}")
+                return
+        
+        modal = DetectAllCandlesModal(self.root)
+        self.root.wait_window(modal)
+
+        if hasattr(modal, 'result') and modal.result:
+            self._log_info(f"Iniciando detección para los siguientes patrones: {', '.join(modal.result)}")
+            self._run_pattern_analysis(modal.result)
+        else:
+            self._log_info("Detección de patrones cancelada.")
+
+    def _run_pattern_analysis(self, selected_patterns):
+        """Ejecuta el análisis de patrones y muestra los resultados."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df'):
+            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
+            return
+        
+        if CandleDetector is None:
+            self._log_error("El detector de velas no está disponible.")
+            return
+
+        try:
+            # Crear una copia del DataFrame para el análisis para no afectar al original
+            candles_df_copy = self.graphic.candles_df.copy()
+            # Asegurar que las columnas estén en minúsculas para el detector
+            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
+            detector = CandleDetector(candles_df_copy)
+            stats = detector.analyze_patterns(selected_patterns)
+
+            self._display_analysis_summary(stats)
+
+        except Exception as e:
+            self._log_error(f"Ocurrió un error durante el análisis de patrones: {e}")
+
+    def _display_analysis_summary(self, stats):
+        """Formatea y muestra el resumen del análisis en el logger."""
+        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS " + "="*15)
+        
+        header = f"{'PATRÓN':<25} | {'DIRECCIÓN':<12} | {'APARICIONES':>12} | {'GANANCIA LONG':>15} | {'GANANCIA SHORT':>15} | {'GANANCIA TOTAL':>16} | {'PÉRDIDA TOTAL':>15}"
+        self._log_info(header)
+        self._log_info("-"*len(header))
+
+        total_profit_all_patterns = 0
+        total_loss_all_patterns = 0
+
+        for pattern, data in stats.items():
+            pattern_name = pattern.replace('_', ' ').title()
+            direction = data['direction'].upper() if data['direction'] != 'N/A' else 'N/A'
+            appearances = data['appearances']
+            money_long = f"{data['money_generated_long']:.2f} $"
+            money_short = f"{data['money_generated_short']:.2f} $"
+            total_profit = f"{data['total_profit']:.2f} $"
+            total_loss = f"{data['total_loss']:.2f} $"
+
+            total_profit_all_patterns += data['total_profit']
+            total_loss_all_patterns += data['total_loss']
+
+            line = f"{pattern_name:<25} | {direction:<12} | {appearances:>12} | {money_long:>15} | {money_short:>15} | {total_profit:>16} | {total_loss:>15}"
+            self._log_info(line)
+
+        self._log_info("-"*len(header))
+        self._log_success(f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit_all_patterns:.2f} $")
+        self._log_error(f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss_all_patterns:.2f} $")
+        self._log_success("="*52 + "\n")
 
     def _log_candle_pattern_action(self):
         self._log_info("Acción de patrón de velas")

@@ -34,7 +34,7 @@ class BodyGraphic(ttk.Frame):
         self._after_job = None
         self.price_line = None
         self.price_text = None
-        self.df: pd.DataFrame | None = None
+        self.candles_df: pd.DataFrame | None = None
         self.ma: pd.Series | None = None
 
         self.columnconfigure(0, weight=1)
@@ -106,7 +106,7 @@ class BodyGraphic(ttk.Frame):
             df = df.set_index("time")
             df.rename(columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "tick_volume": "Volume"}, inplace=True)
             df.sort_index(inplace=True)
-            self.df = df
+            self.candles_df = df
 
             self.ax.clear()
             self.fig.patch.set_facecolor('black')
@@ -157,7 +157,7 @@ class BodyGraphic(ttk.Frame):
                 self.ma = None
 
             if self.tooltip_handler:
-                self.tooltip_handler.update_data(self.df, self.ma)
+                self.tooltip_handler.update_data(self.candles_df, self.ma)
 
             last_price = float(df['Close'].iloc[-1])
             self.price_line = self.ax.axhline(y=last_price, color='#888888', linestyle='-', linewidth=1.0)
