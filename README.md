@@ -91,8 +91,11 @@ app/
 │   └── actions.py
 |
 ├── backtesting/
+│   ├── __init__.py
 │   ├── apply_strategies.py
-│   └── detect_candles.py
+│   ├── backtesting.py
+│   ├── detect_candles.py
+│   └── strategy_simulator.py
 |
 ├── candles/
 |   └── candles_list.py
@@ -101,18 +104,27 @@ app/
 │   └── forex_list.py     
 |
 ├── gui/
+│   ├── __init__.py
 │   ├── body_graphic.py
 │   └── body_logger.py
 |
-├── telegram/
-│   ├── __init__.py
-│   └── telegram-notifier.py
-|
 ├── loggin/
-| └── loggin.py
+│   ├── __init__.py
+│   └── loggin.py
 |
 ├── modals/
-| └── loggin_modal.py
+│   ├── __init__.py
+│   ├── backtesting_modal.py
+│   ├── candle_config_modal.py
+│   ├── detect_all_candles_modal.py
+│   ├── detect_all_forex_modal.py
+│   ├── loggin_modal.py
+│   └── strategy_simulator_modal.py
+|
+├── strategies/
+│   ├── config strategies files
+│   ├── strategies 
+│   └── config_app
 |
 ├── .env
 ├── .gitignore
