@@ -14,18 +14,19 @@ if PROJECT_ROOT not in sys.path:
 from candles.candle_list import CandlePatterns
 from modals.candle_config_modal import CandleConfigModal
 
-class DetectCandleModal(tk.Toplevel):
-    """Modal para seleccionar y configurar estrategias para patrones de velas."""
+class StrategySimulatorModal(tk.Toplevel):
+    """Modal para seleccionar y configurar estrategias de Forex y Velas."""
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Aplicar Estrategias a Patrones de Velas")
-        self.geometry("500x600")
+        self.title("Simulador de Estrategias")
+        self.geometry("600x600")
         self.transient(parent)
         self.grab_set()
 
-        self.patterns = self._get_candle_patterns()
-        self.pattern_widgets = {}
+        # --- Candle Patterns ---
+        self.candle_patterns = self._get_candle_patterns()
+        self.candle_widgets = {}
         self.result = None
 
         # Asegurarse de que el directorio de estrategias existe
@@ -45,26 +46,60 @@ class DetectCandleModal(tk.Toplevel):
         return sorted(pattern_names)
 
     def _build_ui(self):
-        """Construye la interfaz de usuario del modal."""
+        """Construye la interfaz de usuario del modal con pestañas."""
         main_frame = ttk.Frame(self, padding=10)
         main_frame.pack(expand=True, fill=tk.BOTH)
 
+        # --- Notebook para las pestañas ---
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(expand=True, fill=tk.BOTH, pady=(0, 10))
+
+        forex_tab = ttk.Frame(notebook, padding=10)
+        candle_tab = ttk.Frame(notebook, padding=10)
+
+        notebook.add(forex_tab, text="Forex")
+        notebook.add(candle_tab, text="Candle")
+
+        # Construir el contenido de cada pestaña
+        self._build_forex_tab(forex_tab)
+        self._build_candle_tab(candle_tab)
+
+        # --- Frame Inferior para botones de acción (siempre visible) ---
+        bottom_frame = ttk.Frame(main_frame)
+        bottom_frame.pack(fill=tk.X, pady=(10, 0))
+        bottom_frame.columnconfigure(0, weight=1) # Centra los botones
+        bottom_frame.columnconfigure(3, weight=1)
+
+        btn_cancel = ttk.Button(bottom_frame, text="Cancelar", command=self._on_close)
+        btn_cancel.grid(row=0, column=1, padx=5)
+
+        btn_apply = ttk.Button(bottom_frame, text="Aplicar", command=self._save_and_close)
+        btn_apply.grid(row=0, column=2, padx=5)
+
+    def _build_forex_tab(self, tab):
+        """Construye el contenido de la pestaña de estrategias Forex."""
+        # Placeholder por ahora
+        label = ttk.Label(tab, text="Contenido de la pestaña Forex en construcción...")
+        label.pack(padx=20, pady=20)
+
+    def _build_candle_tab(self, tab):
+        """Construye el contenido de la pestaña de patrones de velas."""
         # --- Frame Superior para botones de selección ---
-        top_frame = ttk.Frame(main_frame)
+        top_frame = ttk.Frame(tab)
         top_frame.pack(fill=tk.X, pady=(0, 10))
         top_frame.columnconfigure(0, weight=1) # Empuja los botones a la derecha
 
-        btn_select_all = ttk.Button(top_frame, text="Seleccionar Todos", command=self._select_all)
+        btn_select_all = ttk.Button(top_frame, text="Seleccionar Todos", command=self._select_all_candles)
         btn_select_all.grid(row=0, column=1, padx=5)
 
-        btn_deselect_all = ttk.Button(top_frame, text="Deseleccionar Todos", command=self._deselect_all)
+        btn_deselect_all = ttk.Button(top_frame, text="Deseleccionar Todos", command=self._deselect_all_candles)
         btn_deselect_all.grid(row=0, column=2, padx=5)
 
-        btn_load_all = ttk.Button(top_frame, text="Cargar Todas las Estrategias", command=self._load_all_strategies)
+        btn_load_all = ttk.Button(top_frame, text="Cargar Todas las Estrategias", command=self._load_all_candle_strategies)
         btn_load_all.grid(row=0, column=3, padx=5)
 
         # --- Contenedor para la lista con scroll ---
-        list_container = ttk.Frame(main_frame, borderwidth=1, relief="sunken")
+        list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
         list_container.pack(fill="both", expand=True, pady=5)
 
         canvas = tk.Canvas(list_container, highlightthickness=0)
@@ -76,7 +111,7 @@ class DetectCandleModal(tk.Toplevel):
         canvas.configure(yscrollcommand=scrollbar.set)
 
         # Llenar la lista de patrones
-        for i, pattern_name in enumerate(self.patterns):
+        for i, pattern_name in enumerate(self.candle_patterns):
             row_frame = ttk.Frame(scrollable_frame, padding=(0, 5))
             row_frame.pack(fill=tk.X, expand=True)
 
@@ -101,11 +136,11 @@ class DetectCandleModal(tk.Toplevel):
             btn_config.pack(side=tk.LEFT, padx=5)
 
             # Botón Cargar
-            btn_load = ttk.Button(row_frame, text="Cargar", command=lambda p=pattern_name: self._load_strategy(p))
+            btn_load = ttk.Button(row_frame, text="Cargar", command=lambda p=pattern_name: self._load_candle_strategy(p))
             btn_load.pack(side=tk.LEFT, padx=5)
 
             # Guardar referencias a los widgets de la fila
-            self.pattern_widgets[pattern_name] = {
+            self.candle_widgets[pattern_name] = {
                 'checkbox_var': var,
                 'strategy_var': strategy_type_var,
                 'load_button': btn_load
@@ -119,18 +154,6 @@ class DetectCandleModal(tk.Toplevel):
 
         # Vincular scroll del ratón de forma global para este modal
         self.bind_all("<MouseWheel>", lambda event: self._on_mousewheel(event, canvas))
-
-        # --- Frame Inferior para botones de acción ---
-        bottom_frame = ttk.Frame(main_frame)
-        bottom_frame.pack(fill=tk.X, pady=(10, 0))
-        bottom_frame.columnconfigure(0, weight=1) # Centra los botones
-        bottom_frame.columnconfigure(3, weight=1)
-
-        btn_cancel = ttk.Button(bottom_frame, text="Cancelar", command=self._on_close)
-        btn_cancel.grid(row=0, column=1, padx=5)
-
-        btn_save = ttk.Button(bottom_frame, text="Iniciar", command=self._save_and_close)
-        btn_save.grid(row=0, column=2, padx=5)
 
     def _center_window(self):
         """Centra el modal en la ventana principal."""
@@ -156,20 +179,20 @@ class DetectCandleModal(tk.Toplevel):
             pass
         self.destroy()
 
-    # --- Funciones de los botones (placeholders) ---
+    # --- Funciones de los botones (CANDLE) ---
 
-    def _select_all(self):
-        for widgets in self.pattern_widgets.values():
+    def _select_all_candles(self):
+        for widgets in self.candle_widgets.values():
             widgets['checkbox_var'].set(True)
 
-    def _deselect_all(self):
-        for widgets in self.pattern_widgets.values():
+    def _deselect_all_candles(self):
+        for widgets in self.candle_widgets.values():
             widgets['checkbox_var'].set(False)
 
-    def _load_all_strategies(self):
-        print("Acción: Cargar todas las estrategias")
-        for pattern_name in self.patterns:
-            self._load_strategy(pattern_name, update_ui=True)
+    def _load_all_candle_strategies(self):
+        print("Acción: Cargar todas las estrategias de velas")
+        for pattern_name in self.candle_patterns:
+            self._load_candle_strategy(pattern_name, update_ui=True)
 
     def _open_config_modal(self, pattern_name):
         """Abre el modal de configuración para un patrón específico."""
@@ -180,15 +203,15 @@ class DetectCandleModal(tk.Toplevel):
         if config_modal.result is True:
             self._update_load_button_state(pattern_name)
 
-    def _load_strategy(self, pattern_name, update_ui=False):
+    def _load_candle_strategy(self, pattern_name, update_ui=False):
         config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
         if os.path.exists(config_path):
             print(f"Cargando estrategia para: {pattern_name} desde {config_path}")
             # Aquí iría la lógica para leer y procesar el JSON
             
             # Cambiar dropdown a Custom
-            if pattern_name in self.pattern_widgets:
-                self.pattern_widgets[pattern_name]['strategy_var'].set("Custom")
+            if pattern_name in self.candle_widgets:
+                self.candle_widgets[pattern_name]['strategy_var'].set("Custom")
         elif update_ui:
             # No hacer nada si se llama desde 'Cargar Todas' y el archivo no existe
             pass
@@ -198,7 +221,7 @@ class DetectCandleModal(tk.Toplevel):
     def _save_and_close(self):
         """Recopila la configuración actual y la guarda en strategies/strategies.json."""
         config_to_save = {}
-        for pattern_name, widgets in self.pattern_widgets.items():
+        for pattern_name, widgets in self.candle_widgets.items():
             config_to_save[pattern_name] = {
                 'selected': widgets['checkbox_var'].get(),
                 'strategy_mode': widgets['strategy_var'].get()
@@ -219,7 +242,7 @@ class DetectCandleModal(tk.Toplevel):
     def _update_load_button_state(self, pattern_name):
         """Comprueba si existe el JSON de la estrategia y actualiza el estado del botón."""
         config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
-        button = self.pattern_widgets[pattern_name]['load_button']
+        button = self.candle_widgets[pattern_name]['load_button']
         if os.path.exists(config_path):
             button.config(state=tk.NORMAL)
         else:

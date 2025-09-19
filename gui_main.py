@@ -15,7 +15,7 @@ try:
     from modals.loggin_modal import LoginModal
     from modals.detect_all_candles_modal import DetectAllCandlesModal
     from modals.detect_all_forex_modal import DetectAllForexModal
-    from modals.detect_candle_modal import DetectCandleModal
+    from modals.strategy_simulator_modal import StrategySimulatorModal
     from loggin.loggin import LoginMT5
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
@@ -29,7 +29,7 @@ except Exception as e:
     LoginModal = None
     DetectAllCandlesModal = None
     DetectAllForexModal = None
-    DetectCandleModal = None
+    StrategySimulatorModal = None
     LoginMT5 = None
     BodyGraphic = None
     BodyLogger = None
@@ -429,24 +429,24 @@ class App:
             self._log_info("Análisis de estrategias cancelado.")
 
     def _apply_strategies_action(self):
-        """Abre el modal para configurar y aplicar estrategias a patrones de velas."""
-        global DetectCandleModal
-        if DetectCandleModal is None:
+        """Abre el modal para configurar y aplicar estrategias."""
+        global StrategySimulatorModal
+        if StrategySimulatorModal is None:
             try:
-                from modals.detect_candle_modal import DetectCandleModal as DCM
-                DetectCandleModal = DCM
+                from modals.strategy_simulator_modal import StrategySimulatorModal as SSM
+                StrategySimulatorModal = SSM
             except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de estrategias de velas: {e}")
+                messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
                 return
         
-        modal = DetectCandleModal(self.root)
+        modal = StrategySimulatorModal(self.root)
         self.root.wait_window(modal)
 
         if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Configuración de patrones guardada.")
+            self._log_info(f"Configuración de simulación guardada.")
             # Aquí iría la lógica para aplicar las estrategias configuradas
         else:
-            self._log_info("Configuración de patrones cancelada.")
+            self._log_info("Simulación de estrategias cancelada.")
 
     def _run_pattern_analysis(self, selected_patterns):
         """Ejecuta el análisis de patrones y muestra los resultados."""
