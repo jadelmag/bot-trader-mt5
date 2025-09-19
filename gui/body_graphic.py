@@ -24,13 +24,14 @@ except Exception:
 
 
 class BodyGraphic(ttk.Frame):
-    def __init__(self, parent, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, logger=None, *args, **kwargs):
+    def __init__(self, parent, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, logger=None, debug_mode_var=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
         self.symbol = symbol
         self.timeframe = timeframe
         self.bars = bars
         self.logger = logger
+        self.debug_mode_var = debug_mode_var
 
         self._after_job = None
         self.price_line = None
@@ -296,7 +297,7 @@ class BodyGraphic(ttk.Frame):
             if price is None:
                 self._schedule_live_update()
                 return
-            if self.logger:
+            if self.logger and self.debug_mode_var and self.debug_mode_var.get():
                 self.logger.log(f"Precio {self.symbol}: {price:.5f}")
 
             if self.price_line is None:
