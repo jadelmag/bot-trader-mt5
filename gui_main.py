@@ -64,9 +64,9 @@ class App:
         self.timeframe_var = tk.StringVar(value="M5")
 
         # State for simulation results
-        self.initial_balance_var = tk.StringVar(value="Dinero: ----")
-        self.profit_var = tk.StringVar(value="Beneficios: ----")
-        self.loss_var = tk.StringVar(value="Pérdidas: ----")
+        self.initial_balance_var = tk.StringVar(value="----")
+        self.profit_var = tk.StringVar(value="----")
+        self.loss_var = tk.StringVar(value="----")
 
         # Load persisted preferences (overrides defaults)
         self._load_prefs()
@@ -202,6 +202,25 @@ class App:
         self.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
 
     def _start_mt5_chart(self):
+        # Actualizar el balance de la cuenta desde MT5
+        if mt5:
+            try:
+                # Verificar si hay una conexión activa
+                if mt5.terminal_info():
+                    account_info = mt5.account_info()
+                    if account_info:
+                        balance = account_info.balance
+                        # Formatear como string con 2 decimales y símbolo de dólar
+                        self.initial_balance_var.set(f"{balance:.2f} $")
+                        self._log_info(f"Balance de cuenta actualizado: {balance:.2f} $")
+                    else:
+                        self._log_error("No se pudo obtener la información de la cuenta.")
+                else:
+                    # Este caso es poco probable si el botón está activo, pero es una buena práctica
+                    self._log_error("No hay conexión con MT5 para actualizar el balance.")
+            except Exception as e:
+                self._log_error(f"Error al obtener el balance de MT5: {e}")
+
         # Show the chart and load data for current selection
         if not self.chart_started:
             # Replace placeholder with the actual chart frame
