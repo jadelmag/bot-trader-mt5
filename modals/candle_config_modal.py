@@ -15,6 +15,7 @@ class CandleConfigModal(tk.Toplevel):
 
         self.title(f"Configurar Estrategia: {self.display_name}")
         self.geometry("450x400")
+        self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
 

@@ -10,6 +10,7 @@ class LoginModal(tk.Toplevel):
     def __init__(self, parent: tk.Tk):
         super().__init__(parent)
         self.title("Conectar a MT5")
+        self.geometry("350x150")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()

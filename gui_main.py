@@ -53,6 +53,7 @@ class App:
         self.root.title("Bot Trader MT5")
         self.root.geometry("1500x800")
         self.root.minsize(900, 600)
+        self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
 
         # State for status label

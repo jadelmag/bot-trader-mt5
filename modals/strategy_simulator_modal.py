@@ -22,6 +22,7 @@ class StrategySimulatorModal(tk.Toplevel):
         super().__init__(parent)
         self.title("Simulador de Estrategias")
         self.geometry("650x600")
+        self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
 
@@ -77,9 +78,24 @@ class StrategySimulatorModal(tk.Toplevel):
         self._build_forex_tab(forex_tab)
         self._build_candle_tab(candle_tab)
 
+        # --- Frame para los Slots ---
+        slots_frame = ttk.Frame(main_frame)
+        slots_frame.pack(fill=tk.X, pady=(10, 5))
+        slots_frame.columnconfigure((0, 1, 2, 3), weight=1) # Centrar contenido
+
+        ttk.Label(slots_frame, text="Slots Forex:").grid(row=0, column=0, sticky='e', padx=(0, 5))
+        self.slots_forex_var = tk.IntVar(value=1)
+        forex_slots_entry = ttk.Entry(slots_frame, textvariable=self.slots_forex_var, width=5)
+        forex_slots_entry.grid(row=0, column=1, sticky='w')
+
+        ttk.Label(slots_frame, text="Slots Candles:").grid(row=0, column=2, sticky='e', padx=(10, 5))
+        self.slots_candles_var = tk.IntVar(value=1)
+        candle_slots_entry = ttk.Entry(slots_frame, textvariable=self.slots_candles_var, width=5)
+        candle_slots_entry.grid(row=0, column=3, sticky='w')
+
         # --- Frame Inferior para botones de acción (siempre visible) ---
         bottom_frame = ttk.Frame(main_frame)
-        bottom_frame.pack(fill=tk.X, pady=(10, 0))
+        bottom_frame.pack(fill=tk.X, pady=(5, 0))
         bottom_frame.columnconfigure(0, weight=1) # Centra los botones
         bottom_frame.columnconfigure(3, weight=1)
 
@@ -297,13 +313,23 @@ class StrategySimulatorModal(tk.Toplevel):
 
     def _save_and_close(self):
         """Recopila la configuración actual y la guarda en strategies/strategies.json."""
-        config_to_save = {}
+        config_to_save = {
+            'slots': {
+                'forex': self.slots_forex_var.get(),
+                'candle': self.slots_candles_var.get()
+            },
+            'candle_strategies': {},
+            'forex_strategies': {}
+        }
+
+        # Recopilar datos de la pestaña Candle
         for pattern_name, widgets in self.candle_widgets.items():
-            config_to_save[pattern_name] = {
+            config_to_save['candle_strategies'][pattern_name] = {
                 'selected': widgets['checkbox_var'].get(),
                 'strategy_mode': widgets['strategy_var'].get()
             }
-        config_to_save['forex_strategies'] = {}
+        
+        # Recopilar datos de la pestaña Forex
         for strategy_name, widgets in self.forex_widgets.items():
             config_to_save['forex_strategies'][strategy_name] = {
                 'selected': widgets['checkbox_var'].get(),
