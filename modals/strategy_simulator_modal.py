@@ -81,17 +81,17 @@ class StrategySimulatorModal(tk.Toplevel):
         # --- Frame para los Slots ---
         slots_frame = ttk.Frame(main_frame)
         slots_frame.pack(fill=tk.X, pady=(10, 5))
-        slots_frame.columnconfigure((0, 1, 2, 3), weight=1) # Centrar contenido
+        slots_frame.columnconfigure((0, 4), weight=1) # Columnas vacías para centrar
 
-        ttk.Label(slots_frame, text="Slots Forex:").grid(row=0, column=0, sticky='e', padx=(0, 5))
+        ttk.Label(slots_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5))
         self.slots_forex_var = tk.IntVar(value=1)
         forex_slots_entry = ttk.Entry(slots_frame, textvariable=self.slots_forex_var, width=5)
-        forex_slots_entry.grid(row=0, column=1, sticky='w')
+        forex_slots_entry.grid(row=0, column=2, sticky='w')
 
-        ttk.Label(slots_frame, text="Slots Candles:").grid(row=0, column=2, sticky='e', padx=(10, 5))
+        ttk.Label(slots_frame, text="Slots Candles:").grid(row=0, column=3, sticky='e', padx=(20, 5))
         self.slots_candles_var = tk.IntVar(value=1)
         candle_slots_entry = ttk.Entry(slots_frame, textvariable=self.slots_candles_var, width=5)
-        candle_slots_entry.grid(row=0, column=3, sticky='w')
+        candle_slots_entry.grid(row=0, column=4, sticky='w')
 
         # --- Frame Inferior para botones de acción (siempre visible) ---
         bottom_frame = ttk.Frame(main_frame)

@@ -105,38 +105,47 @@ class App:
         tools_menu.add_command(label="Limpiar log", command=self._clear_log_action)
         self.analysis_tools_btn.state(["disabled"])
 
-        # Spacer para empujar los controles a la derecha (Columna 1)
-        spacer = ttk.Frame(header)
-        spacer.grid(row=0, column=1, sticky="ew")
+        # --- Botón de Simulación (Columna 1) ---
+        self.simulation_btn = ttk.Menubutton(header, text="Simulación")
+        self.simulation_btn.grid(row=0, column=1, padx=(10, 0)) # 10px de separación a la izquierda
+        simulation_menu = tk.Menu(self.simulation_btn, tearoff=False)
+        self.simulation_btn["menu"] = simulation_menu
+        simulation_menu.add_command(label="Iniciar simulación", command=self._iniciar_simulacion_action)
+        simulation_menu.add_command(label="Abrir operación manual", command=self._abrir_operacion_manual_action)
+        simulation_menu.add_command(label="Modificar estrategias", command=self._modificar_estrategias_action)
+        simulation_menu.add_separator()
+        simulation_menu.add_command(label="Cancelar simulación", command=self._cancelar_simulacion_action)
+        self.simulation_btn.state(["disabled"])
 
-        # El resto de los controles (desde la Columna 2 en adelante)
-        ttk.Label(header, text="Símbolo:").grid(row=0, column=2, padx=(0, 6))
+        # Spacer para empujar los controles a la derecha (Columna 2)
+        spacer = ttk.Frame(header)
+        spacer.grid(row=0, column=2, sticky="ew")
+
+        # El resto de los controles (desde la Columna 3 en adelante)
+        ttk.Label(header, text="Símbolo:").grid(row=0, column=3, padx=(0, 6))
         self.symbol_cb = ttk.Combobox(header, textvariable=self.symbol_var, width=12, state="disabled")
         self.symbol_cb["values"] = ("EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "BTCUSD")
-        self.symbol_cb.grid(row=0, column=3)
+        self.symbol_cb.grid(row=0, column=4)
         self.symbol_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
 
-        ttk.Label(header, text="Timeframe:").grid(row=0, column=4, padx=(12, 6))
+        ttk.Label(header, text="Timeframe:").grid(row=0, column=5, padx=(12, 6))
         self.timeframe_cb = ttk.Combobox(header, textvariable=self.timeframe_var, width=8, state="disabled")
         self.timeframe_cb["values"] = ("M1", "M5", "M15", "M30", "H1", "H4", "D1")
-        self.timeframe_cb.grid(row=0, column=5)
+        self.timeframe_cb.grid(row=0, column=6)
         self.timeframe_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
 
         self.start_btn = ttk.Button(header, text="Iniciar MT5", command=self._start_mt5_chart)
-        self.start_btn.grid(row=0, column=6, padx=(12, 12))
+        self.start_btn.grid(row=0, column=7, padx=(12, 12))
         self.start_btn.state(["disabled"])
 
         self.status_label = ttk.Label(header, textvariable=self.status_var, foreground="black")
-        self.status_label.grid(row=0, column=7, padx=(12, 12))
+        self.status_label.grid(row=0, column=8, padx=(12, 12))
 
         conectar_btn = ttk.Button(header, text="Conectar", command=self._open_login_modal)
-        conectar_btn.grid(row=0, column=8, padx=(0, 8))
-
-        salir_btn = ttk.Button(header, text="Salir", command=self._on_exit)
-        salir_btn.grid(row=0, column=9)
+        conectar_btn.grid(row=0, column=9, padx=(6, 12))
 
         # Configuración de las columnas del header
-        header.columnconfigure(1, weight=1)  # Solo el spacer se expande
+        header.columnconfigure(2, weight=1)  # El spacer (col 2) se expande
 
     def _build_body(self):
         container = ttk.Frame(self.root, padding=(12, 10))
@@ -196,8 +205,10 @@ class App:
             self._log_error(f"No se pudo iniciar el gráfico: {e}")
         try:
             self.analysis_tools_btn.state(["!disabled"])
+            self.simulation_btn.state(["!disabled"])
         except Exception:
             self.analysis_tools_btn.configure(state="normal")
+            self.simulation_btn.configure(state="normal")
 
     def _open_login_modal(self):
         global LoginModal, LoginMT5
@@ -381,6 +392,11 @@ class App:
     def _log_info(self, msg: str):
         if hasattr(self, "logger") and hasattr(self.logger, "log"):
             self.logger.log(msg)
+
+    def _log_custom(self, msg: str, color: str):
+        """Registra un mensaje con un color personalizado."""
+        if hasattr(self, "logger") and hasattr(self.logger, "log"):
+            self.logger.log(msg, color=color)
 
     def _log_success(self, msg: str):
         if hasattr(self, "logger") and hasattr(self.logger, "success"):
@@ -590,6 +606,22 @@ class App:
             self.graphic.clear_drawings()
             self._log_info("Dibujos del gráfico eliminados.")
         self._clear_log_action()
+
+    def _iniciar_simulacion_action(self):
+        """Lanza la simulación."""
+        self._log_info("TODO: Iniciar simulación")
+
+    def _abrir_operacion_manual_action(self):
+        """Abre una operación manual."""
+        self._log_info("TODO: Abriendo operación manual")
+
+    def _modificar_estrategias_action(self):
+        """Modifica las estrategias."""
+        self._log_info("TODO: Modificar estrategias")
+
+    def _cancelar_simulacion_action(self):
+        """Cancela la simulación."""
+        self._log_info("TODO: Cancelar simulación")
 
     def _clear_log_action(self):
         """Limpia el contenido del logger."""
