@@ -15,6 +15,7 @@ try:
     from modals.loggin_modal import LoginModal
     from modals.detect_all_candles_modal import DetectAllCandlesModal
     from modals.detect_all_forex_modal import DetectAllForexModal
+    from modals.detect_candle_modal import DetectCandleModal
     from loggin.loggin import LoginMT5
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
@@ -28,6 +29,7 @@ except Exception as e:
     LoginModal = None
     DetectAllCandlesModal = None
     DetectAllForexModal = None
+    DetectCandleModal = None
     LoginMT5 = None
     BodyGraphic = None
     BodyLogger = None
@@ -93,6 +95,7 @@ class App:
         self.analysis_tools_btn.grid(row=0, column=0, padx=(6, 12))
         tools_menu = tk.Menu(self.analysis_tools_btn, tearoff=False)
         self.analysis_tools_btn["menu"] = tools_menu
+        tools_menu.add_command(label="Aplicar estrategias", command=self._apply_strategies_action)
         tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
         tools_menu.add_command(label="Detectar Estrategias forex", command=self._open_detect_forex_modal)
         tools_menu.add_separator()
@@ -424,6 +427,26 @@ class App:
             self._run_strategy_analysis(modal.result)
         else:
             self._log_info("Análisis de estrategias cancelado.")
+
+    def _apply_strategies_action(self):
+        """Abre el modal para configurar y aplicar estrategias a patrones de velas."""
+        global DetectCandleModal
+        if DetectCandleModal is None:
+            try:
+                from modals.detect_candle_modal import DetectCandleModal as DCM
+                DetectCandleModal = DCM
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el modal de estrategias de velas: {e}")
+                return
+        
+        modal = DetectCandleModal(self.root)
+        self.root.wait_window(modal)
+
+        if hasattr(modal, 'result') and modal.result:
+            self._log_info(f"Configuración de patrones guardada.")
+            # Aquí iría la lógica para aplicar las estrategias configuradas
+        else:
+            self._log_info("Configuración de patrones cancelada.")
 
     def _run_pattern_analysis(self, selected_patterns):
         """Ejecuta el análisis de patrones y muestra los resultados."""

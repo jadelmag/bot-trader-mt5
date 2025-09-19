@@ -1,0 +1,86 @@
+{
+    "is_dark_cloud_cover": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_doji": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_dragonfly_doji": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_engulfing": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_evening_star": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_falling_three_methods": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_gravestone_doji": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_hammer": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_hanging_man": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_harami": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_inverted_hammer": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_long_legged_doji": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_marubozu": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_morning_star": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_piercing_line": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_rising_three_methods": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_shooting_star": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_three_black_crows": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_three_inside_up_down": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_three_outside_up_down": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    },
+    "is_three_white_soldiers": {
+        "selected": true,
+        "strategy_mode": "Custom"
+    }
+}
