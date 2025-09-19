@@ -24,12 +24,13 @@ except Exception:
 
 
 class BodyGraphic(ttk.Frame):
-    def __init__(self, parent, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, *args, **kwargs):
+    def __init__(self, parent, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, logger=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
         self.symbol = symbol
         self.timeframe = timeframe
         self.bars = bars
+        self.logger = logger
 
         self._after_job = None
         self.price_line = None
@@ -268,6 +269,9 @@ class BodyGraphic(ttk.Frame):
             if price is None:
                 self._schedule_live_update()
                 return
+            if self.logger:
+                self.logger.log(f"Precio {self.symbol}: {price:.5f}")
+
             if self.price_line is None:
                 self.price_line = self.ax.axhline(y=price, color='#888888', linestyle='-', linewidth=1.0)
             else:

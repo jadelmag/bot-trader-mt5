@@ -173,6 +173,14 @@ class App:
         container.rowconfigure(0, weight=3)
         container.rowconfigure(1, weight=1)
 
+        # Bottom: Logger (create it first)
+        if BodyLogger is None:
+            self.logger = ttk.Frame(container)
+            ttk.Label(self.logger, text="Logger no disponible").pack(expand=True, fill="both")
+        else:
+            self.logger = BodyLogger(container)
+        self.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+
         # Top: Graphic placeholder (shown until Start MT5 is pressed)
         self.graphic_placeholder = ttk.Frame(container)
         self.graphic_placeholder.grid(row=0, column=0, sticky="nsew")
@@ -190,16 +198,15 @@ class App:
             self.graphic = ttk.Frame(container)
             ttk.Label(self.graphic, text="Gráfico no disponible").pack(expand=True, fill="both")
         else:
-            self.graphic = BodyGraphic(container, symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get(), bars=300)
+            # Pass the logger to the graphic
+            self.graphic = BodyGraphic(
+                container, 
+                symbol=self.symbol_var.get(), 
+                timeframe=self.timeframe_var.get(), 
+                bars=300,
+                logger=self.logger  # Pass logger instance
+            )
         # Do not grid the graphic now; it will be gridded when started
-
-        # Bottom: Logger
-        if BodyLogger is None:
-            self.logger = ttk.Frame(container)
-            ttk.Label(self.logger, text="Logger no disponible").pack(expand=True, fill="both")
-        else:
-            self.logger = BodyLogger(container)
-        self.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
 
     def _start_mt5_chart(self):
         # Actualizar el balance de la cuenta desde MT5
