@@ -153,33 +153,45 @@ class ForexStrategies:
                     return 'long'
         return None
 
-    # --- Esqueletos de Estrategias Conceptuales y de Gestión ---
+    # --- Estrategias Conceptuales --- 
 
     @staticmethod
-    def conceptual_grid_trading(current_price, grid_levels=10, grid_step=20):
-        orders_to_place = []
-        for i in range(1, grid_levels + 1):
-            buy_price = current_price - i * (grid_step / 10000)
-            sell_price = current_price + i * (grid_step / 10000)
-            orders_to_place.append({'type': 'buy_limit', 'price': buy_price})
-            orders_to_place.append({'type': 'sell_limit', 'price': sell_price})
-        print(f"GRID: Se generarían {len(orders_to_place)} órdenes alrededor de {current_price}.")
-        return orders_to_place
+    def strategy_conceptual_grid_trading(df, grid_spacing=0.0050, num_levels=5):
+        """
+        CONCEPTUAL: Coloca órdenes pendientes en una cuadrícula alrededor del precio actual.
+        No devuelve una señal directa, sino una estructura de posibles órdenes.
+        """
+        current_price = df['close'].iloc[-1]
+        grid_orders = []
+        for i in range(1, num_levels + 1):
+            buy_price = current_price - i * grid_spacing
+            sell_price = current_price + i * grid_spacing
+            grid_orders.append({'type': 'buy_limit', 'price': buy_price})
+            grid_orders.append({'type': 'sell_limit', 'price': sell_price})
+        # print(f"GRID: Se generarían {len(grid_orders)} órdenes alrededor de {current_price}.")
+        return {'grid_orders': grid_orders}
 
     @staticmethod
-    def conceptual_news_trading(event_data):
-        if event_data['currency'] == 'USD':
-            if event_data['actual'] > event_data['forecast']:
-                return 'long_usd'
-            else:
-                return 'short_usd'
+    def strategy_conceptual_news_trading(df, news_time, window_minutes=5):
+        """
+        CONCEPTUAL: Identifica la volatilidad alrededor de un evento de noticias.
+        Devuelve 'volatility_expected' si el tiempo actual está cerca del evento.
+        """
+        current_time = df.index[-1]
+        time_diff = abs((current_time - news_time).total_seconds() / 60)
+        if time_diff < window_minutes:
+            return 'volatility_expected'
         return None
 
     @staticmethod
-    def conceptual_hedging(open_positions, symbol_to_hedge):
-        for pos in open_positions:
-            if pos['symbol'] == symbol_to_hedge and pos['type'] == 'buy':
-                return 'place_sell_hedge'
-            if pos['symbol'] == symbol_to_hedge and pos['type'] == 'sell':
-                return 'place_buy_hedge'
+    def strategy_conceptual_hedging(df, primary_signal, correlated_symbol_df):
+        """
+        CONCEPTUAL: Si hay una señal primaria, busca una señal de cobertura en un par correlacionado.
+        Devuelve una estructura con la señal primaria y la de cobertura.
+        """
+        if primary_signal is None:
+            return None
+        correlated_signal = ForexStrategies.strategy_ma_crossover(correlated_symbol_df)
+        if correlated_signal is not None:
+            return {'primary_signal': primary_signal, 'hedge_signal': correlated_signal}
         return None

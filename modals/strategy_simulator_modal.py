@@ -13,6 +13,7 @@ if PROJECT_ROOT not in sys.path:
 
 from candles.candle_list import CandlePatterns
 from modals.candle_config_modal import CandleConfigModal
+from forex.forex_list import ForexStrategies
 
 class StrategySimulatorModal(tk.Toplevel):
     """Modal para seleccionar y configurar estrategias de Forex y Velas."""
@@ -20,13 +21,18 @@ class StrategySimulatorModal(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Simulador de Estrategias")
-        self.geometry("600x600")
+        self.geometry("650x600")
         self.transient(parent)
         self.grab_set()
 
         # --- Candle Patterns ---
         self.candle_patterns = self._get_candle_patterns()
         self.candle_widgets = {}
+        
+        # --- Forex Strategies ---
+        self.forex_strategies = self._get_forex_strategies()
+        self.forex_widgets = {}
+
         self.result = None
 
         # Asegurarse de que el directorio de estrategias existe
@@ -44,6 +50,13 @@ class StrategySimulatorModal(tk.Toplevel):
         # Filtra solo los métodos que comienzan con 'is_'
         pattern_names = [name for name, func in pattern_methods if name.startswith('is_')]
         return sorted(pattern_names)
+
+    def _get_forex_strategies(self):
+        """Obtiene una lista de todas las estrategias de la clase ForexStrategies."""
+        strategy_methods = inspect.getmembers(ForexStrategies, predicate=inspect.isfunction)
+        # Filtra solo los métodos que comienzan con 'strategy_'
+        strategy_names = [name for name, func in strategy_methods if name.startswith('strategy_')]
+        return sorted(strategy_names)
 
     def _build_ui(self):
         """Construye la interfaz de usuario del modal con pestañas."""
@@ -78,9 +91,73 @@ class StrategySimulatorModal(tk.Toplevel):
 
     def _build_forex_tab(self, tab):
         """Construye el contenido de la pestaña de estrategias Forex."""
-        # Placeholder por ahora
-        label = ttk.Label(tab, text="Contenido de la pestaña Forex en construcción...")
-        label.pack(padx=20, pady=20)
+        # --- Frame Superior para botones de selección ---
+        top_frame = ttk.Frame(tab)
+        top_frame.pack(fill=tk.X, pady=(0, 10))
+        top_frame.columnconfigure(0, weight=1) # Empuja los botones a la derecha
+
+        btn_select_all = ttk.Button(top_frame, text="Seleccionar Todos", command=self._select_all_forex)
+        btn_select_all.grid(row=0, column=1, padx=5)
+
+        btn_deselect_all = ttk.Button(top_frame, text="Deseleccionar Todos", command=self._deselect_all_forex)
+        btn_deselect_all.grid(row=0, column=2, padx=5)
+
+        # --- Contenedor para la lista con scroll ---
+        list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
+        list_container.pack(fill="both", expand=True, pady=5)
+
+        canvas = tk.Canvas(list_container, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Llenar la lista de estrategias Forex
+        for i, strategy_name in enumerate(self.forex_strategies):
+            row_frame = ttk.Frame(scrollable_frame, padding=(5, 5))
+            row_frame.pack(fill=tk.X, expand=True)
+
+            var = tk.BooleanVar()
+            
+            # Checkbox
+            chk = ttk.Checkbutton(row_frame, variable=var)
+            chk.pack(side=tk.LEFT, padx=(5, 10))
+
+            # Label con el nombre de la estrategia
+            display_name = strategy_name.replace('strategy_', '').replace('_', ' ').title()
+            lbl = ttk.Label(row_frame, text=display_name, width=25)
+            lbl.pack(side=tk.LEFT, padx=5)
+
+            # --- Entradas para % Ratio y RR Ratio ---
+            # Stop Loss
+            sl_var = tk.DoubleVar(value=20.0)
+            sl_entry = ttk.Entry(row_frame, textvariable=sl_var, width=8)
+            sl_entry.pack(side=tk.RIGHT, padx=5)
+            ttk.Label(row_frame, text="Stop Loss (pips):").pack(side=tk.RIGHT)
+
+            # RR Ratio
+            rr_ratio_var = tk.DoubleVar(value=2.0)
+            rr_entry = ttk.Entry(row_frame, textvariable=rr_ratio_var, width=8)
+            rr_entry.pack(side=tk.RIGHT, padx=5)
+            ttk.Label(row_frame, text="RR Ratio:").pack(side=tk.RIGHT)
+
+            # % Ratio
+            percent_ratio_var = tk.DoubleVar(value=1.0)
+            percent_entry = ttk.Entry(row_frame, textvariable=percent_ratio_var, width=8)
+            percent_entry.pack(side=tk.RIGHT, padx=5)
+            ttk.Label(row_frame, text="% Ratio:").pack(side=tk.RIGHT)
+
+            self.forex_widgets[strategy_name] = {
+                'checkbox_var': var,
+                'percent_ratio_var': percent_ratio_var,
+                'rr_ratio_var': rr_ratio_var,
+                'sl_var': sl_var
+            }
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
     def _build_candle_tab(self, tab):
         """Construye el contenido de la pestaña de patrones de velas."""
@@ -206,7 +283,7 @@ class StrategySimulatorModal(tk.Toplevel):
     def _load_candle_strategy(self, pattern_name, update_ui=False):
         config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
         if os.path.exists(config_path):
-            print(f"Cargando estrategia para: {pattern_name} desde {config_path}")
+            # print(f"Cargando estrategia para: {pattern_name} desde {config_path}")
             # Aquí iría la lógica para leer y procesar el JSON
             
             # Cambiar dropdown a Custom
@@ -226,12 +303,20 @@ class StrategySimulatorModal(tk.Toplevel):
                 'selected': widgets['checkbox_var'].get(),
                 'strategy_mode': widgets['strategy_var'].get()
             }
+        config_to_save['forex_strategies'] = {}
+        for strategy_name, widgets in self.forex_widgets.items():
+            config_to_save['forex_strategies'][strategy_name] = {
+                'selected': widgets['checkbox_var'].get(),
+                'percent_ratio': widgets['percent_ratio_var'].get(),
+                'rr_ratio': widgets['rr_ratio_var'].get(),
+                'stop_loss_pips': widgets['sl_var'].get()
+            }
 
         output_path = os.path.join(self.strategies_dir, 'strategies.json')
         try:
             with open(output_path, 'w') as f:
                 json.dump(config_to_save, f, indent=4)
-            print(f"Configuración guardada correctamente en {output_path}")
+            # print(f"Configuración guardada correctamente en {output_path}")
         except Exception as e:
             print(f"Error al guardar la configuración: {e}")
             # Opcional: mostrar un messagebox.showerror aquí
@@ -247,3 +332,11 @@ class StrategySimulatorModal(tk.Toplevel):
             button.config(state=tk.NORMAL)
         else:
             button.config(state=tk.DISABLED)
+
+    def _select_all_forex(self):
+        for widgets in self.forex_widgets.values():
+            widgets['checkbox_var'].set(True)
+
+    def _deselect_all_forex(self):
+        for widgets in self.forex_widgets.values():
+            widgets['checkbox_var'].set(False)
