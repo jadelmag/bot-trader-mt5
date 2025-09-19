@@ -447,6 +447,11 @@ class App:
 
     def _apply_strategies_action(self):
         """Abre el modal para configurar y aplicar estrategias."""
+        # Primero, verificar si el gráfico tiene datos válidos
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
+            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Por favor, inicie el gráfico con 'Iniciar MT5' antes de configurar una simulación.")
+            return
+
         global StrategySimulatorModal
         if StrategySimulatorModal is None:
             try:
@@ -456,12 +461,13 @@ class App:
                 messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
                 return
         
-        modal = StrategySimulatorModal(self.root)
+        # Pasar el DataFrame de velas al modal
+        modal = StrategySimulatorModal(self.root, candles_df=self.graphic.candles_df)
         self.root.wait_window(modal)
 
         if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Configuración de simulación guardada.")
-            # Aquí iría la lógica para aplicar las estrategias configuradas
+            self._log_info(f"Configuración de simulación guardada y simulación ejecutada.")
+            # La lógica de ejecución ya está dentro del modal y el simulador
         else:
             self._log_info("Simulación de estrategias cancelada.")
 

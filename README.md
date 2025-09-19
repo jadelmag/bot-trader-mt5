@@ -35,7 +35,7 @@ Un sofisticado bot de trading para MetaTrader 5, con una interfaz gráfica de us
 
 ## Requisitos
 
-* Python 3.11 [Download: https://www.python.org/downloads/]
+* Python 3.13 [Download: https://www.python.org/downloads/]
 * Conexión a internet (para descargar datos de Yahoo Finance y FinRL)
 * Git (para clonar el repositorio) [Download: https://git-scm.com/downloads]
 * MetaTrader 5

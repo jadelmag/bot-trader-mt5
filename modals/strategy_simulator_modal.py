@@ -11,20 +11,24 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
-from candles.candle_list import CandlePatterns
 from modals.candle_config_modal import CandleConfigModal
 from forex.forex_list import ForexStrategies
+from backtesting.strategy_simulator import StrategySimulator
+from candles.candle_list import CandlePatterns
 
 class StrategySimulatorModal(tk.Toplevel):
     """Modal para seleccionar y configurar estrategias de Forex y Velas."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, candles_df):
         super().__init__(parent)
         self.title("Simulador de Estrategias")
         self.geometry("650x600")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
+
+        # --- Datos del Gráfico ---
+        self.candles_df = candles_df
 
         # --- Candle Patterns ---
         self.candle_patterns = self._get_candle_patterns()
@@ -110,7 +114,7 @@ class StrategySimulatorModal(tk.Toplevel):
         btn_cancel = ttk.Button(bottom_frame, text="Cancelar", command=self._on_close)
         btn_cancel.grid(row=0, column=1, padx=5)
 
-        btn_apply = ttk.Button(bottom_frame, text="Aplicar", command=self._save_and_close)
+        btn_apply = ttk.Button(bottom_frame, text="Aplicar", command=self._apply_and_run_simulation)
         btn_apply.grid(row=0, column=2, padx=5)
 
     def _build_forex_tab(self, tab):
@@ -298,7 +302,7 @@ class StrategySimulatorModal(tk.Toplevel):
             widgets['checkbox_var'].set(False)
 
     def _load_all_candle_strategies(self):
-        print("Acción: Cargar todas las estrategias de velas")
+        #print("Acción: Cargar todas las estrategias de velas")
         for pattern_name in self.candle_patterns:
             self._load_candle_strategy(pattern_name, update_ui=True)
 
@@ -326,8 +330,8 @@ class StrategySimulatorModal(tk.Toplevel):
         else:
             print(f"No se encontró archivo de configuración para: {pattern_name}")
 
-    def _save_and_close(self):
-        """Recopila la configuración actual y la guarda en strategies/strategies.json."""
+    def _apply_and_run_simulation(self):
+        """Recopila la config, la guarda, inicia la simulación y cierra el modal."""
         config_to_save = {
             'slots': {
                 'forex': self.slots_forex_var.get(),
@@ -360,7 +364,11 @@ class StrategySimulatorModal(tk.Toplevel):
             # print(f"Configuración guardada correctamente en {output_path}")
         except Exception as e:
             print(f"Error al guardar la configuración: {e}")
-            # Opcional: mostrar un messagebox.showerror aquí
+
+        # --- Iniciar la simulación de backtesting ---
+        print("\nIniciando simulación desde el modal...")
+        simulator = StrategySimulator(config_to_save, self.candles_df)
+        simulator.run_simulation()
 
         self.result = config_to_save # Devolvemos la configuración para uso futuro
         self._on_close()
