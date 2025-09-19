@@ -461,8 +461,8 @@ class App:
                 messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
                 return
         
-        # Pasar el DataFrame de velas al modal
-        modal = StrategySimulatorModal(self.root, candles_df=self.graphic.candles_df)
+        # Pasar el DataFrame de velas y el logger al modal
+        modal = StrategySimulatorModal(self.root, candles_df=self.graphic.candles_df, logger=self.logger)
         self.root.wait_window(modal)
 
         if hasattr(modal, 'result') and modal.result:

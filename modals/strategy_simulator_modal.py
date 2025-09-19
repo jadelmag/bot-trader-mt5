@@ -19,7 +19,7 @@ from candles.candle_list import CandlePatterns
 class StrategySimulatorModal(tk.Toplevel):
     """Modal para seleccionar y configurar estrategias de Forex y Velas."""
 
-    def __init__(self, parent, candles_df):
+    def __init__(self, parent, candles_df, logger):
         super().__init__(parent)
         self.title("Simulador de Estrategias")
         self.geometry("650x600")
@@ -27,8 +27,9 @@ class StrategySimulatorModal(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
 
-        # --- Datos del Gráfico ---
+        # --- Datos y Logger ---
         self.candles_df = candles_df
+        self.logger = logger
 
         # --- Candle Patterns ---
         self.candle_patterns = self._get_candle_patterns()
@@ -363,11 +364,11 @@ class StrategySimulatorModal(tk.Toplevel):
                 json.dump(config_to_save, f, indent=4)
             # print(f"Configuración guardada correctamente en {output_path}")
         except Exception as e:
-            print(f"Error al guardar la configuración: {e}")
+            self.logger.error(f"Error al guardar la configuración: {e}")
 
         # --- Iniciar la simulación de backtesting ---
-        print("\nIniciando simulación desde el modal...")
-        simulator = StrategySimulator(config_to_save, self.candles_df)
+        self.logger.log("\nIniciando simulación desde el modal...")
+        simulator = StrategySimulator(config_to_save, self.candles_df, self.logger)
         simulator.run_simulation()
 
         self.result = config_to_save # Devolvemos la configuración para uso futuro

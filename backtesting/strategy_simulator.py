@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 import json
+import logging
 
 # --- Configuración de sys.path ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,12 +18,13 @@ class StrategySimulator:
     """ 
     Clase encargada de ejecutar la simulación de estrategias de trading sobre datos históricos.
     """
-    def __init__(self, simulation_config, candles_df):
+    def __init__(self, simulation_config, candles_df, logger):
         """
         Inicializa el simulador con la configuración proporcionada.
         """
         self.config = simulation_config
         self.candles_df = candles_df.copy() # Usar una copia para no modificar el original
+        self.logger = logger
         self.open_trades = []
         self.closed_trades = []
         self.balance = 10000 # Saldo inicial de ejemplo
@@ -32,19 +34,19 @@ class StrategySimulator:
         self.candle_strategy_functions = {name.replace('is_', ''): func for name, func in vars(CandlePatterns).items() if name.startswith('is_')}
         self.forex_strategy_functions = {name: func for name, func in vars(ForexStrategies).items() if name.startswith('strategy_')}
 
-        print("StrategySimulator inicializado.")
+        self.logger.log("StrategySimulator inicializado.")
         if self.candles_df is not None and not self.candles_df.empty:
-            print(f"Datos de velas recibidos: {len(self.candles_df)} velas.")
+            self.logger.log(f"Datos de velas recibidos: {len(self.candles_df)} velas.")
             self.candles_df.columns = [col.lower() for col in self.candles_df.columns]
         else:
-            print("Advertencia: No se recibieron datos de velas.")
+            self.logger.error("Advertencia: No se recibieron datos de velas.")
 
     def _prepare_data(self):
         """Calcula todos los indicadores técnicos necesarios para las estrategias manualmente."""
         if self.candles_df is None or self.candles_df.empty:
             return
         
-        print("Preparando datos y calculando indicadores técnicos manualmente...")
+        self.logger.log("Preparando datos y calculando indicadores técnicos manualmente...")
         df = self.candles_df
 
         # --- EMA ---
@@ -105,15 +107,15 @@ class StrategySimulator:
         # Eliminar filas con NaN generadas por los indicadores
         self.candles_df.dropna(inplace=True)
         self.candles_df.reset_index(inplace=True, drop=True) # drop=True para no guardar el viejo índice
-        print("Indicadores calculados. Velas disponibles para simulación:", len(self.candles_df))
+        self.logger.log(f"Indicadores calculados. Velas disponibles para simulación: {len(self.candles_df)}")
 
     def run_simulation(self):
         """
         Ejecuta la simulación de backtesting iterando sobre cada vela.
         """
-        print("\n--- Iniciando Simulación de Estrategia ---")
+        self.logger.log("\n--- Iniciando Simulación de Estrategia ---")
         if self.candles_df is None or self.candles_df.empty:
-            print("Error: No se puede ejecutar la simulación sin datos de velas.")
+            self.logger.error("Error: No se puede ejecutar la simulación sin datos de velas.")
             return
 
         self._prepare_data()
@@ -149,7 +151,7 @@ class StrategySimulator:
                     if clean_name in self.candle_strategy_functions:
                         signal = self.candle_strategy_functions[clean_name](candles_as_records, i)
                         if signal in ['long', 'short']:
-                            print(f"Señal de VELA '{clean_name}' ({signal}) en la vela {i} al precio {current_price:.5f}")
+                            self.logger.log(f"Señal de VELA '{clean_name}' ({signal}) en la vela {i} al precio {current_price:.5f}")
                             self._open_trade(i, current_price, signal, 'candle', clean_name, config)
                             break # Solo una operación por vela
 
@@ -164,14 +166,14 @@ class StrategySimulator:
                     if strategy_name in self.forex_strategy_functions:
                         signal = self.forex_strategy_functions[strategy_name](df_so_far)
                         if signal in ['long', 'short']:
-                            print(f"Señal de FOREX '{strategy_name}' ({signal}) en la vela {i} al precio {current_price:.5f}")
+                            self.logger.log(f"Señal de FOREX '{strategy_name}' ({signal}) en la vela {i} al precio {current_price:.5f}")
                             self._open_trade(i, current_price, signal, 'forex', strategy_name, config)
                             break # Solo una operación por vela
 
             # --- 3. Gestionar Operaciones Abiertas ---
             self._manage_open_trades(i, current_candle)
 
-        print("--- Simulación Finalizada ---")
+        self.logger.success("--- Simulación Finalizada ---")
         self._print_summary()
 
     def _get_selected_strategies(self, strategy_type):
@@ -215,7 +217,7 @@ class StrategySimulator:
             'take_profit': take_profit
         }
         self.open_trades.append(trade)
-        print(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f}, TP: {take_profit:.5f}")
+        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f}, TP: {take_profit:.5f}")
 
     def _manage_open_trades(self, current_index, current_candle):
         """Gestiona las operaciones abiertas, comprobando si se deben cerrar."""
@@ -256,7 +258,11 @@ class StrategySimulator:
                 self.balance += pnl_pips # Asumiendo 1 pip = 1 unidad de la moneda de la cuenta
 
                 trades_to_close.append(trade)
-                print(f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {close_reason}. P/L: {pnl_pips:.2f} pips. Balance: {self.balance:.2f}")
+                log_msg = f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {close_reason}. P/L: {pnl_pips:.2f} pips. Balance: {self.balance:.2f}"
+                if pnl_pips > 0:
+                    self.logger.success(log_msg)
+                else:
+                    self.logger.error(log_msg)
 
         # Mover las operaciones cerradas de la lista de abiertas a la de cerradas
         if trades_to_close:
@@ -265,10 +271,10 @@ class StrategySimulator:
 
     def _print_summary(self):
         """Imprime un resumen de los resultados de la simulación."""
-        print("\n--- Resumen de la Simulación ---")
+        self.logger.log("\n" + "="*25 + " Resumen de la Simulación " + "="*25)
         total_trades = len(self.closed_trades)
         if total_trades == 0:
-            print("No se realizaron operaciones.")
+            self.logger.log("No se realizaron operaciones.")
             return
 
         wins = [t for t in self.closed_trades if t['pnl_pips'] > 0]
@@ -280,15 +286,16 @@ class StrategySimulator:
         avg_loss = sum(t['pnl_pips'] for t in losses) / len(losses) if losses else 0
         risk_reward_ratio = abs(avg_win / avg_loss) if avg_loss != 0 else float('inf')
 
-        print(f"Operaciones Totales: {total_trades}")
-        print(f"Ganadoras: {len(wins)}")
-        print(f"Perdedoras: {len(losses)}")
-        print(f"Tasa de Acierto: {win_rate:.2f}%")
-        print(f"P/L Total (pips): {total_pnl:.2f}")
-        print(f"Balance Final: {self.balance:.2f}")
-        print(f"Ganancia Promedio (pips): {avg_win:.2f}")
-        print(f"Pérdida Promedio (pips): {avg_loss:.2f}")
-        print(f"Ratio Riesgo/Beneficio Real: {risk_reward_ratio:.2f}")
+        self.logger.log(f"Operaciones Totales: {total_trades}")
+        self.logger.log(f"Ganadoras: {len(wins)}")
+        self.logger.log(f"Perdedoras: {len(losses)}")
+        self.logger.log(f"Tasa de Acierto: {win_rate:.2f}%")
+        self.logger.log(f"P/L Total (pips): {total_pnl:.2f}")
+        self.logger.log(f"Balance Final: {self.balance:.2f}")
+        self.logger.log(f"Ganancia Promedio (pips): {avg_win:.2f}")
+        self.logger.log(f"Pérdida Promedio (pips): {avg_loss:.2f}")
+        self.logger.log(f"Ratio Riesgo/Beneficio Real: {risk_reward_ratio:.2f}")
+        self.logger.log("="*75 + "\n")
 
 # Ejemplo de uso (para pruebas)
 if __name__ == '__main__':
@@ -322,5 +329,13 @@ if __name__ == '__main__':
         }
     }
 
-    simulator = StrategySimulator(mock_config, mock_df)
+    # Crear un logger básico para las pruebas
+    import logging
+    logger = logging.getLogger('TestSimulator')
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(message)s'))
+    logger.addHandler(handler)
+
+    simulator = StrategySimulator(mock_config, mock_df, logger)
     simulator.run_simulation()

@@ -2,6 +2,7 @@
 MetaTrader5==5.0.5260
 
 # Dependencias principales
+pandas==2.2.3
 numpy==1.26.4
 matplotlib==3.8.0
 mplfinance==0.12.10b0
