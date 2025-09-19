@@ -73,6 +73,41 @@ class CandleDetector:
         return stats
 
     @staticmethod
+    def format_analysis_summary(stats):
+        """
+        Formatea las estadísticas de análisis de patrones en una tabla de texto.
+
+        :param stats: El diccionario de estadísticas generado por analyze_patterns.
+        :return: Una tupla con (lista_de_lineas_formateadas, total_profit, total_loss).
+        """
+        lines = []
+        header = f"{'PATRÓN':<25} | {'DIRECCIÓN':<12} | {'APARICIONES':>12} | {'GANANCIA LONG':>15} | {'GANANCIA SHORT':>15} | {'GANANCIA TOTAL':>16} | {'PÉRDIDA TOTAL':>15}"
+        lines.append("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE PATRONES " + "="*15)
+        lines.append(header)
+        lines.append("-"*len(header))
+
+        total_profit_all = 0
+        total_loss_all = 0
+
+        for pattern, data in stats.items():
+            pattern_name = pattern.replace('_', ' ').title()
+            direction = data['direction'].upper() if data['direction'] != 'N/A' else 'N/A'
+            appearances = data['appearances']
+            money_long = f"{data['money_generated_long']:.2f} $"
+            money_short = f"{data['money_generated_short']:.2f} $"
+            total_profit = f"{data['total_profit']:.2f} $"
+            total_loss = f"{data['total_loss']:.2f} $"
+
+            total_profit_all += data['total_profit']
+            total_loss_all += data['total_loss']
+
+            line = f"{pattern_name:<25} | {direction:<12} | {appearances:>12} | {money_long:>15} | {money_short:>15} | {total_profit:>16} | {total_loss:>15}"
+            lines.append(line)
+
+        lines.append("-"*len(header))
+        return lines, total_profit_all, total_loss_all
+
+    @staticmethod
     def _get_default_stats():
         """Devuelve la estructura de estadísticas por defecto para un patrón."""
         return {

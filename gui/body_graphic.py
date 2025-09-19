@@ -185,6 +185,47 @@ class BodyGraphic(ttk.Frame):
         except Exception as e:
             self._draw_placeholder(f"Error cargando datos: {e}")
 
+    def draw_trades(self, trades):
+        """Dibuja marcadores en el gráfico para visualizar las operaciones."""
+        if not trades or self.candles_df is None:
+            return
+
+        for trade in trades:
+            entry_idx = trade['entry_index']
+            exit_idx = trade['exit_index']
+
+            # Asegurarse de que los índices están dentro de los límites del dataframe
+            if entry_idx >= len(self.candles_df) or exit_idx >= len(self.candles_df):
+                continue
+
+            entry_price = trade['entry_price']
+            exit_price = trade['exit_price']
+            trade_type = trade['type']
+
+            # Marcador de entrada
+            if trade_type == 'long':
+                self.ax.plot(entry_idx, entry_price, '^', color='lime', markersize=8, label='Compra')
+            elif trade_type == 'short':
+                self.ax.plot(entry_idx, entry_price, 'v', color='red', markersize=8, label='Venta')
+
+            # Marcador de salida
+            self.ax.plot(exit_idx, exit_price, 'o', color='cyan', markersize=5, label='Cierre')
+
+            # Línea conectando entrada y salida
+            self.ax.plot([entry_idx, exit_idx], [entry_price, exit_price], linestyle='--', color='yellow', linewidth=0.7)
+
+        # Para evitar etiquetas duplicadas en la leyenda
+        handles, labels = self.ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        if by_label:
+            self.ax.legend(by_label.values(), by_label.keys())
+
+        self.canvas.draw()
+
+    def clear_drawings(self):
+        """Elimina todos los dibujos adicionales del gráfico volviéndolo a cargar."""
+        self.refresh()
+
     def _draw_placeholder(self, text: str):
         self.ax.clear()
         self.fig.patch.set_facecolor('black')

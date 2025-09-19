@@ -81,3 +81,35 @@ class StrategyAnalyzer:
                         stats[name]['money_lost'] += abs(money_change)
         
         return stats
+
+    @staticmethod
+    def format_strategy_summary(stats):
+        """
+        Formatea las estadísticas de análisis de estrategias en una tabla de texto.
+
+        :param stats: El diccionario de estadísticas generado por analyze_strategies.
+        :return: Una tupla con (lista_de_lineas_formateadas, total_profit, total_loss).
+        """
+        lines = []
+        header = f"{'ESTRATEGIA':<35} | {'APLICACIONES':>12} | {'BENEFICIOS':>15} | {'PÉRDIDAS':>15}"
+        lines.append("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE ESTRATEGIAS " + "="*15)
+        lines.append(header)
+        lines.append("-"*len(header))
+
+        total_profit_all = 0
+        total_loss_all = 0
+
+        for strategy, data in stats.items():
+            strategy_name = strategy.replace('strategy_', '').replace('_', ' ').title()
+            applications = data['applications']
+            benefits = f"{data['money_generated']:.2f} $"
+            losses = f"{data['money_lost']:.2f} $"
+
+            total_profit_all += data['money_generated']
+            total_loss_all += data['money_lost']
+
+            line = f"{strategy_name:<35} | {applications:>12} | {benefits:>15} | {losses:>15}"
+            lines.append(line)
+
+        lines.append("-"*len(header))
+        return lines, total_profit_all, total_loss_all

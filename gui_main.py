@@ -20,6 +20,7 @@ try:
     from gui.body_logger import BodyLogger
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
+    from backtesting.backtesting import PerfectBacktester
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -32,6 +33,7 @@ except Exception as e:
     BodyLogger = None
     CandleDetector = None
     StrategyAnalyzer = None
+    PerfectBacktester = None
 
 # Optional: try to import MetaTrader5 to fetch symbol list after login
 try:
@@ -91,11 +93,12 @@ class App:
         self.analysis_tools_btn.grid(row=0, column=0, padx=(6, 12))
         tools_menu = tk.Menu(self.analysis_tools_btn, tearoff=False)
         self.analysis_tools_btn["menu"] = tools_menu
-        tools_menu.add_command(label="Analizar gráfica", command=self._log_analysis_action)
         tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
         tools_menu.add_command(label="Detectar Estrategias forex", command=self._open_detect_forex_modal)
         tools_menu.add_separator()
-        tools_menu.add_command(label="Iniciar Backtesting", command=self._log_backtesting_action)
+        tools_menu.add_command(label="Iniciar Backtesting", command=self._run_perfect_backtesting)
+        tools_menu.add_command(label="Finalizar backtesting", command=self._finalize_backtesting_action)
+        tools_menu.add_command(label="Limpiar log", command=self._clear_log_action)
         self.analysis_tools_btn.state(["disabled"])
 
         # Spacer para empujar los controles a la derecha (Columna 1)
@@ -383,9 +386,6 @@ class App:
         if hasattr(self, "logger") and hasattr(self.logger, "error"):
             self.logger.error(msg)
 
-    def _log_analysis_action(self):
-        self._log_info("Acción de análisis")
-
     def _open_detect_candle_modal(self):
         global DetectAllCandlesModal
         if DetectAllCandlesModal is None:
@@ -443,7 +443,9 @@ class App:
             detector = CandleDetector(candles_df_copy)
             stats = detector.analyze_patterns(selected_patterns)
 
-            self._display_analysis_summary(stats)
+            # Formatear los resultados usando el método de la clase
+            summary_lines, total_profit, total_loss = CandleDetector.format_analysis_summary(stats)
+            self._display_analysis_summary(summary_lines, total_profit, total_loss)
 
         except Exception as e:
             self._log_error(f"Ocurrió un error durante el análisis de patrones: {e}")
@@ -474,36 +476,20 @@ class App:
         except Exception as e:
             self._log_error(f"Ocurrió un error durante el análisis de estrategias: {e}")
 
-    def _display_analysis_summary(self, stats):
-        """Formatea y muestra el resumen del análisis en el logger."""
-        self._log_success("\n" + "="*15 + " RESUMEN DE ANÁLISIS DE PATRONES " + "="*15)
+    def _display_analysis_summary(self, lines, total_profit, total_loss):
+        """Muestra el resumen del análisis de patrones en el logger."""
+        for line in lines:
+            # El primer título y los totales tienen colores, el resto es info normal
+            if "RESUMEN" in line or "="*15 in line:
+                self._log_success(line)
+            else:
+                self._log_info(line)
         
-        header = f"{'PATRÓN':<25} | {'DIRECCIÓN':<12} | {'APARICIONES':>12} | {'GANANCIA LONG':>15} | {'GANANCIA SHORT':>15} | {'GANANCIA TOTAL':>16} | {'PÉRDIDA TOTAL':>15}"
-        self._log_info(header)
-        self._log_info("-"*len(header))
-
-        total_profit_all_patterns = 0
-        total_loss_all_patterns = 0
-
-        for pattern, data in stats.items():
-            pattern_name = pattern.replace('_', ' ').title()
-            direction = data['direction'].upper() if data['direction'] != 'N/A' else 'N/A'
-            appearances = data['appearances']
-            money_long = f"{data['money_generated_long']:.2f} $"
-            money_short = f"{data['money_generated_short']:.2f} $"
-            total_profit = f"{data['total_profit']:.2f} $"
-            total_loss = f"{data['total_loss']:.2f} $"
-
-            total_profit_all_patterns += data['total_profit']
-            total_loss_all_patterns += data['total_loss']
-
-            line = f"{pattern_name:<25} | {direction:<12} | {appearances:>12} | {money_long:>15} | {money_short:>15} | {total_profit:>16} | {total_loss:>15}"
-            self._log_info(line)
-
-        self._log_info("-"*len(header))
-        self._log_success(f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit_all_patterns:.2f} $")
-        self._log_error(f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss_all_patterns:.2f} $")
-        self._log_success("="*52 + "\n")
+        self.logger.log_summary(
+            f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit:.2f} $",
+            f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss:.2f} $"
+        )
+        self._log_success("="*75 + "\n")
 
     def _display_strategy_summary(self, stats):
         """Formatea y muestra el resumen del análisis de estrategias en el logger."""
@@ -535,14 +521,56 @@ class App:
         )
         self._log_success("="*75 + "\n")
 
-    def _log_candle_pattern_action(self):
-        self._log_info("Acción de patrón de velas")
+    def _run_perfect_backtesting(self):
+        """Ejecuta un backtesting 'perfecto' y muestra los resultados."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
+            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
+            return
 
-    def _log_forex_strategy_action(self):
-        self._log_info("Acción de estrategia forex")
+        if PerfectBacktester is None:
+            self._log_error("El módulo de backtesting no está disponible.")
+            return
 
-    def _log_backtesting_action(self):
-        self._log_info("Acción de backtesting")
+        try:
+            self._log_info("Iniciando backtesting perfecto... Esto puede tardar un momento.")
+            # Crear una copia para asegurar la consistencia de los nombres de columna
+            candles_df_copy = self.graphic.candles_df.copy()
+            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
+
+            # Aquí se podrían añadir indicadores necesarios para las estrategias
+
+            backtester = PerfectBacktester(candles_df_copy)
+            stats, profitable_trades = backtester.run()
+            
+            summary_lines, total_profit = PerfectBacktester.format_summary(stats)
+
+            # Dibujar las operaciones en el gráfico
+            if hasattr(self, 'graphic') and hasattr(self.graphic, 'draw_trades'):
+                self.graphic.draw_trades(profitable_trades)
+
+            for line in summary_lines:
+                if "RESUMEN" in line or "="*25 in line:
+                    self._log_success(line)
+                else:
+                    self._log_info(line)
+            
+            self._log_success(f"BENEFICIO TOTAL PERFECTO: {total_profit:.2f} $")
+            self._log_success("="*90 + "\n")
+
+        except Exception as e:
+            self._log_error(f"Ocurrió un error durante el backtesting: {e}")
+
+    def _finalize_backtesting_action(self):
+        """Limpia los dibujos del gráfico y el contenido del logger."""
+        if hasattr(self, 'graphic') and hasattr(self.graphic, 'clear_drawings'):
+            self.graphic.clear_drawings()
+            self._log_info("Dibujos del gráfico eliminados.")
+        self._clear_log_action()
+
+    def _clear_log_action(self):
+        """Limpia el contenido del logger."""
+        if hasattr(self, 'logger') and hasattr(self.logger, 'clear'):
+            self.logger.clear()
 
     def _on_exit(self):
         try:

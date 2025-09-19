@@ -62,3 +62,9 @@ class BodyLogger(ttk.Frame):
         """Muestra un resumen con un mensaje de éxito y uno de error."""
         self.success(success_msg)
         self.error(error_msg)
+
+    def clear(self):
+        """Borra todo el contenido del logger."""
+        self.text.configure(state="normal")
+        self.text.delete('1.0', tk.END)
+        self.text.configure(state="disabled")
