@@ -34,6 +34,11 @@ class StrategySimulatorModal(tk.Toplevel):
         self.forex_strategies = self._get_forex_strategies()
         self.forex_widgets = {}
 
+        # --- UI Components ---
+        self.notebook = None
+        self.forex_canvas = None
+        self.candle_canvas = None
+
         self.result = None
 
         # Asegurarse de que el directorio de estrategias existe
@@ -65,18 +70,21 @@ class StrategySimulatorModal(tk.Toplevel):
         main_frame.pack(expand=True, fill=tk.BOTH)
 
         # --- Notebook para las pestañas ---
-        notebook = ttk.Notebook(main_frame)
-        notebook.pack(expand=True, fill=tk.BOTH, pady=(0, 10))
+        self.notebook = ttk.Notebook(main_frame)
+        self.notebook.pack(expand=True, fill=tk.BOTH, pady=(0, 10))
 
-        forex_tab = ttk.Frame(notebook, padding=10)
-        candle_tab = ttk.Frame(notebook, padding=10)
+        forex_tab = ttk.Frame(self.notebook, padding=10)
+        candle_tab = ttk.Frame(self.notebook, padding=10)
 
-        notebook.add(forex_tab, text="Forex")
-        notebook.add(candle_tab, text="Candle")
+        self.notebook.add(forex_tab, text="Forex")
+        self.notebook.add(candle_tab, text="Candle")
 
         # Construir el contenido de cada pestaña
         self._build_forex_tab(forex_tab)
         self._build_candle_tab(candle_tab)
+
+        # Vincular el evento de la rueda del ratón después de crear los canvas
+        self.bind_all("<MouseWheel>", self._on_mousewheel)
 
         # --- Frame para los Slots ---
         slots_frame = ttk.Frame(main_frame)
@@ -122,13 +130,13 @@ class StrategySimulatorModal(tk.Toplevel):
         list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
         list_container.pack(fill="both", expand=True, pady=5)
 
-        canvas = tk.Canvas(list_container, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
+        self.forex_canvas = tk.Canvas(list_container, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.forex_canvas.yview)
+        scrollable_frame = ttk.Frame(self.forex_canvas)
 
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollable_frame.bind("<Configure>", lambda e: self.forex_canvas.configure(scrollregion=self.forex_canvas.bbox("all")))
+        self.forex_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        self.forex_canvas.configure(yscrollcommand=scrollbar.set)
 
         # Llenar la lista de estrategias Forex
         for i, strategy_name in enumerate(self.forex_strategies):
@@ -172,7 +180,7 @@ class StrategySimulatorModal(tk.Toplevel):
                 'sl_var': sl_var
             }
 
-        canvas.pack(side="left", fill="both", expand=True)
+        self.forex_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
     def _build_candle_tab(self, tab):
@@ -195,13 +203,13 @@ class StrategySimulatorModal(tk.Toplevel):
         list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
         list_container.pack(fill="both", expand=True, pady=5)
 
-        canvas = tk.Canvas(list_container, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
+        self.candle_canvas = tk.Canvas(list_container, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.candle_canvas.yview)
+        scrollable_frame = ttk.Frame(self.candle_canvas)
 
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollable_frame.bind("<Configure>", lambda e: self.candle_canvas.configure(scrollregion=self.candle_canvas.bbox("all")))
+        self.candle_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        self.candle_canvas.configure(yscrollcommand=scrollbar.set)
 
         # Llenar la lista de patrones
         for i, pattern_name in enumerate(self.candle_patterns):
@@ -242,11 +250,8 @@ class StrategySimulatorModal(tk.Toplevel):
             # Comprobar estado inicial del botón Cargar
             self._update_load_button_state(pattern_name)
 
-        canvas.pack(side="left", fill="both", expand=True)
+        self.candle_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-
-        # Vincular scroll del ratón de forma global para este modal
-        self.bind_all("<MouseWheel>", lambda event: self._on_mousewheel(event, canvas))
 
     def _center_window(self):
         """Centra el modal en la ventana principal."""
@@ -256,11 +261,21 @@ class StrategySimulatorModal(tk.Toplevel):
         y = parent.winfo_y() + (parent.winfo_height() // 2) - (self.winfo_height() // 2)
         self.geometry(f"+{x}+{y}")
 
-    def _on_mousewheel(self, event, canvas):
-        """Permite hacer scroll en la lista con la rueda del ratón."""
-        # Solo hacer scroll si el canvas todavía existe
-        if canvas.winfo_exists():
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    def _on_mousewheel(self, event):
+        """Maneja el scroll del ratón para la pestaña activa en el notebook."""
+        if not self.notebook:
+            return
+
+        selected_tab_text = self.notebook.tab(self.notebook.select(), "text")
+
+        canvas_to_scroll = None
+        if selected_tab_text == "Forex" and self.forex_canvas and self.forex_canvas.winfo_exists():
+            canvas_to_scroll = self.forex_canvas
+        elif selected_tab_text == "Candle" and self.candle_canvas and self.candle_canvas.winfo_exists():
+            canvas_to_scroll = self.candle_canvas
+
+        if canvas_to_scroll:
+            canvas_to_scroll.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _on_close(self):
         """Cierra el modal y, muy importante, desvincula el evento de scroll."""
