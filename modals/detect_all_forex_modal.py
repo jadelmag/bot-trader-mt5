@@ -17,6 +17,7 @@ class DetectAllForexModal(tk.Toplevel):
         super().__init__(parent)
         self.title("Detectar Estrategias Forex")
         self.geometry("450x400")
+        self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
 

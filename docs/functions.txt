@@ -1,0 +1,54 @@
+
+    def _live_update_once(self):
+        if mt5 is None:
+            return
+        try:
+            tick = mt5.symbol_info_tick(self.symbol)
+            if tick is None:
+                self._schedule_live_update()
+                return
+
+            # --- Lógica de detección de nueva vela ---
+            if self.candles_df is not None and not self.candles_df.empty:
+                last_candle_time = self.candles_df.index[-1]
+                timeframe_delta = self._get_timeframe_delta()
+                current_tick_time = pd.to_datetime(tick.time, unit='s')
+
+                if timeframe_delta and current_tick_time >= (last_candle_time + timeframe_delta):
+                    if self.logger:
+                        self.logger.success(f"Nueva vela detectada para {self.timeframe}. Refrescando gráfico...")
+                    self.refresh() # Llama a refresh y termina este ciclo de actualización
+                    return
+            # --- Fin de la lógica ---
+
+            price = getattr(tick, 'last', None)
+            if price is None or price == 0:
+                price = getattr(tick, 'bid', None)
+            if price is None:
+                self._schedule_live_update()
+                return
+            if self.logger and self.debug_mode_var and self.debug_mode_var.get():
+                self.logger.log(f"Precio {self.symbol}: {price:.5f}")
+
+            # --- Feed the simulation instance ---
+            if self.price_line is None:
+                self.price_line = self.ax.axhline(y=price, color='#888888', linestyle='-', linewidth=1.0)
+            else:
+                self.price_line.set_ydata([price, price])
+            if self.price_text is None:
+                self.price_text = self.ax.text(
+                    1.0, price,
+                    f"{price:.5f}",
+                    color='#cccccc', fontsize=9,
+                    ha='left', va='center',
+                    transform=self.ax.get_yaxis_transform(),
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor='#222222', edgecolor='#666666', linewidth=0.5)
+                )
+            else:
+                self.price_text.set_position((1.0, price))
+                self.price_text.set_text(f"{price:.5f}")
+            self.canvas.draw_idle()
+        except Exception:
+            pass
+        finally:
+            self._schedule_live_update()
