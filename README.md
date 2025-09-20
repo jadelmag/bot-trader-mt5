@@ -6,30 +6,39 @@ Un sofisticado bot de trading para MetaTrader 5, con una interfaz gráfica de us
 
 ## 🚀 Características Principales
 
--   **Interfaz Gráfica de Usuario (GUI)**:
-    -   Conexión/desconexión a cuentas de MT5 a través de un modal de inicio de sesión seguro.
-    -   Visualización de gráficos de velas en tiempo real.
-    -   Selectores para símbolos financieros (ej. EURUSD) y marcos de tiempo (M1 a D1).
-    -   Herramientas de análisis interactivas accesibles a través de un menú dedicado.
-    -   Panel de registro integrado para mostrar el estado de la conexión, las señales y los errores.
+### Interfaz Gráfica Intuitiva (GUI)
+-   **Visualización Profesional**: Gráficos de velas en tiempo real con `mplfinance`, que se actualizan dinámicamente.
+-   **Panel de Control Centralizado**: Selectores para cambiar fácilmente entre símbolos (`EURUSD`, `XAUUSD`, etc.) y marcos de tiempo (`M1` a `D1`).
+-   **Menús de Acceso Rápido**: Accede a todas las herramientas de análisis, backtesting, simulación y configuración desde menús desplegables.
+-   **Logger Integrado**: Un panel de registro detallado que muestra el estado de la conexión, señales de trading, operaciones ejecutadas, errores y resúmenes de análisis.
+-   **Dashboard de Cuenta**: Visualiza en tiempo real el balance, equity, margen, beneficios y pérdidas de tu cuenta de trading.
 
--   **Biblioteca Completa de Estrategias**:
-    -   Incluye **11 estrategias de trading implementadas** que cubren seguimiento de tendencias, reversión a la media, momentum y acción del precio.
-    -   Estrategias implementadas: Cruce de Medias Móviles, Momentum RSI/MACD, Bandas de Bollinger (Reversión y Ruptura), Ichimoku, Reversión de Fibonacci y más.
+### Motor de Trading y Simulación en Tiempo Real
+-   **Ejecución de Estrategias en Vivo**: El bot analiza el mercado en cada nueva vela y puede ejecutar operaciones automáticamente.
+-   **Lógica de Doble Señal**: Combina señales de indicadores de tendencia (como cruces de medias móviles) con señales de patrones de velas para confirmar entradas al mercado.
+-   **Gestión de Riesgo Dinámica**: Calcula automáticamente el volumen de la operación (`lotaje`) basándose en un porcentaje de riesgo sobre el equity y un stop-loss en pips definidos.
+-   **Manejo de Operaciones**: Abre y cierra operaciones directamente en MetaTrader 5, incluyendo la configuración de Stop Loss y Take Profit.
+-   **Protección de Capital**: Incluye un límite de equity configurable para detener la apertura de nuevas operaciones si el capital cae por debajo de un umbral.
 
--   **Herramientas de Análisis Avanzadas**:
-    -   **Detección de Patrones de Velas**: Identifica automáticamente más de 10 patrones comunes (Martillo, Envolvente, Doji, etc.) en la última vela.
-    -   **Detección de Señales de Estrategia**: Escanea todas las estrategias disponibles para encontrar señales activas de `compra` o `venta` en los datos del gráfico actual.
+### Potente Módulo de Backtesting
+-   **Backtesting "Perfecto"**: Evalúa la rentabilidad histórica de todas las estrategias y patrones de velas, asumiendo conocimiento futuro para identificar el potencial máximo de cada señal.
+-   **Informes Detallados**: Genera resúmenes claros que muestran el número de operaciones rentables y el beneficio total para cada estrategia, ayudándote a decidir cuáles son las más efectivas.
+-   **Auditoría de Trades**: Registra cada operación de backtesting en un fichero de auditoría (`JSONL`), permitiendo un análisis post-mortem exhaustivo.
 
--   **Gestión Segura de Credenciales**:
-    -   Utiliza un archivo `.env` para almacenar las credenciales de la cuenta de MT5 de forma segura, manteniéndolas fuera del código fuente.
-    -   El modal de inicio de sesión se rellena previamente con las credenciales del `.env` para mayor comodidad y flexibilidad.
+### Análisis Técnico Avanzado
+-   **Detección de Patrones de Velas**: Identifica más de 10 patrones de velas (Martillo, Envolvente, Doji, etc.) y analiza su rendimiento histórico.
+-   **Análisis de Estrategias Forex**: Evalúa el rendimiento de múltiples estrategias de trading basadas en indicadores como Medias Móviles, RSI, MACD y Bandas de Bollinger.
+-   **Configuración de Estrategias**: Permite seleccionar y configurar qué estrategias de velas y forex se utilizarán en la simulación en tiempo real.
 
--   **Base de Código Modular y Extensible**:
-    -   `gui_main.py`: Gestiona la ventana principal de la aplicación y las interacciones del usuario.
-    -   `forex/forex_list.py`: Contiene la biblioteca de todas las estrategias de trading.
-    -   `candles/candle_list.py`: Alberga la lógica para la detección de patrones de velas.
-    -   `loggin.py`: Maneja la lógica de conexión con el terminal de MetaTrader 5.
+### Configuración y Personalización
+-   **Gestión Centralizada**: Un modal de configuración permite ajustar parámetros clave de la aplicación.
+-   **Notificaciones por Email**: Configura el envío de resúmenes periódicos del estado de la cuenta a tu correo electrónico, con control sobre el intervalo de envío.
+-   **Parámetros de Riesgo**: Define el capital mínimo para operar y el porcentaje de riesgo por operación.
+-   **Persistencia de Preferencias**: La aplicación guarda tus últimas selecciones de símbolo y timeframe para mayor comodidad.
+
+### Gestión Segura y Conexión
+-   **Conexión Segura a MT5**: Utiliza un modal de inicio de sesión para conectar de forma segura a tu cuenta de MetaTrader 5.
+-   **Manejo de Credenciales**: Carga las credenciales desde un archivo `.env` para mantenerlas separadas del código fuente.
 
 ---
 
@@ -81,59 +90,81 @@ Sigue estos pasos para poner en marcha el proyecto.
 
 ```
 app/
-├── docs/
-|   ├── candles.md               
-|   ├── market_scene.md                              
-|   └── forex.md                       
 |
-├── actions/
-│   ├── tooltip.py
-│   └── actions.py
+├── actions/                              # Módulos para acciones
+│   ├── actions.py                        # Acciones
+│   ├── tooltip.py                        # Tooltips
+│   └── trade_manager.py                  # Gestión de operaciones
 |
-├── backtesting/
-│   ├── __init__.py
-│   ├── apply_strategies.py
-│   ├── backtesting.py
-│   ├── detect_candles.py
-│   └── strategy_simulator.py
+├── audit/                                # Directorio para logs de operaciones en JSONL
 |
-├── candles/
-|   └── candles_list.py
+├── backtesting/                         
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── apply_strategies.py               # Aplicación de estrategias
+│   ├── backtesting.py                    # Backtesting
+│   ├── detect_candles.py                 # Detección de velas
+│   ├── report_generator.py               # Generador de informes
+│   └── strategy_simulator.py             # Simulador de estrategias
+|
+├── candles/                              
+|   └── candle_list.py                    # Patrones de velas
+|
+├── custom/
+|   └── custom_strategies.py              # Estrategias personalizadas
+|
+├── docs/                                 # Documentación
+|   ├── candles.md                        # Documentación de patrones de velas
+|   ├── forex.md                          # Documentación de estrategias de forex
+|   ├── log.txt                           # Log de la aplicación
+|   └── todo.md                           # Tareas pendientes
+|
+├── email/                                # Módulo para envío de notificaciones por email
+|   └── email_sender.py                   # Envío de notificaciones por email
 |
 ├── forex/
-│   └── forex_list.py     
+│   └── forex_list.py                     # Lista de estrategias de forex
 |
 ├── gui/
-│   ├── __init__.py
-│   ├── body_graphic.py
-│   └── body_logger.py
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── body_graphic.py                   # Gráfico principal de la aplicación
+│   └── body_logger.py                    # Logger de la aplicación
 |
-├── loggin/
-│   ├── __init__.py
-│   └── loggin.py
+├── loggin/                               # Módulos para logging
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── audit_log.py                      # Logger de auditoría
+│   └── loggin.py                         # Logger de la aplicación
 |
-├── modals/
-│   ├── __init__.py
-│   ├── backtesting_modal.py
-│   ├── candle_config_modal.py
-│   ├── detect_all_candles_modal.py
-│   ├── detect_all_forex_modal.py
-│   ├── loggin_modal.py
-│   └── strategy_simulator_modal.py
+├── modals/                               # Módulos para modales de la aplicación
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── backtesting_modal.py              # Modal de backtesting
+│   ├── candle_config_modal.py            # Modal de configuración de velas
+│   ├── config_app_modal.py               # Modal de configuración de la aplicación
+│   ├── detect_all_candles_modal.py       # Modal de detección de velas
+│   ├── detect_all_forex_modal.py         # Modal de detección de forex
+│   ├── loggin_modal.py                   # Modal de logging
+│   └── strategy_simulator_modal.py       # Modal de simulador de estrategias
 |
-├── strategies/
-│   ├── config strategies files
-│   ├── strategies 
-│   └── config_app
+├── resumes/                            # Directorio para informes de backtesting
+│   └── backtesting_2025-09-20_12-51-52.txt
 |
-├── .env
-├── .gitignore
-├── gui_main.py
-├── main.py
-├── LICENSE
-├── README.md                           
-├── requirements.txt
-└── user_prefs.json
+├── simultation/   
+│   └── simulation.py                     # Simulación de trading
+|
+├── simultation_logs/   
+│   └── simulation_2025-09-20_12-51-52.txt # Log de la simulación
+|
+├── strategies/                         # Patrones de velas y estrategias de trading
+|   ├── config.json                       # Fichero de configuración de la app
+|   └── ... (Múltiples ficheros .json con estrategias)
+|
+├── .env                                  # Archivo de variables de entorno
+├── .gitignore                            # Archivo de configuración de Git
+├── gui_main.py                           # Punto de entrada de la aplicación con GUI
+├── LICENSE                               # Licencia de la aplicación
+├── main.py                               # Punto de entrada de la aplicación
+├── README.md                             # Documentación de la aplicación
+├── requirements.txt                      # Requisitos de la aplicación
+└── user_prefs.json                       # Preferencias del usuario
 ```
 
 ---

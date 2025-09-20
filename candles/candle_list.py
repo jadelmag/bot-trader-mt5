@@ -50,8 +50,8 @@ class CandlePatterns:
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.1:
-            if (candle['high'] - candle['close']) / candle_range < 0.1 and (candle['high'] - candle['open']) / candle_range < 0.1:
+        if candle_range > 0 and body_size / candle_range < 0.15:
+            if (candle['high'] - max(candle['close'], candle['open'])) / candle_range < 0.20:
                 if index > 0 and candles[index-1]['close'] < candles[index-1]['open']:
                     return 'long'
         return None
@@ -61,8 +61,8 @@ class CandlePatterns:
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.1:
-            if (candle['close'] - candle['low']) / candle_range < 0.1 and (candle['open'] - candle['low']) / candle_range < 0.1:
+        if candle_range > 0 and body_size / candle_range < 0.15:
+            if (min(candle['close'], candle['open']) - candle['low']) / candle_range < 0.20:
                 if index > 0 and candles[index-1]['close'] > candles[index-1]['open']:
                     return 'short'
         return None
@@ -72,7 +72,7 @@ class CandlePatterns:
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.05:
+        if candle_range > 0 and body_size / candle_range < 0.1:
             return 'neutral'
         return None
 
@@ -81,10 +81,10 @@ class CandlePatterns:
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.05:
+        if candle_range > 0 and body_size / candle_range < 0.1:
             upper_shadow = candle['high'] - max(candle['open'], candle['close'])
             lower_shadow = min(candle['open'], candle['close']) - candle['low']
-            if upper_shadow > body_size * 3 and lower_shadow > body_size * 3:
+            if upper_shadow > body_size * 2.5 and lower_shadow > body_size * 2.5:
                 return 'neutral'
         return None
 
@@ -167,10 +167,10 @@ class CandlePatterns:
         c1_is_bearish = c1['close'] < c1['open']
         c1_body = abs(c1['open'] - c1['close'])
         c2_body = abs(c2['open'] - c2['close'])
-        star_gaps_down = max(c2['open'], c2['close']) < c1['close']
+        star_opens_lower = c2['open'] < c1['close']
         c3_is_bullish = c3['close'] > c3['open']
         c3_closes_in_c1 = c3['close'] > (c1['open'] + c1['close']) / 2
-        if c1_is_bearish and c1_body > c2_body * 2 and star_gaps_down and c3_is_bullish and c3_closes_in_c1:
+        if c1_is_bearish and c1_body > c2_body * 1.5 and star_opens_lower and c3_is_bullish and c3_closes_in_c1:
             return 'long'
         return None
 
@@ -181,10 +181,10 @@ class CandlePatterns:
         c1_is_bullish = c1['close'] > c1['open']
         c1_body = abs(c1['open'] - c1['close'])
         c2_body = abs(c2['open'] - c2['close'])
-        star_gaps_up = min(c2['open'], c2['close']) > c1['close']
+        star_opens_higher = c2['open'] > c1['close']
         c3_is_bearish = c3['close'] < c3['open']
         c3_closes_in_c1 = c3['close'] < (c1['open'] + c1['close']) / 2
-        if c1_is_bullish and c1_body > c2_body * 2 and star_gaps_up and c3_is_bearish and c3_closes_in_c1:
+        if c1_is_bullish and c1_body > c2_body * 1.5 and star_opens_higher and c3_is_bearish and c3_closes_in_c1:
             return 'short'
         return None
 
@@ -246,7 +246,7 @@ class CandlePatterns:
         c1_bullish = c1['close'] > c1['open']
         c5_bullish = c5['close'] > c5['open']
         three_bearish = c2['close'] < c2['open'] and c3['close'] < c3['open'] and c4['close'] < c4['open']
-        contained = all(c['high'] < c1['high'] and c['low'] > c1['low'] for c in [c2, c3, c4])
+        contained = all(max(c['open'], c['close']) < c1['high'] and min(c['open'], c['close']) > c1['low'] for c in [c2, c3, c4])
         c5_closes_higher = c5['close'] > c1['close']
         if c1_bullish and c5_bullish and three_bearish and contained and c5_closes_higher:
             return 'long'
@@ -259,7 +259,7 @@ class CandlePatterns:
         c1_bearish = c1['close'] < c1['open']
         c5_bearish = c5['close'] < c5['open']
         three_bullish = c2['close'] > c2['open'] and c3['close'] > c3['open'] and c4['close'] > c4['open']
-        contained = all(c['high'] < c1['high'] and c['low'] > c1['low'] for c in [c2, c3, c4])
+        contained = all(max(c['open'], c['close']) < c1['high'] and min(c['open'], c['close']) > c1['low'] for c in [c2, c3, c4])
         c5_closes_lower = c5['close'] < c1['close']
         if c1_bearish and c5_bearish and three_bullish and contained and c5_closes_lower:
             return 'short'

@@ -6,6 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import dates as mdates
 import numpy as np
+import threading
 
 try:
     import MetaTrader5 as mt5
@@ -24,12 +25,15 @@ except Exception:
 
 
 class BodyGraphic(ttk.Frame):
-    def __init__(self, parent, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, *args, **kwargs):
+    def __init__(self, parent, app, symbol: str = "EURUSD", timeframe: str = "M5", bars: int = 300, logger=None, debug_mode_var=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
+        self.app = app
         self.symbol = symbol
         self.timeframe = timeframe
         self.bars = bars
+        self.logger = logger
+        self.debug_mode_var = debug_mode_var
 
         self._after_job = None
         self.price_line = None
@@ -62,6 +66,128 @@ class BodyGraphic(ttk.Frame):
             self.tooltip_handler.disconnect()
         return super().destroy()
 
+    def load_symbol(self, symbol: str = None, timeframe: str = None, bars: int = None, queue=None):
+        if symbol:
+            self.symbol = symbol
+        if timeframe:
+            self.timeframe = timeframe
+        if bars:
+            self.bars = bars
+        
+        # Lanzar la carga de datos en un hilo para no bloquear la UI
+        if queue:
+            thread = threading.Thread(target=self._fetch_chart_data_threaded, args=(queue,), daemon=True)
+            thread.start()
+        else:
+            # Fallback si no se pasa la cola (comportamiento antiguo)
+            self.refresh()
+
+    def _fetch_chart_data_threaded(self, queue):
+        """Se ejecuta en un hilo para obtener los datos del gráfico y los pone en la cola."""
+        try:
+            tf = self._mt5_timeframe()
+            if tf is None:
+                queue.put(("log_error", "Timeframe inválido"))
+                return
+
+            rates = mt5.copy_rates_from_pos(self.symbol, tf, 0, self.bars)
+            if rates is None or len(rates) == 0:
+                queue.put(("log_info", f"No se encontraron datos para {self.symbol}"))
+                # Podríamos querer limpiar el gráfico o mostrar un placeholder
+                return
+
+            df = pd.DataFrame(rates)
+            df["time"] = pd.to_datetime(df["time"], unit="s")
+            df = df.set_index("time")
+            df.rename(columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "tick_volume": "Volume"}, inplace=True)
+            df.sort_index(inplace=True)
+            
+            # Enviar los datos listos para renderizar
+            queue.put(("chart_data_ready", df))
+
+        except Exception as e:
+            queue.put(("log_error", f"Error al cargar datos del gráfico: {e}"))
+
+    def render_chart_data(self, df: pd.DataFrame):
+        """Renderiza los datos del gráfico en el hilo principal de la UI."""
+        self._stop_live_updates()
+        self.candles_df = df
+
+        self.ax.clear()
+        self.fig.patch.set_facecolor('black')
+        self.ax.set_facecolor('black')
+        self.ax.grid(True, which='both', axis='both', color='#444444', linestyle='--', linewidth=0.6)
+        self.ax.yaxis.tick_right()
+        self.ax.yaxis.set_label_position("right")
+        self.ax.tick_params(axis='x', colors='#aaaaaa', labelrotation=0)
+        self.ax.tick_params(axis='y', colors='#aaaaaa')
+        self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b %H:%M'))
+
+        style = mpf.make_mpf_style(
+            base_mpf_style='nightclouds',
+            marketcolors=mpf.make_marketcolors(
+                up='#26a69a', down='#ef5350',
+                edge={'up':'#26a69a','down':'#ef5350'},
+                wick={'up':'#26a69a','down':'#ef5350'},
+                volume='inherit'
+            ),
+            facecolor='black', figcolor='black', gridcolor='#404040', gridstyle='--'
+        )
+        width_cfg = dict(candle_linewidth=1.0, candle_width=0.8, volume_width=0.7)
+        mpf.plot(
+            df,
+            type="candle",
+            ax=self.ax,
+            volume=False,
+            style=style,
+            update_width_config=width_cfg,
+            datetime_format="%d %b %H:%M",
+            xrotation=0,
+            show_nontrading=False,
+            tight_layout=True
+        )
+
+        period = 20
+        if len(df) >= period:
+            self.ma = df['Close'].rolling(window=period).mean()
+            valid_ma = self.ma.dropna()
+            if len(valid_ma) > 0:
+                ma_indices = np.arange(len(df))[~self.ma.isna()]
+                ma_values = self.ma.dropna().values
+                self.ax.plot(ma_indices, ma_values, 
+                               color='#ff0000', linewidth=2.0, 
+                               label=f'MA({period})', zorder=10)
+        else:
+            self.ma = None
+
+        if self.tooltip_handler:
+            self.tooltip_handler.update_data(self.candles_df, self.ma)
+
+        last_price = float(df['Close'].iloc[-1])
+        self.price_line = self.ax.axhline(y=last_price, color='#888888', linestyle='-', linewidth=1.0)
+        if self.price_text is not None:
+            try:
+                self.price_text.remove()
+            except Exception:
+                pass
+        self.price_text = self.ax.text(
+            1.0, last_price,
+            f"{last_price:.5f}",
+            color='#cccccc', fontsize=9,
+            ha='left', va='center',
+            transform=self.ax.get_yaxis_transform(),
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='#222222', edgecolor='#666666', linewidth=0.5)
+        )
+
+        self.fig.tight_layout()
+        self.canvas.draw()
+
+        if self.actions:
+            self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
+
+        self._schedule_live_update()
+
     def _mt5_timeframe(self):
         if mt5 is None:
             return None
@@ -76,114 +202,9 @@ class BodyGraphic(ttk.Frame):
         }
         return mapping.get(self.timeframe.upper(), mt5.TIMEFRAME_M5)
 
-    def load_symbol(self, symbol: str = None, timeframe: str = None, bars: int = None):
-        if symbol:
-            self.symbol = symbol
-        if timeframe:
-            self.timeframe = timeframe
-        if bars:
-            self.bars = bars
-        self.refresh()
-
     def refresh(self):
-        self._stop_live_updates()
-        if mt5 is None:
-            self._draw_placeholder("MetaTrader5 no disponible")
-            return
-        try:
-            tf = self._mt5_timeframe()
-            if tf is None:
-                self._draw_placeholder("Timeframe inválido")
-                return
-
-            rates = mt5.copy_rates_from_pos(self.symbol, tf, 0, self.bars)
-            if rates is None or len(rates) == 0:
-                self._draw_placeholder("Sin datos del símbolo")
-                return
-
-            df = pd.DataFrame(rates)
-            df["time"] = pd.to_datetime(df["time"], unit="s")
-            df = df.set_index("time")
-            df.rename(columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "tick_volume": "Volume"}, inplace=True)
-            df.sort_index(inplace=True)
-            self.candles_df = df
-
-            self.ax.clear()
-            self.fig.patch.set_facecolor('black')
-            self.ax.set_facecolor('black')
-            self.ax.grid(True, which='both', axis='both', color='#444444', linestyle='--', linewidth=0.6)
-            self.ax.yaxis.tick_right()
-            self.ax.yaxis.set_label_position("right")
-            self.ax.tick_params(axis='x', colors='#aaaaaa', labelrotation=0)
-            self.ax.tick_params(axis='y', colors='#aaaaaa')
-            self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b %H:%M'))
-
-            style = mpf.make_mpf_style(
-                base_mpf_style='nightclouds',
-                marketcolors=mpf.make_marketcolors(
-                    up='#26a69a', down='#ef5350',
-                    edge={'up':'#26a69a','down':'#ef5350'},
-                    wick={'up':'#26a69a','down':'#ef5350'},
-                    volume='inherit'
-                ),
-                facecolor='black', figcolor='black', gridcolor='#404040', gridstyle='--'
-            )
-            width_cfg = dict(candle_linewidth=1.0, candle_width=0.8, volume_width=0.7)
-            mpf.plot(
-                df,
-                type="candle",
-                ax=self.ax,
-                volume=False,
-                style=style,
-                update_width_config=width_cfg,
-                datetime_format="%d %b %H:%M",
-                xrotation=0,
-                show_nontrading=False,
-                tight_layout=True
-            )
-
-            period = 20
-            if len(df) >= period:
-                self.ma = df['Close'].rolling(window=period).mean()
-                valid_ma = self.ma.dropna()
-                if len(valid_ma) > 0:
-                    ma_indices = np.arange(len(df))[~self.ma.isna()]
-                    ma_values = self.ma.dropna().values
-                    self.ax.plot(ma_indices, ma_values, 
-                                color='#ff0000', linewidth=2.0, 
-                                label=f'MA({period})', zorder=10)
-            else:
-                self.ma = None
-
-            if self.tooltip_handler:
-                self.tooltip_handler.update_data(self.candles_df, self.ma)
-
-            last_price = float(df['Close'].iloc[-1])
-            self.price_line = self.ax.axhline(y=last_price, color='#888888', linestyle='-', linewidth=1.0)
-            if self.price_text is not None:
-                try:
-                    self.price_text.remove()
-                except Exception:
-                    pass
-            self.price_text = self.ax.text(
-                1.0, last_price,
-                f"{last_price:.5f}",
-                color='#cccccc', fontsize=9,
-                ha='left', va='center',
-                transform=self.ax.get_yaxis_transform(),
-                bbox=dict(boxstyle='round,pad=0.2', facecolor='#222222', edgecolor='#666666', linewidth=0.5)
-            )
-
-            self.fig.tight_layout()
-            self.canvas.draw()
-
-            if self.actions:
-                self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
-
-            self._schedule_live_update()
-        except Exception as e:
-            self._draw_placeholder(f"Error cargando datos: {e}")
+        # Ahora 'refresh' simplemente vuelve a lanzar la carga de datos en un hilo
+        self.load_symbol(queue=self.app.queue)
 
     def draw_trades(self, trades):
         """Dibuja marcadores en el gráfico para visualizar las operaciones."""
@@ -237,6 +258,19 @@ class BodyGraphic(ttk.Frame):
         self.fig.tight_layout()
         self.canvas.draw()
 
+    def _get_timeframe_delta(self):
+        """Convierte el string del timeframe en un objeto pd.Timedelta."""
+        mapping = {
+            "M1": pd.Timedelta(minutes=1),
+            "M5": pd.Timedelta(minutes=5),
+            "M15": pd.Timedelta(minutes=15),
+            "M30": pd.Timedelta(minutes=30),
+            "H1": pd.Timedelta(hours=1),
+            "H4": pd.Timedelta(hours=4),
+            "D1": pd.Timedelta(days=1),
+        }
+        return mapping.get(self.timeframe.upper())
+
     def _schedule_live_update(self, delay_ms: int = 1000):
         if self._after_job is not None:
             try:
@@ -262,12 +296,28 @@ class BodyGraphic(ttk.Frame):
             if tick is None:
                 self._schedule_live_update()
                 return
+
+            # --- Lógica de detección de nueva vela ---
+            if self.candles_df is not None and not self.candles_df.empty:
+                last_candle_time = self.candles_df.index[-1]
+                timeframe_delta = self._get_timeframe_delta()
+                current_tick_time = pd.to_datetime(tick.time, unit='s')
+
+                if timeframe_delta and current_tick_time >= (last_candle_time + timeframe_delta):
+                    if self.logger:
+                        self.logger.success(f"Nueva vela detectada para {self.timeframe}. Refrescando gráfico...")
+                    self.refresh() # Llama a refresh y termina este ciclo de actualización
+                    return
+            # --- Fin de la lógica ---
+
             price = getattr(tick, 'last', None)
             if price is None or price == 0:
                 price = getattr(tick, 'bid', None)
             if price is None:
                 self._schedule_live_update()
                 return
+
+            # --- Feed the simulation instance ---
             if self.price_line is None:
                 self.price_line = self.ax.axhline(y=price, color='#888888', linestyle='-', linewidth=1.0)
             else:

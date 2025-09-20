@@ -2,6 +2,7 @@ import pandas as pd
 import inspect
 import os
 import sys
+from loggin.audit_log import audit_logger
 
 # --- Configuración de sys.path ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +16,7 @@ from forex.forex_list import ForexStrategies
 class PerfectBacktester:
     """Realiza un backtesting 'perfecto' sabiendo el resultado futuro de las operaciones."""
 
-    def __init__(self, df: pd.DataFrame, pip_value=10, hold_period=10):
+    def __init__(self, df: pd.DataFrame, symbol: str, pip_value=10, hold_period=10):
         if not isinstance(df, pd.DataFrame) or df.empty:
             raise ValueError("Se requiere un DataFrame de pandas no vacío.")
         required_cols = ['open', 'high', 'low', 'close']
@@ -23,6 +24,7 @@ class PerfectBacktester:
             raise ValueError(f"El DataFrame debe contener las columnas: {', '.join(required_cols)}")
         
         self.df = df
+        self.symbol = symbol
         self.candles_dict = df.to_dict('records')
         self.pip_value = pip_value
         self.hold_period = hold_period
@@ -44,8 +46,13 @@ class PerfectBacktester:
     def run(self):
         """Ejecuta el backtesting perfecto sobre todo el DataFrame."""
         all_signals = self._get_all_signals()
+        
+        # Devolver una lista de todas las señales para que el logger las muestre
+        signal_names = list(all_signals.keys())
+
         stats = {name: {'money_generated': 0, 'trades': 0} for name in all_signals.keys()}
         profitable_trades = []
+        all_generated_signals = [] # Lista para todas las señales generadas
 
         for i in range(len(self.df) - self.hold_period):
             for name, (signal_type, func) in all_signals.items():
@@ -60,31 +67,56 @@ class PerfectBacktester:
                     continue # Ignorar si la señal falla por falta de datos
 
                 if signal and signal != 'neutral':
+                    # Registrar todas las señales generadas, rentables o no
+                    all_generated_signals.append({'name': name, 'signal': signal, 'index': i})
+
                     entry_price = self.df['close'].iloc[i]
                     exit_price = self.df['close'].iloc[i + self.hold_period]
                     is_profitable = (signal == 'long' and exit_price > entry_price) or \
                                     (signal == 'short' and exit_price < entry_price)
 
                     if is_profitable:
-                        pips_diff = abs(exit_price - entry_price) * 10000
+                        # Cálculo correcto del beneficio (revertido)
+                        pips_diff = abs(exit_price - entry_price) * 10000 # Asumiendo 4 decimales para pips
                         profit = pips_diff * self.pip_value
                         stats[name]['money_generated'] += profit
                         stats[name]['trades'] += 1
+
+                        # --- Log de Auditoría ---
+                        audit_logger.log_trade_open(
+                            symbol=self.symbol,
+                            trade_type=signal,
+                            volume=0.01, # Volumen de ejemplo para el log
+                            price=entry_price,
+                            sl=0,
+                            tp=0,
+                            comment=f"[Backtest] {name}"
+                        )
+                        audit_logger.log_trade_close(
+                            ticket=i, # Usamos el índice como ticket de ejemplo
+                            symbol=self.symbol,
+                            close_price=exit_price,
+                            profit=profit
+                        )
+                        # --- Fin Log de Auditoría ---
+
                         profitable_trades.append({
                             'signal_name': name,
                             'type': signal, # 'long' o 'short'
-                            'entry_index': i,
-                            'exit_index': i + self.hold_period,
+                            'entry_time': self.df.index[i],
+                            'entry_index': i, # Re-añadido para la función de dibujo
+                            'exit_index': i + self.hold_period, # Re-añadido para la función de dibujo
                             'entry_price': entry_price,
-                            'exit_price': exit_price
+                            'exit_price': exit_price,
+                            'profit': profit
                         })
-        return stats, profitable_trades
+        return stats, profitable_trades, signal_names, all_generated_signals
 
     @staticmethod
     def format_summary(stats):
         """Formatea los resultados del backtesting perfecto en una tabla de texto."""
         lines = []
-        header = f"{'SEÑAL (PATRÓN/ESTRATEGIA)':<40} | {'OPERACIONES RENTABLES':>25} | {'BENEFICIO TOTAL':>20}"
+        header = f"{'SEÑAL (PATRÓN/ESTRATEGIA)':<50} | {'OPERACIONES RENTABLES':>25} | {'BENEFICIO TOTAL':>20}"
         lines.append("\n" + "="*25 + " RESUMEN DE BACKTESTING PERFECTO " + "="*25)
         lines.append(header)
         lines.append("-"*len(header))
@@ -95,11 +127,19 @@ class PerfectBacktester:
 
         for name, data in sorted_stats:
             if data['trades'] > 0:
-                display_name = name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                clean_name = name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                
+                signal_type = ""
+                if name.startswith('pattern_'):
+                    signal_type = "[candle]"
+                elif name.startswith('strategy_'):
+                    signal_type = "[forex]"
+
+                display_name = f"{clean_name} {signal_type}"
                 trades = data['trades']
                 profit = f"{data['money_generated']:.2f} $"
                 total_profit_all += data['money_generated']
-                line = f"{display_name:<40} | {trades:>25} | {profit:>20}"
+                line = f"{display_name:<50} | {trades:>25} | {profit:>20}"
                 lines.append(line)
 
         lines.append("-"*len(header))
