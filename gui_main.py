@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from datetime import datetime
+import threading
+import queue
 
 # --- Configuración robusta de sys.path ---
 # Esto asegura que el script encuentre los módulos sin importar desde dónde se ejecute.
@@ -68,6 +70,10 @@ class App:
         self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
 
+        # --- Threading and Queue for background tasks ---
+        self.queue = queue.Queue()
+        self.thread = None
+
         # Create required directories
         self._create_required_dirs()
 
@@ -105,6 +111,9 @@ class App:
 
         self._build_header()
         self._build_body()
+
+        # Start the queue processor
+        self.process_queue()
 
         # Ensure proper closing behavior
         self.root.protocol("WM_DELETE_WINDOW", self._on_exit)
@@ -256,6 +265,44 @@ class App:
             )
         # Do not grid the graphic now; it will be gridded when started
 
+    def process_queue(self):
+        """Procesa mensajes de la cola de hilos en el hilo principal de la GUI."""
+        try:
+            # Procesa todos los mensajes pendientes sin bloquear
+            while not self.queue.empty():
+                message_type, data = self.queue.get_nowait()
+
+                if message_type == "log_info":
+                    self._log_info(data)
+                elif message_type == "log_success":
+                    self._log_success(data)
+                elif message_type == "log_error":
+                    self._log_error(data)
+                elif message_type == "status_update":
+                    self._set_status(data['text'], data['color'])
+                elif message_type == "login_success":
+                    self._handle_login_success()
+                elif message_type == "chart_data_ready":
+                    self.graphic.render_chart_data(data)
+                    # Habilitar botones una vez que el gráfico está listo
+                    try:
+                        self.analysis_tools_btn.state(["!disabled"])
+                        self.simulation_btn.state(["!disabled"])
+                    except tk.TclError:
+                        self.analysis_tools_btn.configure(state="normal")
+                        self.simulation_btn.configure(state="normal")
+                elif message_type == "analysis_results":
+                    self._display_analysis_summary(data['lines'], data['profit'], data['loss'])
+                elif message_type == "strategy_results":
+                    self._display_strategy_summary(data)
+                # Añade aquí más tipos de mensajes según sea necesario
+
+        except queue.Empty:
+            pass  # No hay nada en la cola
+        finally:
+            # Vuelve a programar la comprobación de la cola
+            self.root.after(100, self.process_queue)
+
     def _start_mt5_chart(self):
         # Actualizar el balance de la cuenta desde MT5
         if mt5:
@@ -292,15 +339,14 @@ class App:
         self._log_info(f"Inicializando gráfico para {self.symbol_var.get()} ({self.timeframe_var.get()})…")
         try:
             if hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
-                self.graphic.load_symbol(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
+                # Cargar datos en un hilo para no bloquear la UI
+                self.graphic.load_symbol(
+                    symbol=self.symbol_var.get(), 
+                    timeframe=self.timeframe_var.get(),
+                    queue=self.queue
+                )
         except Exception as e:
-            self._log_error(f"No se pudo iniciar el gráfico: {e}")
-        try:
-            self.analysis_tools_btn.state(["!disabled"])
-            self.simulation_btn.state(["!disabled"])
-        except Exception:
-            self.analysis_tools_btn.configure(state="normal")
-            self.simulation_btn.configure(state="normal")
+            self._log_error(f"No se pudo iniciar el gráfico: {e})")
 
     def _open_login_modal(self):
         global LoginModal, LoginMT5
@@ -362,8 +408,12 @@ class App:
                     self.timeframe_cb.configure(state="normal")
                 # If chart already started, refresh it
                 try:
-                    if self.chart_started and hasattr(self, "graphic") and hasattr(self.graphic, "refresh"):
-                        self.graphic.refresh()
+                    if self.chart_started and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
+                        self.graphic.load_symbol(
+                            symbol=self.symbol_var.get(), 
+                            timeframe=self.timeframe_var.get(),
+                            queue=self.queue
+                        )
                 except Exception:
                     pass
             else:
@@ -434,7 +484,11 @@ class App:
         if self.chart_started and symbol and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
             self._log_info(f"Cambiando gráfico a {symbol} ({timeframe})")
             try:
-                self.graphic.load_symbol(symbol=symbol, timeframe=timeframe)
+                self.graphic.load_symbol(
+                    symbol=symbol, 
+                    timeframe=timeframe, 
+                    queue=self.queue
+                )
             except Exception as e:
                 self._log_error(f"No se pudo actualizar el gráfico: {e}")
 
