@@ -31,7 +31,7 @@ class ConfigAppModal(tk.Toplevel):
         self._build_buttons(main_frame)
 
         self._load_config()
-        self._center_window(500, 420)
+        self._center_window(500, 380)
 
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
         self.grab_set() # Modal behavior
