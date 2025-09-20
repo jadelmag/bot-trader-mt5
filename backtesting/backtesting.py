@@ -74,17 +74,20 @@ class PerfectBacktester:
                                     (signal == 'short' and exit_price < entry_price)
 
                     if is_profitable:
-                        pips_diff = abs(exit_price - entry_price) * 10000
+                        # Cálculo correcto del beneficio (revertido)
+                        pips_diff = abs(exit_price - entry_price) * 10000 # Asumiendo 4 decimales para pips
                         profit = pips_diff * self.pip_value
                         stats[name]['money_generated'] += profit
                         stats[name]['trades'] += 1
                         profitable_trades.append({
                             'signal_name': name,
                             'type': signal, # 'long' o 'short'
-                            'entry_index': i,
-                            'exit_index': i + self.hold_period,
+                            'entry_time': self.df.index[i],
+                            'entry_index': i, # Re-añadido para la función de dibujo
+                            'exit_index': i + self.hold_period, # Re-añadido para la función de dibujo
                             'entry_price': entry_price,
-                            'exit_price': exit_price
+                            'exit_price': exit_price,
+                            'profit': profit
                         })
         return stats, profitable_trades, signal_names, all_generated_signals
 

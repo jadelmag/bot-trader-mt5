@@ -23,6 +23,7 @@ try:
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
+    from backtesting.report_generator import ReportGenerator
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -37,6 +38,7 @@ except Exception as e:
     CandleDetector = None
     StrategyAnalyzer = None
     PerfectBacktester = None
+    ReportGenerator = None
 
 # Optional: try to import MetaTrader5 to fetch symbol list after login
 try:
@@ -715,17 +717,31 @@ class App:
             if hasattr(self, 'graphic') and hasattr(self.graphic, 'draw_trades'):
                 self.graphic.draw_trades(profitable_trades)
 
+            # Imprimir resumen en el logger
             for line in summary_lines:
-                if "RESUMEN" in line or "="*25 in line:
-                    self._log_success(line)
-                else:
-                    self._log_info(line)
-            
+                self._log_info(line)
             self._log_success(f"BENEFICIO TOTAL PERFECTO: {total_profit:.2f} $")
-            self._log_success("="*90 + "\n")
+            self._log_info("="*85)
+
+            # Generar y guardar el informe detallado
+            report_generator = ReportGenerator(
+                profitable_trades=profitable_trades,
+                summary_lines=summary_lines,
+                total_profit=total_profit,
+                symbol=self.graphic.symbol,
+                timeframe=self.graphic.timeframe
+            )
+            report_path = report_generator.generate_report()
+            if report_path:
+                self._log_success(f"Informe detallado guardado en: {report_path}")
+            else:
+                self._log_error("No se pudo generar el informe detallado.")
 
         except Exception as e:
             self._log_error(f"Ocurrió un error durante el backtesting: {e}")
+            # Opcional: imprimir traceback para depuración
+            import traceback
+            traceback.print_exc()
 
     def _finalize_backtesting_action(self):
         """Limpia los dibujos del gráfico y el contenido del logger."""
