@@ -3,4 +3,4 @@
 __pycache__
 simulation_logs/*.log
 resumes/*.txt
-tests
+.pytest_cache
