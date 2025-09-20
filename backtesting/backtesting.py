@@ -2,6 +2,7 @@ import pandas as pd
 import inspect
 import os
 import sys
+from loggin.audit_log import audit_logger
 
 # --- Configuración de sys.path ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +16,7 @@ from forex.forex_list import ForexStrategies
 class PerfectBacktester:
     """Realiza un backtesting 'perfecto' sabiendo el resultado futuro de las operaciones."""
 
-    def __init__(self, df: pd.DataFrame, pip_value=10, hold_period=10):
+    def __init__(self, df: pd.DataFrame, symbol: str, pip_value=10, hold_period=10):
         if not isinstance(df, pd.DataFrame) or df.empty:
             raise ValueError("Se requiere un DataFrame de pandas no vacío.")
         required_cols = ['open', 'high', 'low', 'close']
@@ -23,6 +24,7 @@ class PerfectBacktester:
             raise ValueError(f"El DataFrame debe contener las columnas: {', '.join(required_cols)}")
         
         self.df = df
+        self.symbol = symbol
         self.candles_dict = df.to_dict('records')
         self.pip_value = pip_value
         self.hold_period = hold_period
@@ -79,6 +81,25 @@ class PerfectBacktester:
                         profit = pips_diff * self.pip_value
                         stats[name]['money_generated'] += profit
                         stats[name]['trades'] += 1
+
+                        # --- Log de Auditoría ---
+                        audit_logger.log_trade_open(
+                            symbol=self.symbol,
+                            trade_type=signal,
+                            volume=0.01, # Volumen de ejemplo para el log
+                            price=entry_price,
+                            sl=0,
+                            tp=0,
+                            comment=f"[Backtest] {name}"
+                        )
+                        audit_logger.log_trade_close(
+                            ticket=i, # Usamos el índice como ticket de ejemplo
+                            symbol=self.symbol,
+                            close_price=exit_price,
+                            profit=profit
+                        )
+                        # --- Fin Log de Auditoría ---
+
                         profitable_trades.append({
                             'signal_name': name,
                             'type': signal, # 'long' o 'short'

@@ -17,7 +17,9 @@ try:
     from modals.detect_all_candles_modal import DetectAllCandlesModal
     from modals.detect_all_forex_modal import DetectAllForexModal
     from modals.strategy_simulator_modal import StrategySimulatorModal
+    from modals.config_app_modal import ConfigAppModal
     from loggin.loggin import LoginMT5
+    from loggin.audit_log import AuditLogger # Importar la clase
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
     from backtesting.detect_candles import CandleDetector
@@ -32,6 +34,7 @@ except Exception as e:
     DetectAllCandlesModal = None
     DetectAllForexModal = None
     StrategySimulatorModal = None
+    ConfigAppModal = None
     LoginMT5 = None
     BodyGraphic = None
     BodyLogger = None
@@ -58,6 +61,9 @@ class App:
         self.root.minsize(900, 600)
         self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
+
+        # Create required directories
+        self._create_required_dirs()
 
         # State for status label
         self.status_var = tk.StringVar(value="Estado: -----")
@@ -122,6 +128,8 @@ class App:
         options_menu = tk.Menu(self.options_btn, tearoff=False)
         self.options_btn["menu"] = options_menu
         options_menu.add_checkbutton(label="Modo Debug (Log de Precios)", variable=self.debug_mode_var)
+        options_menu.add_separator()
+        options_menu.add_command(label="Configuración", command=self._open_config_modal)
 
         # --- Botón de Simulación (Columna 2) ---
         self.simulation_btn = ttk.Menubutton(header, text="Simulación")
@@ -688,7 +696,11 @@ class App:
             # --- AÑADIR INDICADORES TÉCNICOS ---
             candles_df_copy = self._add_technical_indicators(candles_df_copy)
 
-            backtester = PerfectBacktester(candles_df_copy)
+            # Recargar la configuración del logger de auditoría antes de ejecutar
+            AuditLogger()._load_config()
+            AuditLogger()._setup_log_file()
+
+            backtester = PerfectBacktester(candles_df_copy, symbol=self.symbol_var.get())
             stats, profitable_trades, signal_names, all_generated_signals = backtester.run()
             
             # Registrar todas las señales evaluadas
@@ -770,6 +782,39 @@ class App:
         """Limpia el contenido del logger."""
         if hasattr(self, 'logger') and hasattr(self.logger, 'clear'):
             self.logger.clear()
+
+    def _create_required_dirs(self):
+        """Crea los directorios necesarios para la aplicación si no existen."""
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        dirs_to_create = ["email", "audit"]
+        for dir_name in dirs_to_create:
+            try:
+                os.makedirs(os.path.join(base_path, dir_name), exist_ok=True)
+            except OSError as e:
+                # Log a warning but don't crash the app
+                self._log_error(f"No se pudo crear el directorio '{dir_name}': {e}")
+
+    def _open_config_modal(self):
+        """Abre el modal de configuración de la aplicación."""
+        global ConfigAppModal
+        if ConfigAppModal is None:
+            try:
+                from modals.config_app_modal import ConfigAppModal as CAM
+                ConfigAppModal = CAM
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el modal de configuración: {e}")
+                return
+        
+        modal = ConfigAppModal(self.root)
+        self.root.wait_window(modal)
+
+        if hasattr(modal, 'result') and modal.result:
+            self._log_info("Configuración guardada correctamente.")
+            # Recargar la configuración del logger de auditoría
+            AuditLogger()._load_config()
+            AuditLogger()._setup_log_file()
+        else:
+            self._log_info("La configuración no fue modificada.")
 
     def _on_exit(self):
         try:
