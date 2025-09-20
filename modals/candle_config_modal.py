@@ -100,15 +100,18 @@ class CandleConfigModal(tk.Toplevel):
             "atr_sl_multiplier": 1.5, "atr_tp_multiplier": 3.0, "atr_trailing_multiplier": 1.5
         }
 
-        config = default_config
+        config = {}
         if os.path.exists(self.config_file_path):
             try:
                 with open(self.config_file_path, 'r') as f:
-                    loaded_config = json.load(f)
-                # Asegurarse de que el archivo cargado no está corrupto y tiene todas las claves
-                config.update(loaded_config)
+                    config = json.load(f)
             except (json.JSONDecodeError, TypeError):
-                pass # Si hay error, se usan los valores por defecto
+                pass # Si hay error, se usará la configuración por defecto
+
+        # Completar con valores por defecto si faltan claves
+        for key, value in default_config.items():
+            if key not in config:
+                config[key] = value
 
         for key, value in config.items():
             if key in self.config_vars:

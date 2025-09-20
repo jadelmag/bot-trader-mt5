@@ -1,6 +1,7 @@
 ## CANDLE PATTERNS
 
-* Doji: no usar 
+* Dark Cloud Cover: ✅
+* Doji: ❌
 * Dragonfly Doji: no usar
 * Falling Three Methods: no usar
 * Gravestone Doji: no usar / revisar --> Da resultados negativos
