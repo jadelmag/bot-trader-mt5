@@ -31,6 +31,7 @@ try:
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
     from backtesting.report_generator import ReportGenerator
+    from backtesting.indicators import add_all_indicators
     from simulation.simulation import Simulation
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
@@ -374,17 +375,16 @@ class App:
                 LoginMT5 = LM5
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo importar LoginMT5: {e}")
-                self._set_status("Desconectado", "red")
+                self._set_status("Error", "red")
                 return
+
         try:
-            client = LoginMT5()
-            # Actualiza credenciales desde el modal
-            try:
-                client.account = int(creds.get("cuenta", "0") or 0)
-            except ValueError:
-                client.account = 0
-            client.password = creds.get("password", "")
-            client.server = creds.get("servidor", "")
+            # Pasar credenciales directamente al constructor
+            client = LoginMT5(
+                account=creds.get("cuenta"),
+                password=creds.get("contraseña"),
+                server=creds.get("servidor")
+            )
 
             self._log_info(f"Intentando conexión a MT5 con cuenta {client.account} en {client.server}…")
             connected = client.login()
@@ -417,11 +417,11 @@ class App:
                 except Exception:
                     pass
             else:
-                self._set_status("Desconectado", "red")
+                self._set_status("Error", "red")
                 self._log_error("No se pudo establecer conexión (login() devolvió False).")
         except Exception as e:
             messagebox.showerror("Error de conexión", f"No se pudo conectar a MT5: {e}")
-            self._set_status("Desconectado", "red")
+            self._set_status("Error", "red")
             self._log_error(f"Excepción durante la conexión: {e}")
 
     def _populate_symbols(self):
@@ -657,8 +657,8 @@ class App:
             candles_df_copy = self.graphic.candles_df.copy()
             candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
             
-            # Aquí se podrían añadir indicadores necesarios para las estrategias
-            # Ejemplo: df['ema_fast'] = df['close'].ewm(span=12, adjust=False).mean()
+            # Añadir todos los indicadores necesarios
+            candles_df_copy = add_all_indicators(candles_df_copy)
 
             analyzer = StrategyAnalyzer(candles_df_copy)
             stats = analyzer.analyze_strategies(selected_strategies)
