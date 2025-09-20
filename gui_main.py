@@ -17,6 +17,7 @@ try:
     from modals.detect_all_candles_modal import DetectAllCandlesModal
     from modals.detect_all_forex_modal import DetectAllForexModal
     from modals.strategy_simulator_modal import StrategySimulatorModal
+    from modals.simulation_strategies_modal import SimulationStrategiesModal
     from modals.config_app_modal import ConfigAppModal
     from loggin.loggin import LoginMT5
     from loggin.audit_log import AuditLogger # Importar la clase
@@ -34,6 +35,7 @@ except Exception as e:
     DetectAllCandlesModal = None
     DetectAllForexModal = None
     StrategySimulatorModal = None
+    SimulationStrategiesModal = None
     ConfigAppModal = None
     LoginMT5 = None
     BodyGraphic = None
@@ -763,8 +765,27 @@ class App:
         self._clear_log_action()
 
     def _iniciar_simulacion_action(self):
-        """Lanza la simulación."""
-        self._log_info("TODO: Iniciar simulación")
+        """Abre el modal de simulación de estrategias."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
+            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Por favor, inicie el gráfico con 'Iniciar MT5' antes de configurar una simulación.")
+            return
+
+        global SimulationStrategiesModal
+        if SimulationStrategiesModal is None:
+            try:
+                from modals.simulation_strategies_modal import SimulationStrategiesModal as SSM
+                SimulationStrategiesModal = SSM
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
+                return
+        
+        modal = SimulationStrategiesModal(self.root, candles_df=self.graphic.candles_df, logger=self.logger)
+        self.root.wait_window(modal)
+
+        if hasattr(modal, 'result') and modal.result:
+            self._log_info(f"Configuración de simulación guardada y simulación ejecutada.")
+        else:
+            self._log_info("Simulación de estrategias cancelada.")
 
     def _abrir_operacion_manual_action(self):
         """Abre una operación manual."""
