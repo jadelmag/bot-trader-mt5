@@ -84,7 +84,7 @@ class PerfectBacktester:
     def format_summary(stats):
         """Formatea los resultados del backtesting perfecto en una tabla de texto."""
         lines = []
-        header = f"{'SEÑAL (PATRÓN/ESTRATEGIA)':<40} | {'OPERACIONES RENTABLES':>25} | {'BENEFICIO TOTAL':>20}"
+        header = f"{'SEÑAL (PATRÓN/ESTRATEGIA)':<50} | {'OPERACIONES RENTABLES':>25} | {'BENEFICIO TOTAL':>20}"
         lines.append("\n" + "="*25 + " RESUMEN DE BACKTESTING PERFECTO " + "="*25)
         lines.append(header)
         lines.append("-"*len(header))
@@ -95,11 +95,19 @@ class PerfectBacktester:
 
         for name, data in sorted_stats:
             if data['trades'] > 0:
-                display_name = name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                clean_name = name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                
+                signal_type = ""
+                if name.startswith('pattern_'):
+                    signal_type = "[candle]"
+                elif name.startswith('strategy_'):
+                    signal_type = "[forex]"
+
+                display_name = f"{clean_name} {signal_type}"
                 trades = data['trades']
                 profit = f"{data['money_generated']:.2f} $"
                 total_profit_all += data['money_generated']
-                line = f"{display_name:<40} | {trades:>25} | {profit:>20}"
+                line = f"{display_name:<50} | {trades:>25} | {profit:>20}"
                 lines.append(line)
 
         lines.append("-"*len(header))

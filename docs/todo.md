@@ -2,6 +2,9 @@
 ## TODO
 
 1. Crear estrategias customizadas de poca ganancia pero segura.
+2. Añadir botones de configuración.
+   - Permite enviar emails cada cierto tiempo.
+   - 
 
 1. Crear los funciones de:
    - Iniciar simulación

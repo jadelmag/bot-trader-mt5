@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import pandas_ta as ta
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox

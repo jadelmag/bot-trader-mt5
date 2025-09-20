@@ -1,0 +1,16 @@
+[11:03:15] SEÑAL (PATRÓN/ESTRATEGIA)                |     OPERACIONES RENTABLES |      BENEFICIO TOTAL
+[11:03:15] -------------------------------------------------------------------------------------------
+[11:03:15] Engulfing                                |                        21 |             470.00 $
+[11:03:15] Three Outside Up Down                    |                        12 |             283.00 $
+[11:03:15] Dark Cloud Cover                         |                         9 |             161.00 $
+[11:03:15] Marubozu                                 |                        10 |             152.00 $
+[11:03:15] Harami                                   |                         7 |             126.00 $
+[11:03:15] Shooting Star                            |                         5 |             116.00 $
+[11:03:15] Three Inside Up Down                     |                         5 |             112.00 $
+[11:03:15] Piercing Line                            |                         5 |              93.00 $
+[11:03:15] Hanging Man                              |                         3 |              65.00 $
+[11:03:15] Candle Reversal                          |                         4 |              46.00 $
+[11:03:15] Inverted Hammer                          |                         3 |              45.00 $
+[11:03:15] Three Black Crows                        |                         1 |              39.00 $
+[11:03:15] Hammer                                   |                         3 |              35.00 $
+[11:03:15] Dragonfly Doji  
