@@ -3,6 +3,7 @@
     "email_address": "email@example.com",
     "email_password": "123456",
     "email_interval_hours": 2,
-    "money_limit": 0.0,
-    "audit_log_enabled": true
+    "money_limit": 800000.0,
+    "audit_log_enabled": true,
+    "risk_per_trade_percent": 1.0
 }

@@ -21,6 +21,7 @@ class ConfigAppModal(tk.Toplevel):
         self.interval_var = tk.StringVar()
         self.money_limit_var = tk.StringVar()
         self.audit_log_var = tk.BooleanVar()
+        self.risk_per_trade_var = tk.StringVar(value="1.0") # Default 1%
 
         # --- Layout --- #
         main_frame = ttk.Frame(self, padding="15")
@@ -31,7 +32,7 @@ class ConfigAppModal(tk.Toplevel):
         self._build_buttons(main_frame)
 
         self._load_config()
-        self._center_window(500, 380)
+        self._center_window(500, 400)
 
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
         self.grab_set() # Modal behavior
@@ -77,8 +78,14 @@ class ConfigAppModal(tk.Toplevel):
         # Money Limit
         limit_frame = ttk.Frame(general_frame)
         limit_frame.pack(fill="x", pady=5)
-        ttk.Label(limit_frame, text="Límite de dinero (stop loss global):").pack(side="left", padx=5)
+        ttk.Label(limit_frame, text="Capital Mínimo para Operar:").pack(side="left", padx=5)
         ttk.Entry(limit_frame, textvariable=self.money_limit_var, width=15).pack(side="left")
+
+        # Risk per Trade
+        risk_frame = ttk.Frame(general_frame)
+        risk_frame.pack(fill="x", pady=5)
+        ttk.Label(risk_frame, text="Riesgo por Operación (%):").pack(side="left", padx=5)
+        ttk.Entry(risk_frame, textvariable=self.risk_per_trade_var, width=15).pack(side="left")
 
         # Audit Log
         audit_frame = ttk.Frame(general_frame)
@@ -109,6 +116,7 @@ class ConfigAppModal(tk.Toplevel):
             self.interval_var.set(str(config.get("email_interval_hours", "24")))
             self.money_limit_var.set(str(config.get("money_limit", "")))
             self.audit_log_var.set(config.get("audit_log_enabled", False))
+            self.risk_per_trade_var.set(str(config.get("risk_per_trade_percent", "1.0")))
 
         except (json.JSONDecodeError, TypeError):
             messagebox.showerror("Error", f"El archivo de configuración '{os.path.basename(CONFIG_PATH)}' está corrupto.", parent=self)
@@ -118,6 +126,7 @@ class ConfigAppModal(tk.Toplevel):
             # Validation
             interval_hours = int(self.interval_var.get()) if self.interval_var.get() else 0
             money_limit = float(self.money_limit_var.get()) if self.money_limit_var.get() else 0.0
+            risk_percent = float(self.risk_per_trade_var.get()) if self.risk_per_trade_var.get() else 1.0
 
             if self.email_notifications_var.get() and not self.email_var.get():
                 messagebox.showwarning("Campo Requerido", "El correo electrónico es obligatorio si las notificaciones están activadas.", parent=self)
@@ -129,7 +138,8 @@ class ConfigAppModal(tk.Toplevel):
                 "email_password": self.password_var.get(),
                 "email_interval_hours": interval_hours,
                 "money_limit": money_limit,
-                "audit_log_enabled": self.audit_log_var.get()
+                "audit_log_enabled": self.audit_log_var.get(),
+                "risk_per_trade_percent": risk_percent
             }
 
             # Ensure directory exists
@@ -142,7 +152,7 @@ class ConfigAppModal(tk.Toplevel):
             self.destroy()
 
         except ValueError:
-            messagebox.showerror("Error de Validación", "Por favor, introduce un número válido para el intervalo y el límite de dinero.", parent=self)
+            messagebox.showerror("Error de Validación", "Por favor, introduce un número válido para el intervalo, límite y riesgo.", parent=self)
         except Exception as e:
             messagebox.showerror("Error al Guardar", f"No se pudo guardar la configuración: {e}", parent=self)
 

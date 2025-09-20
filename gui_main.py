@@ -2,9 +2,11 @@ import os
 import sys
 import json
 import pandas_ta as ta
+import pandas as pd
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from datetime import datetime
 
 # --- Configuración robusta de sys.path ---
 # Esto asegura que el script encuentre los módulos sin importar desde dónde se ejecute.
@@ -27,6 +29,7 @@ try:
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
     from backtesting.report_generator import ReportGenerator
+    from simulation.simulation import Simulation
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -44,6 +47,7 @@ except Exception as e:
     StrategyAnalyzer = None
     PerfectBacktester = None
     ReportGenerator = None
+    Simulation = None
 
 # Optional: try to import MetaTrader5 to fetch symbol list after login
 try:
@@ -79,6 +83,9 @@ class App:
 
         # State for simulation results
         self.initial_balance_var = tk.StringVar(value="----")
+        self.equity_var = tk.StringVar(value="----")
+        self.margin_var = tk.StringVar(value="----")
+        self.free_margin_var = tk.StringVar(value="----")
         self.profit_var = tk.StringVar(value="----")
         self.loss_var = tk.StringVar(value="----")
 
@@ -87,6 +94,10 @@ class App:
 
         # Track whether chart has been started/shown
         self.chart_started = False
+
+        # Instance for the simulation
+        self.simulation_instance = None
+        self.simulation_running = False
 
         # Configure a simple layout: header on top, main body below
         self.root.columnconfigure(0, weight=1)
@@ -139,24 +150,36 @@ class App:
         simulation_menu = tk.Menu(self.simulation_btn, tearoff=False)
         self.simulation_btn["menu"] = simulation_menu
         simulation_menu.add_command(label="Iniciar simulación", command=self._iniciar_simulacion_action)
-        simulation_menu.add_command(label="Abrir operación manual", command=self._abrir_operacion_manual_action)
-        simulation_menu.add_command(label="Modificar estrategias", command=self._modificar_estrategias_action)
         simulation_menu.add_separator()
-        simulation_menu.add_command(label="Cancelar simulación", command=self._cancelar_simulacion_action)
+        simulation_menu.add_command(label="Detener simulación", command=self._detener_simulacion_action)
         self.simulation_btn.state(["disabled"])
 
         # --- Labels for Simulation Results (Columna 3) ---
         results_frame = ttk.Frame(header, padding=(10, 0))
         results_frame.grid(row=0, column=3, sticky="ew", padx=(10, 0))
 
-        ttk.Label(results_frame, text="Dinero inicial:").pack(side="left", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.initial_balance_var, foreground="black").pack(side="left", padx=(0, 10))
+        # Use a grid layout within the frame for better alignment
+        results_frame.columnconfigure(1, minsize=80) # Space for values
+        results_frame.columnconfigure(3, minsize=80)
+        results_frame.columnconfigure(5, minsize=80)
 
-        ttk.Label(results_frame, text="Beneficios:").pack(side="left", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.profit_var, foreground="green").pack(side="left", padx=(0, 10))
+        ttk.Label(results_frame, text="Dinero inicial:").grid(row=0, column=0, sticky="w", padx=(0, 5))
+        ttk.Label(results_frame, textvariable=self.initial_balance_var, foreground="black").grid(row=0, column=1, sticky="w")
 
-        ttk.Label(results_frame, text="Pérdidas:").pack(side="left", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.loss_var, foreground="red").pack(side="left")
+        ttk.Label(results_frame, text="Equity:").grid(row=0, column=2, sticky="w", padx=(10, 5))
+        ttk.Label(results_frame, textvariable=self.equity_var, foreground="#007ACC").grid(row=0, column=3, sticky="w")
+
+        ttk.Label(results_frame, text="Beneficios:").grid(row=0, column=4, sticky="w", padx=(10, 5))
+        ttk.Label(results_frame, textvariable=self.profit_var, foreground="green").grid(row=0, column=5, sticky="w")
+
+        ttk.Label(results_frame, text="Margen:").grid(row=1, column=0, sticky="w", padx=(0, 5))
+        ttk.Label(results_frame, textvariable=self.margin_var, foreground="#E59400").grid(row=1, column=1, sticky="w")
+
+        ttk.Label(results_frame, text="Margen Libre:").grid(row=1, column=2, sticky="w", padx=(10, 5))
+        ttk.Label(results_frame, textvariable=self.free_margin_var, foreground="#33A133").grid(row=1, column=3, sticky="w")
+
+        ttk.Label(results_frame, text="Pérdidas:").grid(row=1, column=4, sticky="w", padx=(10, 5))
+        ttk.Label(results_frame, textvariable=self.loss_var, foreground="red").grid(row=1, column=5, sticky="w")
 
         # Spacer para empujar los controles a la derecha (Columna 4)
         spacer = ttk.Frame(header)
@@ -221,9 +244,10 @@ class App:
             self.graphic = ttk.Frame(container)
             ttk.Label(self.graphic, text="Gráfico no disponible").pack(expand=True, fill="both")
         else:
-            # Pass the logger to the graphic
+            # Pass the logger and app instance to the graphic
             self.graphic = BodyGraphic(
                 container, 
+                app=self, # Pass the whole app instance
                 symbol=self.symbol_var.get(), 
                 timeframe=self.timeframe_var.get(), 
                 bars=300,
@@ -765,44 +789,214 @@ class App:
         self._clear_log_action()
 
     def _iniciar_simulacion_action(self):
-        """Abre el modal de simulación de estrategias."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
-            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Por favor, inicie el gráfico con 'Iniciar MT5' antes de configurar una simulación.")
+        """Abre el modal de configuración y, si se acepta, inicia la simulación."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df.empty:
+            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Inicie el gráfico antes de simular.")
             return
 
-        global SimulationStrategiesModal
-        if SimulationStrategiesModal is None:
-            try:
-                from modals.simulation_strategies_modal import SimulationStrategiesModal as SSM
-                SimulationStrategiesModal = SSM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
-                return
+        if self.simulation_instance:
+            messagebox.showinfo("Información", "Ya hay una simulación en curso. Deténgala para iniciar una nueva.")
+            return
         
+        # Abrir el modal para que el usuario configure las estrategias
         modal = SimulationStrategiesModal(self.root, candles_df=self.graphic.candles_df, logger=self.logger)
         self.root.wait_window(modal)
 
+        # Solo iniciar la simulación si el usuario guardó la configuración en el modal
         if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Configuración de simulación guardada y simulación ejecutada.")
+            strategies_config = modal.result
+            self._log_success("Configuración de estrategias aceptada. Iniciando simulación...")
+
+            try:
+                balance_str = self.initial_balance_var.get().replace('$', '').strip()
+                initial_balance = float(balance_str) if balance_str != '----' else 10000.0
+
+                self.simulation_instance = Simulation(
+                    initial_balance=initial_balance,
+                    symbol=self.symbol_var.get(),
+                    timeframe=self.timeframe_var.get(),
+                    strategies_config=strategies_config,
+                    logger=self.logger
+                )
+                
+                self.simulation_running = True
+                self._start_simulation_loop()
+                self._log_success(f"Simulación iniciada para {self.symbol_var.get()} con un balance de {initial_balance:.2f} $.")
+
+            except Exception as e:
+                self._log_error(f"Error al iniciar la simulación: {e}")
+                messagebox.showerror("Error", f"No se pudo iniciar la simulación: {e}")
         else:
-            self._log_info("Simulación de estrategias cancelada.")
+            self._log_info("Inicio de simulación cancelado por el usuario.")
 
-    def _abrir_operacion_manual_action(self):
-        """Abre una operación manual."""
-        self._log_info("TODO: Abriendo operación manual")
+    def _detener_simulacion_action(self):
+        """Detiene la simulación, cierra todas las operaciones y guarda el log."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
 
-    def _modificar_estrategias_action(self):
-        """Modifica las estrategias."""
-        self._log_info("TODO: Modificar estrategias")
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
 
-    def _cancelar_simulacion_action(self):
-        """Cancela la simulación."""
-        self._log_info("TODO: Cancelar simulación")
+        self._log_info("Deteniendo simulación...")
+
+        try:
+            # Indicar a la simulación que se detenga
+            self.simulation_running = False
+
+            # Cerrar todas las posiciones abiertas para el símbolo actual
+            try:
+                open_positions = mt5.positions_get(symbol=self.simulation_instance.symbol)
+                if open_positions and len(open_positions) > 0:
+                    self._log(f"Cerrando {len(open_positions)} posiciones abiertas para {self.simulation_instance.symbol}...")
+                    for pos in open_positions:
+                        trade_type = 'long' if pos.type == mt5.POSITION_TYPE_BUY else 'short'
+                        self.simulation_instance.close_trade(pos.ticket, pos.volume, trade_type)
+                else:
+                    self._log_info("No hay posiciones abiertas para cerrar.")
+            except Exception as e:
+                self._log_error(f"Error al intentar cerrar posiciones abiertas: {e}")
+
+            # Guardar el log de la sesión
+            self._save_session_log()
+
+            self.simulation_instance = None
+            self._log_success("Simulación detenida y operaciones cerradas.")
+
+            # Actualizar y limpiar las etiquetas de la UI
+            self._update_final_labels()
+
+        except Exception as e:
+            self._log_error(f"Error al detener la simulación: {e}")
+
+    def _start_simulation_loop(self):
+        """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""
+        if not self.simulation_running or not self.simulation_instance or not mt5 or not mt5.terminal_info():
+            if self.simulation_running:
+                self._log_error("Se perdió la conexión con MT5 o la simulación se detuvo. Bucle finalizado.")
+                self.simulation_running = False 
+            return
+
+        try:
+            # 1. Obtener el precio actual
+            symbol = self.simulation_instance.symbol
+            tick = mt5.symbol_info_tick(symbol)
+            if tick:
+                # Usar el precio medio para on_tick, ya que es para la formación de velas
+                price = (tick.bid + tick.ask) / 2
+                timestamp = pd.to_datetime(tick.time, unit='s')
+                
+                # 2. Procesar el tick en la simulación (esto formará velas y ejecutará estrategias)
+                self.simulation_instance.on_tick(timestamp, price)
+
+            # 3. Obtener y actualizar el resumen de la cuenta desde MT5
+            summary = self.simulation_instance.get_account_summary()
+            if summary:
+                self.equity_var.set(f"{summary['equity']:.2f} $")
+                self.margin_var.set(f"{summary['margin']:.2f} $")
+                self.free_margin_var.set(f"{summary['free_margin']:.2f} $")
+                
+                # El 'profit' de account_info es el P/L flotante
+                profit_or_loss = summary.get('profit', 0.0)
+                if profit_or_loss >= 0:
+                    self.profit_var.set(f"{profit_or_loss:.2f} $")
+                    self.loss_var.set("0.00 $")
+                else:
+                    self.profit_var.set("0.00 $")
+                    self.loss_var.set(f"{abs(profit_or_loss):.2f} $")
+
+        except Exception as e:
+            self._log_error(f"Error en el bucle de simulación: {e}")
+
+        # Programar la siguiente ejecución si la simulación sigue activa
+        if self.simulation_running:
+            self.root.after(1000, self._start_simulation_loop)
+
+    def _save_session_log(self):
+        """Guarda el contenido actual del logger en un archivo."""
+        if not hasattr(self.logger, 'get_content'):
+            self._log_error("El logger no soporta la exportación de contenido.")
+            return
+
+        try:
+            log_content = self.logger.get_content()
+            if not log_content.strip():
+                return # No guardar si el log está vacío
+
+            log_dir = os.path.join(_project_root, 'simulation_logs')
+            os.makedirs(log_dir, exist_ok=True)
+
+            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+            filename = f"simulacion_{timestamp}.log"
+            filepath = os.path.join(log_dir, filename)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(log_content)
+            
+            self._log_success(f"Log de la sesión guardado en: {filepath}")
+
+        except Exception as e:
+            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
+
+    def _update_final_labels(self):
+        """Actualiza los labels una última vez y luego los limpia."""
+        try:
+            account_info = mt5.account_info()
+            if account_info:
+                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
+                self.equity_var.set(f"{account_info.equity:.2f} $")
+                self.margin_var.set("0.00 $")
+                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
+        finally:
+            # Limpiar labels de profit/loss ya que no hay simulación activa
+            self.profit_var.set("----")
+            self.loss_var.set("----")
 
     def _clear_log_action(self):
-        """Limpia el contenido del logger."""
+        """Limpia el contenido del logger.""" 
         if hasattr(self, 'logger') and hasattr(self.logger, 'clear'):
             self.logger.clear()
+
+    def _save_session_log(self):
+        """Guarda el contenido actual del logger en un archivo."""
+        if not hasattr(self.logger, 'get_content'):
+            self._log_error("El logger no soporta la exportación de contenido.")
+            return
+
+        try:
+            log_content = self.logger.get_content()
+            if not log_content.strip():
+                return # No guardar si el log está vacío
+
+            log_dir = os.path.join(_project_root, 'simulation_logs')
+            os.makedirs(log_dir, exist_ok=True)
+
+            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+            filename = f"simulacion_{timestamp}.log"
+            filepath = os.path.join(log_dir, filename)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(log_content)
+            
+            self._log_success(f"Log de la sesión guardado en: {filepath}")
+
+        except Exception as e:
+            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
+
+    def _update_final_labels(self):
+        """Actualiza los labels una última vez y luego los limpia."""
+        try:
+            account_info = mt5.account_info()
+            if account_info:
+                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
+                self.equity_var.set(f"{account_info.equity:.2f} $")
+                self.margin_var.set("0.00 $")
+                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
+        finally:
+            # Limpiar labels de profit/loss ya que no hay simulación activa
+            self.profit_var.set("----")
+            self.loss_var.set("----")
 
     def _create_required_dirs(self):
         """Crea los directorios necesarios para la aplicación si no existen."""
@@ -838,15 +1032,15 @@ class App:
             self._log_info("La configuración no fue modificada.")
 
     def _on_exit(self):
-        try:
-            # Save preferences on exit
-            self._save_prefs(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
-            # Close the Tkinter window gracefully
-            self.root.destroy()
-        finally:
-            # Ensure all subprocesses/threads are terminated
-            print("Saliendo del programa...")
-            os._exit(0)
+        """Handle application closing.""" 
+        # Si la simulación está corriendo, detenerla antes de salir
+        if self.simulation_running:
+            self._detener_simulacion_action()
+
+        self._save_prefs(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
+        self.root.destroy()
+        print("Saliendo del programa...")
+        os._exit(0)
 
 
 if __name__ == "__main__":

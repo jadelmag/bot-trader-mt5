@@ -68,3 +68,7 @@ class BodyLogger(ttk.Frame):
         self.text.configure(state="normal")
         self.text.delete('1.0', tk.END)
         self.text.configure(state="disabled")
+
+    def get_content(self) -> str:
+        """Devuelve todo el contenido del widget de texto."""
+        return self.text.get('1.0', tk.END)

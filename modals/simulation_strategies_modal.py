@@ -96,22 +96,16 @@ class SimulationStrategiesModal(tk.Toplevel):
         config_frame.pack(fill=tk.X, pady=(10, 5))
         config_frame.columnconfigure((0, 4), weight=1) # Columnas para centrar
 
-        # Fila para Capital Inicial
-        ttk.Label(config_frame, text="Capital Inicial:").grid(row=0, column=1, sticky='e', padx=(0, 5))
-        self.initial_capital_var = tk.DoubleVar(value=1000.0)
-        initial_capital_entry = ttk.Entry(config_frame, textvariable=self.initial_capital_var, width=10)
-        initial_capital_entry.grid(row=0, column=2, columnspan=2, sticky='w')
-
         # Fila para Slots
-        ttk.Label(config_frame, text="Slots Forex:").grid(row=1, column=1, sticky='e', padx=(0, 5), pady=(5,0))
+        ttk.Label(config_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5), pady=(5,0))
         self.slots_forex_var = tk.IntVar(value=1)
         forex_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_forex_var, width=5)
-        forex_slots_entry.grid(row=1, column=2, sticky='w', pady=(5,0))
+        forex_slots_entry.grid(row=0, column=2, sticky='w', pady=(5,0))
 
-        ttk.Label(config_frame, text="Slots Candles:").grid(row=1, column=3, sticky='e', padx=(10, 5), pady=(5,0))
+        ttk.Label(config_frame, text="Slots Candles:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
         self.slots_candles_var = tk.IntVar(value=1)
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
-        candle_slots_entry.grid(row=1, column=4, sticky='w', pady=(5,0))
+        candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
 
         # --- Frame Inferior para botones de acción (siempre visible) ---
         bottom_frame = ttk.Frame(main_frame)
@@ -337,7 +331,7 @@ class SimulationStrategiesModal(tk.Toplevel):
             pass
 
     def _apply_and_run_simulation(self):
-        """Recopila la config, la guarda, inicia la simulación y cierra el modal."""
+        """Recopila la config, la guarda, la devuelve y cierra el modal."""
         config_to_save = {
             'slots': {
                 'forex': self.slots_forex_var.get(),
@@ -367,15 +361,12 @@ class SimulationStrategiesModal(tk.Toplevel):
         try:
             with open(output_path, 'w') as f:
                 json.dump(config_to_save, f, indent=4)
+            self.logger.log("Configuración de estrategias guardada en 'strategies.json'.")
         except Exception as e:
             self.logger.error(f"Error al guardar la configuración: {e}")
 
-        # --- Iniciar la simulación de backtesting ---
-        self.logger.log("\nIniciando simulación desde el modal...")
-        simulator = StrategySimulator(config_to_save, self.candles_df, self.logger, self.initial_capital_var.get())
-        simulator.run_simulation()
-
-        self.result = config_to_save # Devolvemos la configuración para uso futuro
+        # Devolvemos la configuración para que la ventana principal la use
+        self.result = config_to_save 
         self._on_close()
 
     def _update_load_button_state(self, pattern_name):
