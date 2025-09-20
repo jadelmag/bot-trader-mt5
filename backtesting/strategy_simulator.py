@@ -206,17 +206,28 @@ class StrategySimulator:
     def _open_trade(self, entry_index, entry_price, signal, source, strategy_name, config):
         """Abre una nueva operación y la añade a la lista de operaciones abiertas."""
         stop_loss_pips = 0
-        risk_percent = 1.0 # Riesgo por defecto del 1% para velas
+        risk_percent = 1.0 # Riesgo por defecto del 1%
 
         if source == 'forex':
             stop_loss_pips = config.get('stop_loss_pips', 20)
             rr_ratio = config.get('rr_ratio', 2.0)
             risk_percent = config.get('percent_ratio', 1.0)
         else: # 'candle'
+            # Extraer la configuración detallada del patrón
+            pattern_config = config.get('config', {})
+            use_sl = pattern_config.get('use_stop_loss', True)
+
+            if not use_sl:
+                self.logger.log(f"    -> Trade RECHAZADO: El Stop Loss está desactivado para '{strategy_name}'.")
+                return
+
             atr = self.candles_df.iloc[entry_index]['atr']
+            atr_sl_multiplier = pattern_config.get('atr_sl_multiplier', 1.5)
+            atr_tp_multiplier = pattern_config.get('atr_tp_multiplier', 2.0)
+            
             # Convertir el SL basado en ATR a pips
-            stop_loss_pips = (atr * 1.5) / self.pip_value
-            rr_ratio = 2.0 # RR fijo para velas
+            stop_loss_pips = (atr * atr_sl_multiplier) / self.pip_value
+            rr_ratio = atr_tp_multiplier / atr_sl_multiplier if atr_sl_multiplier > 0 else 0
 
         if stop_loss_pips <= 0:
             self.logger.error(f"    -> Trade RECHAZADO: Stop loss inválido ({stop_loss_pips} pips) para {strategy_name}")
