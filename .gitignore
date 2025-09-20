@@ -1,3 +1,4 @@
 .env
 __pycache__
-simulation_logs/simulacion_*.log
+simulation_logs/*.log
+resumes/*.txt

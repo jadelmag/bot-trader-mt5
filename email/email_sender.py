@@ -85,7 +85,7 @@ class EmailSender:
                 time.sleep(60)
 
     def _get_account_summary(self):
-        """Obtiene un resumen del estado de la cuenta de MT5."""
+        """Obtiene un resumen detallado del estado de la cuenta de MT5."""
         if not mt5 or not mt5.terminal_info():
             return "No hay conexión con MetaTrader 5."
 
@@ -94,18 +94,85 @@ class EmailSender:
             if not account_info:
                 return "No se pudo obtener la información de la cuenta."
 
-            positions = mt5.positions_get()
-            num_positions = len(positions) if positions else 0
+            # --- Datos Principales ---
+            currency = account_info.currency
+            balance = account_info.balance
+            equity = account_info.equity
+            profit_floating = account_info.profit
+            leverage = account_info.leverage
 
+            # --- Datos Históricos y Métricas ---
+            history_deals = mt5.history_deals_get(0, int(time.time()))
+            
+            total_trades = 0
+            wins = 0
+            losses = 0
+            gross_profit = 0
+            gross_loss = 0
+            most_profitable_trade = 0
+            most_losing_trade = 0
+            
+            if history_deals:
+                # Filtrar solo transacciones de entrada/salida
+                trade_deals = [d for d in history_deals if d.entry in (mt5.DEAL_ENTRY_IN, mt5.DEAL_ENTRY_OUT)]
+                total_trades = len(trade_deals)
+
+                for deal in trade_deals:
+                    if deal.profit > 0:
+                        wins += 1
+                        gross_profit += deal.profit
+                        if deal.profit > most_profitable_trade:
+                            most_profitable_trade = deal.profit
+                    elif deal.profit < 0:
+                        losses += 1
+                        gross_loss += abs(deal.profit)
+                        if deal.profit < most_losing_trade:
+                            most_losing_trade = deal.profit
+
+            win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
+            avg_profit = (gross_profit / wins) if wins > 0 else 0
+            avg_loss = (gross_loss / losses) if losses > 0 else 0
+            profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf')
+
+            # --- Operaciones Abiertas ---
+            positions = mt5.positions_get()
+            open_positions_count = len(positions) if positions else 0
+
+            # --- Construcción del Resumen ---
             summary = f"""
-            Resumen de la Cuenta:
-            ---------------------
-            Balance: {account_info.balance:.2f} {account_info.currency}
-            Equity: {account_info.equity:.2f} {account_info.currency}
-            Profit: {account_info.profit:.2f} {account_info.currency}
-            Operaciones Abiertas: {num_positions}
+===============================
+|         RESUMEN GENERAL         |
+===============================
+
+📌 Datos principales:
+- Dinero inicial: No disponible
+- Balance actual: {balance:.2f} {currency}
+- Dinero total (incluyendo flotante): {equity:.2f} {currency}
+- Ganancias acumuladas: No disponible
+- Pérdidas acumuladas: No disponible
+- Equity: {equity:.2f} {currency}
+- Drawdown máximo: No disponible
+- Apalancamiento usado: 1:{leverage}
+
+📊 Operaciones:
+- Número de operaciones realizadas: {total_trades}
+- Número de operaciones forex abiertas: {open_positions_count} (Total)
+- Número de operaciones candle abiertas: No disponible
+- Operación más rentable: {most_profitable_trade:.2f} {currency}
+- Operación más perdedora: {most_losing_trade:.2f} {currency}
+
+📈 Métricas de rendimiento:
+- Win Rate (%): {win_rate:.2f}%
+- Promedio de ganancia por operación: {avg_profit:.2f} {currency}
+- Promedio de pérdida por operación: {avg_loss:.2f} {currency}
+- Relación Ganancia/Pérdida (Profit Factor): {profit_factor:.2f}
+- Expectancy (ganancia esperada por operación): No disponible
+- Tiempo promedio en operación: No disponible
+
+===============================
             """
-            return summary
+            return summary.strip()
+
         except Exception as e:
             return f"Error al obtener el resumen de la cuenta: {e}"
 
