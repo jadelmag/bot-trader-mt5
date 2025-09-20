@@ -1,9 +1,0 @@
-[15:09:29] Intentando conexión a MT5 con cuenta 5040311399 en MetaQuotes-Demo…
-[15:09:29] Conexión establecida correctamente.
-[15:09:31] Balance de cuenta actualizado: 100000.00 $
-[15:09:31] Inicializando gráfico para EURUSD (M1)…
-[15:09:37] Inicio de simulación cancelado por el usuario.
-[15:09:57] Configuración de estrategias guardada en 'strategies.json'.
-[15:09:57] Configuración de estrategias aceptada. Iniciando simulación...
-[15:09:57] Simulación iniciada para EURUSD con un balance de 100000.00 $.
-
