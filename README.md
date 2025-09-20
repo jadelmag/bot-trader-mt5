@@ -81,59 +81,75 @@ Sigue estos pasos para poner en marcha el proyecto.
 
 ```
 app/
-├── docs/
-|   ├── candles.md               
-|   ├── market_scene.md                              
-|   └── forex.md                       
 |
-├── actions/
-│   ├── tooltip.py
-│   └── actions.py
+├── actions/                              # Módulos para acciones
+│   ├── actions.py                        # Acciones
+│   ├── tooltip.py                        # Tooltips
+│   └── trade_manager.py                  # Gestión de operaciones
 |
-├── backtesting/
-│   ├── __init__.py
-│   ├── apply_strategies.py
-│   ├── backtesting.py
-│   ├── detect_candles.py
-│   └── strategy_simulator.py
+├── audit/                                # Directorio para logs de operaciones en JSONL
 |
-├── candles/
-|   └── candles_list.py
+├── backtesting/                         
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── apply_strategies.py               # Aplicación de estrategias
+│   ├── backtesting.py                    # Backtesting
+│   ├── detect_candles.py                 # Detección de velas
+│   ├── report_generator.py               # Generador de informes
+│   └── strategy_simulator.py             # Simulador de estrategias
+|
+├── candles/                              
+|   └── candle_list.py                    # Patrones de velas
+|
+├── custom/
+|   └── custom_strategies.py              # Estrategias personalizadas
+|
+├── docs/                                 # Documentación
+|   ├── candles.md                        # Documentación de patrones de velas
+|   ├── forex.md                          # Documentación de estrategias de forex
+|   ├── log.txt                           # Log de la aplicación
+|   └── todo.md                           # Tareas pendientes
+|
+├── email/                                # Módulo para envío de notificaciones por email
+|   └── email_sender.py                   # Envío de notificaciones por email
 |
 ├── forex/
-│   └── forex_list.py     
+│   └── forex_list.py                     # Lista de estrategias de forex
 |
 ├── gui/
-│   ├── __init__.py
-│   ├── body_graphic.py
-│   └── body_logger.py
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── body_graphic.py                   # Gráfico principal de la aplicación
+│   └── body_logger.py                    # Logger de la aplicación
 |
-├── loggin/
-│   ├── __init__.py
-│   └── loggin.py
+├── loggin/                               # Módulos para logging
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── audit_log.py                      # Logger de auditoría
+│   └── loggin.py                         # Logger de la aplicación
 |
-├── modals/
-│   ├── __init__.py
-│   ├── backtesting_modal.py
-│   ├── candle_config_modal.py
-│   ├── detect_all_candles_modal.py
-│   ├── detect_all_forex_modal.py
-│   ├── loggin_modal.py
-│   └── strategy_simulator_modal.py
+├── modals/                               # Módulos para modales de la aplicación
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── backtesting_modal.py              # Modal de backtesting
+│   ├── candle_config_modal.py            # Modal de configuración de velas
+│   ├── config_app_modal.py               # Modal de configuración de la aplicación
+│   ├── detect_all_candles_modal.py       # Modal de detección de velas
+│   ├── detect_all_forex_modal.py         # Modal de detección de forex
+│   ├── loggin_modal.py                   # Modal de logging
+│   └── strategy_simulator_modal.py       # Modal de simulador de estrategias
 |
-├── strategies/
-│   ├── config strategies files
-│   ├── strategies 
-│   └── config_app
+├── resumes/                            # Directorio para informes de backtesting
+│   └── backtesting_2025-09-20_12-51-52.txt
 |
-├── .env
-├── .gitignore
-├── gui_main.py
-├── main.py
-├── LICENSE
-├── README.md                           
-├── requirements.txt
-└── user_prefs.json
+├── strategies/                         # Patrones de velas y estrategias de trading
+|   ├── config.json                       # Fichero de configuración de la app
+|   └── ... (Múltiples ficheros .json con estrategias)
+|
+├── .env                                  # Archivo de variables de entorno
+├── .gitignore                            # Archivo de configuración de Git
+├── gui_main.py                           # Punto de entrada de la aplicación con GUI
+├── LICENSE                               # Licencia de la aplicación
+├── main.py                               # Punto de entrada de la aplicación
+├── README.md                             # Documentación de la aplicación
+├── requirements.txt                      # Requisitos de la aplicación
+└── user_prefs.json                       # Preferencias del usuario
 ```
 
 ---
