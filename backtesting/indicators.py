@@ -46,15 +46,14 @@ def add_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Ichimoku Kinko Hyo ---
     # Nombres por defecto: 'ITS_9', 'IKS_26', 'ISA_9_26_52', 'ISB_26_52', 'ICS_26'
-    ichimoku = df.ta.ichimoku(append=True)
-    if ichimoku is not None and not ichimoku.empty:
-        df.rename(columns={
-            'ITS_9': 'tenkan_sen',
-            'IKS_26': 'kijun_sen',
-            'ISA_9_26_52': 'senkou_span_a',
-            'ISB_26_52': 'senkou_span_b',
-            'ICS_26': 'chikou_span'
-        }, inplace=True)
+    df.ta.ichimoku(append=True)
+    df.rename(columns={
+        'ITS_9': 'tenkan_sen',
+        'IKS_26': 'kijun_sen',
+        'ISA_9_26_52': 'senkou_span_a',
+        'ISB_26_52': 'senkou_span_b',
+        'ICS_26': 'chikou_span'
+    }, inplace=True)
 
     # --- Stochastic RSI (StochRSI) ---
     # Nombres por defecto: 'STOCHRSIk_14_14_3_3', 'STOCHRSId_14_14_3_3'

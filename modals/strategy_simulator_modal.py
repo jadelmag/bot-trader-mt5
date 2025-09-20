@@ -352,11 +352,27 @@ class StrategySimulatorModal(tk.Toplevel):
 
         # Recopilar datos de la pestaña Candle
         for pattern_name, widgets in self.candle_widgets.items():
-            config_to_save['candle_strategies'][pattern_name] = {
-                'selected': widgets['checkbox_var'].get(),
-                'strategy_mode': widgets['strategy_var'].get()
+            is_selected = widgets['checkbox_var'].get()
+            strategy_mode = widgets['strategy_var'].get()
+
+            strategy_config = {
+                'selected': is_selected,
+                'strategy_mode': strategy_mode,
+                'config': {}  # Diccionario para la configuración específica
             }
-        
+
+            if is_selected and strategy_mode == 'Custom':
+                config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
+                if os.path.exists(config_path):
+                    try:
+                        with open(config_path, 'r') as f:
+                            strategy_config['config'] = json.load(f)
+                    except (json.JSONDecodeError, IOError) as e:
+                        self.logger.error(f"Error al cargar la configuración para {pattern_name}: {e}")
+                        # Opcional: decidir si continuar sin la config o mostrar un error
+
+            config_to_save['candle_strategies'][pattern_name] = strategy_config
+
         # Recopilar datos de la pestaña Forex
         for strategy_name, widgets in self.forex_widgets.items():
             config_to_save['forex_strategies'][strategy_name] = {

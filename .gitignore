@@ -3,4 +3,5 @@
 __pycache__
 simulation_logs/*.log
 resumes/*.txt
+.pytest_cache
 connect.py

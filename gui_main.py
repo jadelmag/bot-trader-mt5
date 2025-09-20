@@ -150,7 +150,7 @@ class App:
         self.options_btn.grid(row=0, column=1, padx=(10, 0))
         options_menu = tk.Menu(self.options_btn, tearoff=False)
         self.options_btn["menu"] = options_menu
-        options_menu.add_checkbutton(label="Modo Debug (Log de Precios)", variable=self.debug_mode_var)
+        options_menu.add_checkbutton(label="Modo Debug", variable=self.debug_mode_var)
         options_menu.add_separator()
         options_menu.add_command(label="Configuración", command=self._open_config_modal)
 
