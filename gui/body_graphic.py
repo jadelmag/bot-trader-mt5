@@ -300,9 +300,6 @@ class BodyGraphic(ttk.Frame):
                 return
 
             # --- Feed the simulation instance ---
-            if self.logger and self.debug_mode_var and self.debug_mode_var.get():
-                self.logger.log(f"Precio {self.symbol}: {price:.5f}")
-
             if self.price_line is None:
                 self.price_line = self.ax.axhline(y=price, color='#888888', linestyle='-', linewidth=1.0)
             else:
