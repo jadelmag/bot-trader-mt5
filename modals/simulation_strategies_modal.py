@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import os
 import sys
 import inspect
@@ -305,7 +305,7 @@ class SimulationStrategiesModal(tk.Toplevel):
 
     def _load_all_candle_strategies(self):
         for pattern_name in self.candle_patterns:
-            self._load_candle_strategy(pattern_name, update_ui=True)
+            self._load_candle_strategy(pattern_name)
 
     def _open_config_modal(self, pattern_name):
         """Abre el modal de configuración para un patrón específico."""
@@ -316,19 +316,22 @@ class SimulationStrategiesModal(tk.Toplevel):
         if config_modal.result is True:
             self._update_load_button_state(pattern_name)
 
-    def _load_candle_strategy(self, pattern_name, update_ui=False):
+    def _load_candle_strategy(self, pattern_name):
+        """Carga una estrategia de velas desde un archivo JSON."""
         config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
         if os.path.exists(config_path):
-            # Aquí iría la lógica para leer y procesar el JSON
-            
-            # Cambiar dropdown a Custom
-            if pattern_name in self.candle_widgets:
-                self.candle_widgets[pattern_name]['strategy_var'].set("Custom")
-        elif update_ui:
-            # No hacer nada si se llama desde 'Cargar Todas' y el archivo no existe
-            pass
-        else:
-            pass
+            try:
+                with open(config_path, 'r') as f:
+                    # Leemos el archivo para asegurarnos de que es un JSON válido
+                    json.load(f)
+                
+                # Si la lectura es exitosa, cambiamos el dropdown a Custom
+                if pattern_name in self.candle_widgets:
+                    self.candle_widgets[pattern_name]['strategy_var'].set("Custom")
+
+            except (json.JSONDecodeError, IOError) as e:
+                messagebox.showerror("Error de Configuración", f"No se pudo cargar la estrategia para '{pattern_name}'.\nEl archivo podría estar corrupto.\n\nError: {e}")
+    
 
     def _apply_and_run_simulation(self):
         """Recopila la config, la guarda, la devuelve y cierra el modal."""
