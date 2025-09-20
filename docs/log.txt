@@ -1,49 +1,105 @@
-[11:50:24] Intentando conexión a MT5 con cuenta 5040311399 en MetaQuotes-Demo…
-[11:50:24] Conexión establecida correctamente.
-[11:50:25] Balance de cuenta actualizado: 100000.00 $
-[11:50:25] Inicializando gráfico para EURUSD (M1)…
-[11:50:38] Iniciando backtesting perfecto... Esto puede tardar un momento.
-[11:50:38] Indicadores técnicos calculados correctamente.
-[11:50:38] --------------------------------------------------
-[11:50:38] Señales evaluadas en este backtest:
-[11:50:38] - Bollinger Bands Breakout [forex] 3
-[11:50:38] - Bollinger Bands Reversion [forex] 0
-[11:50:38] - Candle Reversal [forex] 4
-[11:50:38] - Chart Breakout [forex] 3
-[11:50:38] - Fibonacci Reversal [forex] 4
-[11:50:38] - Ichimoku Kinko Hyo [forex] 2
-[11:50:38] - Ma Crossover [forex] 6
-[11:50:38] - Momentum Rsi Macd [forex] 7
-[11:50:38] - Price Action Sr [forex] 3
-[11:50:38] - Scalping Stochrsi Ema [forex] 8
-[11:50:38] - Swing Trading Multi Indicator [forex] 21
+[12:04:03] Intentando conexión a MT5 con cuenta 5040311399 en MetaQuotes-Demo…
+[12:04:03] Conexión establecida correctamente.
+[12:04:04] Balance de cuenta actualizado: 100000.00 $
+[12:04:04] Inicializando gráfico para EURUSD (M1)…
+[12:04:10] Iniciando backtesting perfecto... Esto puede tardar un momento.
+[12:04:10] Indicadores técnicos calculados correctamente.
+[12:04:10] --------------------------------------------------
+[12:04:10] Señales evaluadas en este backtest:
+[12:04:10] - Dark Cloud Cover [candle]
+[12:04:10] - Doji [candle]
+[12:04:10] - Dragonfly Doji [candle]
+[12:04:10] - Engulfing [candle]
+[12:04:10] - Evening Star [candle]
+[12:04:10] - Falling Three Methods [candle]
+[12:04:10] - Gravestone Doji [candle]
+[12:04:10] - Hammer [candle]
+[12:04:10] - Hanging Man [candle]
+[12:04:10] - Harami [candle]
+[12:04:10] - Inverted Hammer [candle]
+[12:04:10] - Long Legged Doji [candle]
+[12:04:10] - Marubozu [candle]
+[12:04:10] - Morning Star [candle]
+[12:04:10] - Piercing Line [candle]
+[12:04:10] - Rising Three Methods [candle]
+[12:04:10] - Shooting Star [candle]
+[12:04:10] - Three Black Crows [candle]
+[12:04:10] - Three Inside Up Down [candle]
+[12:04:10] - Three Outside Up Down [candle]
+[12:04:10] - Three White Soldiers [candle]
+[12:04:10] - Bollinger Bands Breakout [forex]
+[12:04:10] - Bollinger Bands Reversion [forex]
+[12:04:10] - Candle Reversal [forex]
+[12:04:10] - Chart Breakout [forex]
+[12:04:10] - Fibonacci Reversal [forex]
+[12:04:10] - Ichimoku Kinko Hyo [forex]
+[12:04:10] - Ma Crossover [forex]
+[12:04:10] - Momentum Rsi Macd [forex]
+[12:04:10] - Price Action Sr [forex]
+[12:04:10] - Scalping Stochrsi Ema [forex]
+[12:04:10] - Swing Trading Multi Indicator [forex]
+[12:04:10] --------------------------------------------------
+[12:04:10] Señales generadas (rentables o no):
+[12:04:10] - Dark Cloud Cover: 17 veces
+[12:04:10] - Doji: 0 veces
+[12:04:10] - Dragonfly Doji: 1 veces
+[12:04:10] - Engulfing: 38 veces
+[12:04:10] - Evening Star: 0 veces
+[12:04:10] - Falling Three Methods: 0 veces
+[12:04:10] - Gravestone Doji: 1 veces
+[12:04:10] - Hammer: 6 veces
+[12:04:10] - Hanging Man: 8 veces
+[12:04:10] - Harami: 12 veces
+[12:04:10] - Inverted Hammer: 8 veces
+[12:04:10] - Long Legged Doji: 0 veces
+[12:04:10] - Marubozu: 18 veces
+[12:04:10] - Morning Star: 2 veces
+[12:04:10] - Piercing Line: 11 veces
+[12:04:10] - Rising Three Methods: 0 veces
+[12:04:10] - Shooting Star: 7 veces
+[12:04:10] - Three Black Crows: 3 veces
+[12:04:10] - Three Inside Up Down: 9 veces
+[12:04:10] - Three Outside Up Down: 21 veces
+[12:04:10] - Three White Soldiers: 2 veces
+[12:04:10] - Bollinger Bands Breakout: 12 veces
+[12:04:10] - Bollinger Bands Reversion: 2 veces
+[12:04:10] - Candle Reversal: 15 veces
+[12:04:10] - Chart Breakout: 19 veces
+[12:04:10] - Fibonacci Reversal: 15 veces
+[12:04:10] - Ichimoku Kinko Hyo: 8 veces
+[12:04:10] - Ma Crossover: 10 veces
+[12:04:10] - Momentum Rsi Macd: 19 veces
+[12:04:10] - Price Action Sr: 15 veces
+[12:04:10] - Scalping Stochrsi Ema: 11 veces
+[12:04:10] - Swing Trading Multi Indicator: 69 veces
+[12:04:10] 
 ========================= RESUMEN DE BACKTESTING PERFECTO =========================
-[11:50:38] SEÑAL (PATRÓN/ESTRATEGIA)                          |     OPERACIONES RENTABLES |      BENEFICIO TOTAL
-[11:50:38] -----------------------------------------------------------------------------------------------------
-[11:50:38] Swing Trading Multi Indicator [forex]              |                        33 |             669.00 $
-[11:50:38] Engulfing [candle]                                 |                        21 |             470.00 $
-[11:50:38] Three Outside Up Down [candle]                     |                        12 |             283.00 $
-[11:50:38] Dark Cloud Cover [candle]                          |                         9 |             161.00 $
-[11:50:38] Marubozu [candle]                                  |                        10 |             152.00 $
-[11:50:38] Scalping Stochrsi Ema [forex]                      |                         8 |             146.00 $
-[11:50:38] Momentum Rsi Macd [forex]                          |                         7 |             138.00 $
-[11:50:38] Harami [candle]                                    |                         7 |             126.00 $
-[11:50:38] Shooting Star [candle]                             |                         5 |             116.00 $
-[11:50:38] Three Inside Up Down [candle]                      |                         5 |             112.00 $
-[11:50:38] Piercing Line [candle]                             |                         5 |              93.00 $
-[11:50:38] Hanging Man [candle]                               |                         3 |              65.00 $
-[11:50:38] Ma Crossover [forex]                               |                         6 |              64.00 $
-[11:50:38] Candle Reversal [forex]                            |                         4 |              46.00 $
-[11:50:38] Fibonacci Reversal [forex]                         |                         4 |              46.00 $
-[11:50:38] Price Action Sr [forex]                            |                         4 |              46.00 $
-[11:50:38] Inverted Hammer [candle]                           |                         3 |              45.00 $
-[11:50:38] Chart Breakout [forex]                             |                         3 |              39.00 $
-[11:50:38] Three Black Crows [candle]                         |                         1 |              39.00 $
-[11:50:38] Hammer [candle]                                    |                         3 |              35.00 $
-[11:50:38] Ichimoku Kinko Hyo [forex]                         |                         2 |              28.00 $
-[11:50:38] Bollinger Bands Breakout [forex]                   |                         3 |              25.00 $
-[11:50:38] Dragonfly Doji [candle]                            |                         1 |               8.00 $
-[11:50:38] -----------------------------------------------------------------------------------------------------
-[11:50:38] BENEFICIO TOTAL PERFECTO: 2952.00 $
-[11:50:38] ==========================================================================================
+[12:04:10] SEÑAL (PATRÓN/ESTRATEGIA)                          |     OPERACIONES RENTABLES |      BENEFICIO TOTAL
+[12:04:10] -----------------------------------------------------------------------------------------------------
+[12:04:10] Swing Trading Multi Indicator [forex]              |                        33 |             669.00 $
+[12:04:10] Engulfing [candle]                                 |                        21 |             470.00 $
+[12:04:10] Three Outside Up Down [candle]                     |                        12 |             283.00 $
+[12:04:10] Dark Cloud Cover [candle]                          |                         9 |             161.00 $
+[12:04:10] Marubozu [candle]                                  |                        10 |             152.00 $
+[12:04:10] Scalping Stochrsi Ema [forex]                      |                         8 |             146.00 $
+[12:04:10] Momentum Rsi Macd [forex]                          |                         7 |             138.00 $
+[12:04:10] Harami [candle]                                    |                         7 |             126.00 $
+[12:04:10] Shooting Star [candle]                             |                         5 |             116.00 $
+[12:04:10] Three Inside Up Down [candle]                      |                         5 |             112.00 $
+[12:04:10] Piercing Line [candle]                             |                         5 |              93.00 $
+[12:04:10] Candle Reversal [forex]                            |                         6 |              69.00 $
+[12:04:10] Fibonacci Reversal [forex]                         |                         6 |              69.00 $
+[12:04:10] Price Action Sr [forex]                            |                         6 |              69.00 $
+[12:04:10] Hanging Man [candle]                               |                         3 |              65.00 $
+[12:04:10] Ma Crossover [forex]                               |                         6 |              64.00 $
+[12:04:10] Inverted Hammer [candle]                           |                         3 |              45.00 $
+[12:04:10] Chart Breakout [forex]                             |                         3 |              39.00 $
+[12:04:10] Three Black Crows [candle]                         |                         1 |              39.00 $
+[12:04:10] Hammer [candle]                                    |                         3 |              35.00 $
+[12:04:10] Ichimoku Kinko Hyo [forex]                         |                         2 |              28.00 $
+[12:04:10] Bollinger Bands Breakout [forex]                   |                         3 |              25.00 $
+[12:04:10] Dragonfly Doji [candle]                            |                         1 |               8.00 $
+[12:04:10] -----------------------------------------------------------------------------------------------------
+[12:04:10] BENEFICIO TOTAL PERFECTO: 3021.00 $
+[12:04:10] ==========================================================================================
 

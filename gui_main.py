@@ -687,7 +687,7 @@ class App:
             candles_df_copy = self._add_technical_indicators(candles_df_copy)
 
             backtester = PerfectBacktester(candles_df_copy)
-            stats, profitable_trades, signal_names = backtester.run()
+            stats, profitable_trades, signal_names, all_generated_signals = backtester.run()
             
             # Registrar todas las señales evaluadas
             self._log_info("-"*50)
@@ -696,6 +696,18 @@ class App:
                 clean_name = signal_name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
                 signal_type = "[forex]" if signal_name.startswith('strategy_') else "[candle]"
                 self._log_info(f"- {clean_name} {signal_type}")
+
+            # Registrar todas las señales generadas (rentables o no)
+            self._log_info("-"*50)
+            self._log_info("Señales generadas (rentables o no):")
+            from collections import Counter
+            signal_counts = Counter(s['name'] for s in all_generated_signals)
+            
+            # Mostrar todas las señales evaluadas, con su contador (o 0 si no se generaron)
+            for signal_name in sorted(signal_names):
+                count = signal_counts.get(signal_name, 0)
+                clean_name = signal_name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                self._log_info(f"- {clean_name}: {count} veces")
 
             summary_lines, total_profit = PerfectBacktester.format_summary(stats)
 

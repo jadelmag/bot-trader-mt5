@@ -50,6 +50,7 @@ class PerfectBacktester:
 
         stats = {name: {'money_generated': 0, 'trades': 0} for name in all_signals.keys()}
         profitable_trades = []
+        all_generated_signals = [] # Lista para todas las señales generadas
 
         for i in range(len(self.df) - self.hold_period):
             for name, (signal_type, func) in all_signals.items():
@@ -64,6 +65,9 @@ class PerfectBacktester:
                     continue # Ignorar si la señal falla por falta de datos
 
                 if signal and signal != 'neutral':
+                    # Registrar todas las señales generadas, rentables o no
+                    all_generated_signals.append({'name': name, 'signal': signal, 'index': i})
+
                     entry_price = self.df['close'].iloc[i]
                     exit_price = self.df['close'].iloc[i + self.hold_period]
                     is_profitable = (signal == 'long' and exit_price > entry_price) or \
@@ -82,7 +86,7 @@ class PerfectBacktester:
                             'entry_price': entry_price,
                             'exit_price': exit_price
                         })
-        return stats, profitable_trades, signal_names
+        return stats, profitable_trades, signal_names, all_generated_signals
 
     @staticmethod
     def format_summary(stats):
