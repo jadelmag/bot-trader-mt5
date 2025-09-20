@@ -16,6 +16,7 @@ class DetectAllCandlesModal(tk.Toplevel):
         super().__init__(parent)
         self.title("Detectar Patrones de Velas en Gráfico")
         self.geometry("400x400")
+        self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
 

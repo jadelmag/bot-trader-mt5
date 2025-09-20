@@ -91,7 +91,7 @@
     },
     "forex_strategies": {
         "strategy_bollinger_bands_breakout": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0
@@ -151,7 +151,7 @@
             "stop_loss_pips": 20.0
         },
         "strategy_swing_trading_multi_indicator": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0

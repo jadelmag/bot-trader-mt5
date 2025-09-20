@@ -20,3 +20,23 @@ No detecta ninguna de estas estrategias forex:
 * strategy_price_action_sr: no encuentra
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
+
+while True:
+    tick = mt5.symbol_info_tick(symbol)
+    
+    if signal['direction'] == 'long':
+        if tick.last >= precio_entrada + tp_pips*0.0001:  # TP alcanzado
+            cerrar_operacion()
+            break
+        elif tick.last <= precio_entrada - sl_pips*0.0001:  # SL alcanzado
+            cerrar_operacion()
+            break
+    elif signal['direction'] == 'short':
+        if tick.last <= precio_entrada - tp_pips*0.0001:  # TP alcanzado
+            cerrar_operacion()
+            break
+        elif tick.last >= precio_entrada + sl_pips*0.0001:  # SL alcanzado
+            cerrar_operacion()
+            break
+
+    time.sleep(1)
