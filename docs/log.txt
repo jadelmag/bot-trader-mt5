@@ -1,16 +1,49 @@
-[11:03:15] SEÑAL (PATRÓN/ESTRATEGIA)                |     OPERACIONES RENTABLES |      BENEFICIO TOTAL
-[11:03:15] -------------------------------------------------------------------------------------------
-[11:03:15] Engulfing                                |                        21 |             470.00 $
-[11:03:15] Three Outside Up Down                    |                        12 |             283.00 $
-[11:03:15] Dark Cloud Cover                         |                         9 |             161.00 $
-[11:03:15] Marubozu                                 |                        10 |             152.00 $
-[11:03:15] Harami                                   |                         7 |             126.00 $
-[11:03:15] Shooting Star                            |                         5 |             116.00 $
-[11:03:15] Three Inside Up Down                     |                         5 |             112.00 $
-[11:03:15] Piercing Line                            |                         5 |              93.00 $
-[11:03:15] Hanging Man                              |                         3 |              65.00 $
-[11:03:15] Candle Reversal                          |                         4 |              46.00 $
-[11:03:15] Inverted Hammer                          |                         3 |              45.00 $
-[11:03:15] Three Black Crows                        |                         1 |              39.00 $
-[11:03:15] Hammer                                   |                         3 |              35.00 $
-[11:03:15] Dragonfly Doji  
+[11:50:24] Intentando conexión a MT5 con cuenta 5040311399 en MetaQuotes-Demo…
+[11:50:24] Conexión establecida correctamente.
+[11:50:25] Balance de cuenta actualizado: 100000.00 $
+[11:50:25] Inicializando gráfico para EURUSD (M1)…
+[11:50:38] Iniciando backtesting perfecto... Esto puede tardar un momento.
+[11:50:38] Indicadores técnicos calculados correctamente.
+[11:50:38] --------------------------------------------------
+[11:50:38] Señales evaluadas en este backtest:
+[11:50:38] - Bollinger Bands Breakout [forex] 3
+[11:50:38] - Bollinger Bands Reversion [forex] 0
+[11:50:38] - Candle Reversal [forex] 4
+[11:50:38] - Chart Breakout [forex] 3
+[11:50:38] - Fibonacci Reversal [forex] 4
+[11:50:38] - Ichimoku Kinko Hyo [forex] 2
+[11:50:38] - Ma Crossover [forex] 6
+[11:50:38] - Momentum Rsi Macd [forex] 7
+[11:50:38] - Price Action Sr [forex] 3
+[11:50:38] - Scalping Stochrsi Ema [forex] 8
+[11:50:38] - Swing Trading Multi Indicator [forex] 21
+========================= RESUMEN DE BACKTESTING PERFECTO =========================
+[11:50:38] SEÑAL (PATRÓN/ESTRATEGIA)                          |     OPERACIONES RENTABLES |      BENEFICIO TOTAL
+[11:50:38] -----------------------------------------------------------------------------------------------------
+[11:50:38] Swing Trading Multi Indicator [forex]              |                        33 |             669.00 $
+[11:50:38] Engulfing [candle]                                 |                        21 |             470.00 $
+[11:50:38] Three Outside Up Down [candle]                     |                        12 |             283.00 $
+[11:50:38] Dark Cloud Cover [candle]                          |                         9 |             161.00 $
+[11:50:38] Marubozu [candle]                                  |                        10 |             152.00 $
+[11:50:38] Scalping Stochrsi Ema [forex]                      |                         8 |             146.00 $
+[11:50:38] Momentum Rsi Macd [forex]                          |                         7 |             138.00 $
+[11:50:38] Harami [candle]                                    |                         7 |             126.00 $
+[11:50:38] Shooting Star [candle]                             |                         5 |             116.00 $
+[11:50:38] Three Inside Up Down [candle]                      |                         5 |             112.00 $
+[11:50:38] Piercing Line [candle]                             |                         5 |              93.00 $
+[11:50:38] Hanging Man [candle]                               |                         3 |              65.00 $
+[11:50:38] Ma Crossover [forex]                               |                         6 |              64.00 $
+[11:50:38] Candle Reversal [forex]                            |                         4 |              46.00 $
+[11:50:38] Fibonacci Reversal [forex]                         |                         4 |              46.00 $
+[11:50:38] Price Action Sr [forex]                            |                         4 |              46.00 $
+[11:50:38] Inverted Hammer [candle]                           |                         3 |              45.00 $
+[11:50:38] Chart Breakout [forex]                             |                         3 |              39.00 $
+[11:50:38] Three Black Crows [candle]                         |                         1 |              39.00 $
+[11:50:38] Hammer [candle]                                    |                         3 |              35.00 $
+[11:50:38] Ichimoku Kinko Hyo [forex]                         |                         2 |              28.00 $
+[11:50:38] Bollinger Bands Breakout [forex]                   |                         3 |              25.00 $
+[11:50:38] Dragonfly Doji [candle]                            |                         1 |               8.00 $
+[11:50:38] -----------------------------------------------------------------------------------------------------
+[11:50:38] BENEFICIO TOTAL PERFECTO: 2952.00 $
+[11:50:38] ==========================================================================================
+

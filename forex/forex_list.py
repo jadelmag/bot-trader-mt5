@@ -18,11 +18,14 @@ class ForexStrategies:
         resistance = df['high'].iloc[-lookback:-2].max()
         candle_data = df.to_dict('records')
         signals = CandlePatterns.detect_all_patterns(candle_data)
-        is_near_support = abs(df['low'].iloc[-1] - support) / support < 0.005
-        if is_near_support and ('hammer' in signals['long'] or 'engulfing' in signals['long']):
+        
+        # Aumentamos la tolerancia a 1% y añadimos más patrones de vela
+        is_near_support = abs(df['low'].iloc[-1] - support) / support < 0.01
+        if is_near_support and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral'] or 'piercing_line' in signals['long']):
             return 'long'
-        is_near_resistance = abs(df['high'].iloc[-1] - resistance) / resistance < 0.005
-        if is_near_resistance and ('shooting_star' in signals['short'] or 'engulfing' in signals['short']):
+        
+        is_near_resistance = abs(df['high'].iloc[-1] - resistance) / resistance < 0.01
+        if is_near_resistance and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral'] or 'dark_cloud_cover' in signals['short']):
             return 'short'
         return None
 
@@ -49,9 +52,11 @@ class ForexStrategies:
         if 'close' not in df.columns or 'bb_lower' not in df.columns or 'bb_upper' not in df.columns: return None
         candle_data = df.to_dict('records')
         signals = CandlePatterns.detect_all_patterns(candle_data)
-        if df['low'].iloc[-1] <= df['bb_lower'].iloc[-1] and ('hammer' in signals['long'] or 'engulfing' in signals['long']):
+        
+        # Añadimos más patrones de vela para la confirmación
+        if df['low'].iloc[-1] <= df['bb_lower'].iloc[-1] and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral'] or 'piercing_line' in signals['long']):
             return 'long'
-        if df['high'].iloc[-1] >= df['bb_upper'].iloc[-1] and ('shooting_star' in signals['short'] or 'engulfing' in signals['short']):
+        if df['high'].iloc[-1] >= df['bb_upper'].iloc[-1] and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral'] or 'dark_cloud_cover' in signals['short']):
             return 'short'
         return None
 
@@ -123,11 +128,12 @@ class ForexStrategies:
         candle_data = df.to_dict('records')
         signals = CandlePatterns.detect_all_patterns(candle_data)
         for level in fib_levels.values():
-            if abs(df['low'].iloc[-1] - level) / level < 0.005 and ('hammer' in signals['long'] or 'engulfing' in signals['long']):
+            # Aumentamos la tolerancia a 1% y añadimos más patrones
+            if abs(df['low'].iloc[-1] - level) / level < 0.01 and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral']):
                 return 'long'
         fib_levels_short = {'level_0.618': swing_low + 0.618 * price_range}
         for level in fib_levels_short.values():
-            if abs(df['high'].iloc[-1] - level) / level < 0.005 and ('shooting_star' in signals['short'] or 'engulfing' in signals['short']):
+            if abs(df['high'].iloc[-1] - level) / level < 0.01 and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral']):
                 return 'short'
         return None
 
