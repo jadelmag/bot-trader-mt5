@@ -139,22 +139,31 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_chart_pattern_breakout(df, lookback=60):
-        if 'atr' not in df.columns: return None
-        prominence = df['atr'].iloc[-1] * 1.5
-        peaks, _ = find_peaks(df['high'].iloc[-lookback:], prominence=prominence)
-        valleys, _ = find_peaks(-df['low'].iloc[-lookback:], prominence=prominence)
+        if len(df) < lookback or 'atr' not in df.columns:
+            return None
+
+        df_lookback = df.iloc[-lookback:]
+        prominence = df_lookback['atr'].iloc[-1] * 1.5
+
+        peaks, _ = find_peaks(df_lookback['high'], prominence=prominence)
+        valleys, _ = find_peaks(-df_lookback['low'], prominence=prominence)
+
         if len(peaks) >= 2:
             p1_idx, p2_idx = peaks[-2], peaks[-1]
-            p1_high, p2_high = df['high'].iloc[-lookback+p1_idx], df['high'].iloc[-lookback+p2_idx]
+            p1_high, p2_high = df_lookback['high'].iloc[p1_idx], df_lookback['high'].iloc[p2_idx]
+
             if abs(p1_high - p2_high) / p1_high < 0.03:
-                neckline = df['low'].iloc[-lookback+p1_idx:-lookback+p2_idx].min()
-                if df['close'].iloc[-1] < neckline and df['close'].iloc[-2] >= neckline:
+                neckline = df_lookback['low'].iloc[p1_idx:p2_idx].min()
+                if df_lookback['close'].iloc[-1] < neckline and df_lookback['close'].iloc[-2] >= neckline:
                     return 'short'
+
         if len(valleys) >= 2:
             v1_idx, v2_idx = valleys[-2], valleys[-1]
-            v1_low, v2_low = df['low'].iloc[-lookback+v1_idx], df['low'].iloc[-lookback+v2_idx]
+            v1_low, v2_low = df_lookback['low'].iloc[v1_idx], df_lookback['low'].iloc[v2_idx]
+
             if abs(v1_low - v2_low) / v1_low < 0.03:
-                neckline = df['high'].iloc[-lookback+v1_idx:-lookback+v2_idx].max()
-                if df['close'].iloc[-1] > neckline and df['close'].iloc[-2] <= neckline:
+                neckline = df_lookback['high'].iloc[v1_idx:v2_idx].max()
+                if df_lookback['close'].iloc[-1] > neckline and df_lookback['close'].iloc[-2] <= neckline:
                     return 'long'
+
         return None

@@ -1,0 +1,8 @@
+
+
+como puede ser que siguiendo este flujo:
+
+Herramientas > Aplicar Estrategia > Seleccionar una solo con esta configuracion:
+- % Ratio: 1.0
+- RR Ratio: 2.0
+- Stop Loss: 100 pips
