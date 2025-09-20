@@ -612,6 +612,61 @@ class App:
         )
         self._log_success("="*75 + "\n")
 
+    def _add_technical_indicators(self, df):
+        """Añade una serie de indicadores técnicos al DataFrame."""
+        if df is None or df.empty:
+            return df
+
+        # Copia para evitar SettingWithCopyWarning
+        df = df.copy()
+
+        try:
+            # Medias Móviles Exponenciales (EMA)
+            df.ta.ema(length=12, append=True, col_names=('ema_fast',))
+            df.ta.ema(length=26, append=True, col_names=('ema_slow',))
+            df.ta.ema(length=50, append=True, col_names=('ema_50',))
+            df.ta.ema(length=200, append=True, col_names=('ema_200',))
+
+            # RSI
+            df.ta.rsi(length=14, append=True, col_names=('rsi',))
+
+            # MACD
+            macd = df.ta.macd(fast=12, slow=26, signal=9)
+            if macd is not None and not macd.empty:
+                df['macd_line'] = macd.iloc[:, 0]
+                df['macd_signal'] = macd.iloc[:, 2]
+
+            # Bandas de Bollinger
+            bbands = df.ta.bbands(length=20, std=2)
+            if bbands is not None and not bbands.empty:
+                df['bb_lower'] = bbands.iloc[:, 0]
+                df['bb_upper'] = bbands.iloc[:, 2]
+
+            # Ichimoku Cloud
+            ichimoku_tuple = df.ta.ichimoku(tenkan=9, kijun=26, senkou=52)
+            # Ichimoku devuelve una tupla de DataFrames
+            if ichimoku_tuple and ichimoku_tuple[0] is not None and not ichimoku_tuple[0].empty:
+                ichimoku_df = ichimoku_tuple[0]
+                df['tenkan_sen'] = ichimoku_df[f'ITS_9']
+                df['kijun_sen'] = ichimoku_df[f'IKS_26']
+                df['senkou_span_a'] = ichimoku_df[f'ISA_9']
+                df['senkou_span_b'] = ichimoku_df[f'ISB_26']
+
+            # StochRSI
+            stoch_rsi = df.ta.stochrsi(length=14, rsi_length=14, k=3, d=3)
+            if stoch_rsi is not None and not stoch_rsi.empty:
+                df['stochrsi_k'] = stoch_rsi.iloc[:, 0]
+
+            # ATR
+            df.ta.atr(length=14, append=True, col_names=('atr',))
+
+            self._log_info("Indicadores técnicos calculados correctamente.")
+
+        except Exception as e:
+            self._log_error(f"Error al calcular indicadores técnicos: {e}")
+        
+        return df
+
     def _run_perfect_backtesting(self):
         """Ejecuta un backtesting 'perfecto' y muestra los resultados."""
         if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
@@ -628,11 +683,20 @@ class App:
             candles_df_copy = self.graphic.candles_df.copy()
             candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
 
-            # Aquí se podrían añadir indicadores necesarios para las estrategias
+            # --- AÑADIR INDICADORES TÉCNICOS ---
+            candles_df_copy = self._add_technical_indicators(candles_df_copy)
 
             backtester = PerfectBacktester(candles_df_copy)
-            stats, profitable_trades = backtester.run()
+            stats, profitable_trades, signal_names = backtester.run()
             
+            # Registrar todas las señales evaluadas
+            self._log_info("-"*50)
+            self._log_info("Señales evaluadas en este backtest:")
+            for signal_name in sorted(signal_names):
+                clean_name = signal_name.replace('strategy_', '').replace('pattern_', '').replace('_', ' ').title()
+                signal_type = "[forex]" if signal_name.startswith('strategy_') else "[candle]"
+                self._log_info(f"- {clean_name} {signal_type}")
+
             summary_lines, total_profit = PerfectBacktester.format_summary(stats)
 
             # Dibujar las operaciones en el gráfico

@@ -44,6 +44,10 @@ class PerfectBacktester:
     def run(self):
         """Ejecuta el backtesting perfecto sobre todo el DataFrame."""
         all_signals = self._get_all_signals()
+        
+        # Devolver una lista de todas las señales para que el logger las muestre
+        signal_names = list(all_signals.keys())
+
         stats = {name: {'money_generated': 0, 'trades': 0} for name in all_signals.keys()}
         profitable_trades = []
 
@@ -78,7 +82,7 @@ class PerfectBacktester:
                             'entry_price': entry_price,
                             'exit_price': exit_price
                         })
-        return stats, profitable_trades
+        return stats, profitable_trades, signal_names
 
     @staticmethod
     def format_summary(stats):
