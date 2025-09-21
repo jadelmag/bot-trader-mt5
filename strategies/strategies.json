@@ -105,6 +105,11 @@
             "config": {}
         },
         "is_three_outside_up_down": {
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
+        },
+        "is_three_white_soldiers": {
             "selected": true,
             "strategy_mode": "Custom",
             "config": {
@@ -117,11 +122,6 @@
                 "atr_tp_multiplier": 3.0,
                 "atr_trailing_multiplier": 1.5
             }
-        },
-        "is_three_white_soldiers": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
         }
     },
     "forex_strategies": {

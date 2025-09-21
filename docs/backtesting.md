@@ -15,13 +15,13 @@
 * Long Legged Doji: ✅✅✅✅ Tasa de Acierto: 66.67%
 * Marubozu: ✅✅✅ Tasa de Acierto: $60.00
 * Morning Star: Tasa de Acierto: 0.00% ❌
-* Piercing Line: revisar ❌
+* Piercing Line: Tasa de Acierto: 11.11% ❌
 * Rising Three Methods: no detecta nada ❌
 * Shooting Star: ✅✅✅✅ Tasa de Acierto: 66.67%
 * Three Black Crows: ✅✅ Tasa de Acierto: 50.00%
-* Three Inside Up Down: revisar ❌
+* Three Inside Up Down:  Tasa de Acierto: 0.00% ❌
 * Three Outside Up Down: ✅✅ Tasa de Acierto: 44.44%
-* Three White Soldiers: revisar ❌
+* Three White Soldiers: Tasa de Acierto: 0.00% ❌
 
 ## FOREX STRATEGIES
 
@@ -37,12 +37,20 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Long Legged Doji con la configuración por defecto:
---- Iniciando Simulación de Estrategia ---
-[13:27:41] Preparando datos y calculando indicadores técnicos manualmente...
-[13:27:41] Indicadores calculados. Velas disponibles para simulación: 223
-[13:27:41] --- Simulación Finalizada ---
-[13:27:41] 
+Three White Soldiers con la configuración por defecto:
 ========================= Resumen de la Simulación =========================
-[13:27:41] No se realizaron operaciones.
-[13:27:41] Configuración de simulación guardada y simulación ejecutada.
+[13:47:41] Capital Inicial: $1000.00
+[13:47:41] Capital Final: $989.94
+[13:47:41] Beneficio Neto: $-10.06
+[13:47:42] Total Ganancias: $0.00
+[13:47:42] Total Pérdidas: $-10.06
+[13:47:42] Total Arriesgado: $10.06
+[13:47:42] -----------------------------------
+[13:47:42] Operaciones Totales: 1
+[13:47:42] Ganadoras: 0
+[13:47:42] Perdedoras: 1
+[13:47:42] Tasa de Acierto: 0.00%
+[13:47:42] Ganancia Promedio: $0.00
+[13:47:42] Pérdida Promedio: $-10.06
+[13:47:42] Ratio Riesgo/Beneficio Real: 0.00
+[13:47:42] ===========================================================================
