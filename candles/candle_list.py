@@ -13,14 +13,35 @@ class CandlePatterns:
     
     @staticmethod
     def is_hammer(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         if body_size == 0: return None
+
         lower_shadow = (candle['open'] - candle['low']) if candle['close'] > candle['open'] else (candle['close'] - candle['low'])
         upper_shadow = (candle['high'] - candle['close']) if candle['close'] > candle['open'] else (candle['high'] - candle['open'])
-        if lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5:
-            if index > 0 and candles[index-1]['close'] < candles[index-1]['open']:
-                return 'long'
+        
+        # Comprobar forma de martillo + filtro de tendencia (bajo EMA50) + filtro de momentum (RSI < 35)
+        is_hammer_shape = lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5
+        is_downtrend = candle['close'] < ema_50.iloc[index]
+        is_oversold = rsi.iloc[index] < 35
+
+        if is_hammer_shape and is_downtrend and is_oversold:
+            return 'long'
+            
         return None
 
     @staticmethod
@@ -70,13 +91,22 @@ class CandlePatterns:
 
     @staticmethod
     def is_gravestone_doji(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.15:
-            if (min(candle['close'], candle['open']) - candle['low']) / candle_range < 0.20:
-                if index > 0 and candles[index-1]['close'] > candles[index-1]['open']:
-                    return 'short'
+
+        # Comprobar forma + tendencia alcista (sobre EMA50)
+        is_gravestone_shape = candle_range > 0 and body_size / candle_range < 0.15 and (min(candle['close'], candle['open']) - candle['low']) / candle_range < 0.20
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+
+        if is_gravestone_shape and is_uptrend:
+            return 'short'
+
         return None
 
     @staticmethod
@@ -194,12 +224,30 @@ class CandlePatterns:
 
     @staticmethod
     def is_dark_cloud_cover(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         c1, c2 = candles[index-1], candles[index]
-        if not (c1['close'] > c1['open'] and c2['close'] < c2['open']): return None
-        mid_point_c1 = (c1['open'] + c1['close']) / 2
-        if c2['open'] > c1['close'] and c2['close'] < mid_point_c1:
+
+        # Comprobar forma + tendencia alcista (sobre EMA50) + momentum sobrecomprado (RSI > 65)
+        is_dark_cloud_shape = (c1['close'] > c1['open'] and c2['close'] < c2['open']) and (c2['open'] > c1['close'] and c2['close'] < (c1['open'] + c1['close']) / 2)
+        is_uptrend = c1['close'] > ema_50.iloc[index-1]
+        is_overbought = rsi.iloc[index] > 65
+
+        if is_dark_cloud_shape and is_uptrend and is_overbought:
             return 'short'
+
         return None
 
     

@@ -1,26 +1,26 @@
 ## CANDLE PATTERNS
 
-* Dark Cloud Cover: ✅✅
+* Dark Cloud Cover: ✅✅✅✅✅ Tasa de Acierto: 100.00%
 * Doji: no seleccionar [se usa para otras estrategias] ❌
-* Doji Reversal: ✅✅
+* Doji Reversal: ✅✅✅✅ Tasa de Acierto: 60.00%
 * Dragonfly Doji: revisar porque siempre devuelve lo mismo ❌
-* Engulfing: ✅✅
-* Evening Star: ✅✅
+* Engulfing: ✅ Tasa de Acierto: 35.71%
+* Evening Star: ✅✅✅✅ Tasa de Acierto: 66.67%
 * Falling Three Methods: no detecta nada ❌
-* Gravestone Doji: ❌
-* Hammer: revisar ❌
+* Gravestone Doji: ✅✅✅ Tasa de Acierto: 50.00%
+* Hammer: ✅✅✅✅✅ Tasa de Acierto: 100%
 * Hanging Man: revisar ❌
-* Harami: ✅✅✅
+* Harami: ✅✅✅✅ Tasa de Acierto: 80%
 * Inverted Hammer: revisar ❌
 * Long Legged Doji: no detecta nada ❌
-* Marubozu: ✅✅✅ 
+* Marubozu: ✅✅✅✅ Tasa de Acierto: 71.43%
 * Morning Star: revisar ❌
 * Piercing Line: revisar ❌
 * Rising Three Methods: no detecta nada ❌
-* Shooting Star: ✅✅✅
-* Three Black Crows: ✅✅ intentar optimizar
+* Shooting Star: ✅✅✅✅ Tasa de Acierto: 66.67%
+* Three Black Crows: ✅✅ Tasa de Acierto: 50.00%
 * Three Inside Up Down: revisar ❌
-* Three Outside Up Down: ✅✅✅
+* Three Outside Up Down: ✅✅ Tasa de Acierto: 44.44%
 * Three White Soldiers: revisar ❌
 
 ## FOREX STRATEGIES
@@ -37,5 +37,20 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-
-
+Engulfing con la configuración por defecto:
+========================= Resumen de la Simulación =========================
+[12:40:10] Capital Inicial: $1000.00
+[12:40:10] Capital Final: $1009.02
+[12:40:10] Beneficio Neto: $9.02
+[12:40:10] Total Ganancias: $100.04
+[12:40:10] Total Pérdidas: $-91.03
+[12:40:10] Total Arriesgado: $141.05
+[12:40:10] -----------------------------------
+[12:40:10] Operaciones Totales: 14
+[12:40:10] Ganadoras: 5
+[12:40:10] Perdedoras: 9
+[12:40:10] Tasa de Acierto: 35.71%
+[12:40:10] Ganancia Promedio: $20.01
+[12:40:10] Pérdida Promedio: $-10.11
+[12:40:10] Ratio Riesgo/Beneficio Real: 1.98
+[12:40:10] ===========================================================================
