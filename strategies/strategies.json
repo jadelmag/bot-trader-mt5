@@ -147,7 +147,7 @@
             "stop_loss_pips": 20.0
         },
         "strategy_ichimoku_kinko_hyo": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 30.0
@@ -159,7 +159,7 @@
             "stop_loss_pips": 20.0
         },
         "strategy_momentum_rsi_macd": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0

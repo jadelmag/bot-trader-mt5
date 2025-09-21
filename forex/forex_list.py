@@ -74,11 +74,60 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_momentum_rsi_macd(df):
-        if 'rsi' not in df.columns or 'macd_line' not in df.columns or 'macd_signal' not in df.columns: return None
-        if df['rsi'].iloc[-1] > 50 and df['rsi'].iloc[-1] < 70 and df['macd_line'].iloc[-1] > df['macd_signal'].iloc[-1] and df['macd_line'].iloc[-2] <= df['macd_signal'].iloc[-2]:
-            return 'long'
-        if df['rsi'].iloc[-1] < 50 and df['rsi'].iloc[-1] > 30 and df['macd_line'].iloc[-1] < df['macd_signal'].iloc[-1] and df['macd_line'].iloc[-2] >= df['macd_signal'].iloc[-2]:
-            return 'short'
+        """
+        Estrategia de Momentum v2.1 que combina RSI, MACD y un filtro de tendencia (EMA 200).
+        Busca operar a favor de la tendencia, con condiciones de entrada más flexibles para aumentar
+        la frecuencia de operaciones de alta calidad.
+        """
+        required = ['close', 'ema_200', 'rsi', 'macd_line', 'macd_signal']
+        if not all(col in df.columns for col in required) or len(df) < 2:
+            return None
+
+        # --- 1. Filtro de Tendencia Principal ---
+        price = df['close'].iloc[-1]
+        ema_200 = df['ema_200'].iloc[-1]
+        is_uptrend = price > ema_200
+        is_downtrend = price < ema_200
+
+        # --- 2. Indicadores de Momentum ---
+        rsi = df['rsi'].iloc[-1]
+        macd_line = df['macd_line'].iloc[-1]
+        macd_signal = df['macd_signal'].iloc[-1]
+        macd_line_prev = df['macd_line'].iloc[-2]
+        macd_signal_prev = df['macd_signal'].iloc[-2]
+
+        # --- 3. Lógica de Compra (Long) ---
+        if is_uptrend:
+            # Condición de Momentum: MACD debe ser alcista
+            macd_is_bullish = macd_line > macd_signal
+            # Condición de RSI: Debe estar en zona de retroceso, no sobrecomprado
+            rsi_in_zone = rsi > 40 and rsi < 70
+
+            if macd_is_bullish and rsi_in_zone:
+                # Disparador 1: Cruce de MACD reciente
+                macd_cross_up = macd_line > macd_signal and macd_line_prev <= macd_signal_prev
+                # Disparador 2: RSI saliendo de la zona baja
+                rsi_gaining_momentum = df['rsi'].iloc[-1] > df['rsi'].iloc[-2]
+
+                if macd_cross_up or rsi_gaining_momentum:
+                    return 'long'
+
+        # --- 4. Lógica de Venta (Short) ---
+        if is_downtrend:
+            # Condición de Momentum: MACD debe ser bajista
+            macd_is_bearish = macd_line < macd_signal
+            # Condición de RSI: Debe estar en zona de rebote, no sobrevendido
+            rsi_in_zone = rsi < 60 and rsi > 30
+
+            if macd_is_bearish and rsi_in_zone:
+                # Disparador 1: Cruce de MACD reciente
+                macd_cross_down = macd_line < macd_signal and macd_line_prev >= macd_signal_prev
+                # Disparador 2: RSI perdiendo momentum
+                rsi_losing_momentum = df['rsi'].iloc[-1] < df['rsi'].iloc[-2]
+
+                if macd_cross_down or rsi_losing_momentum:
+                    return 'short'
+
         return None
 
     @staticmethod

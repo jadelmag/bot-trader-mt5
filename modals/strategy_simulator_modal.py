@@ -47,6 +47,7 @@ class StrategySimulatorModal(tk.Toplevel):
             "strategy_ma_crossover": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
             "strategy_ichimoku_kinko_hyo": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 30.0},
             "strategy_price_action_sr": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_momentum_rsi_macd": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
             "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.5, "rr_ratio": 1.5, "sl": 30.0},
             "strategy_swing_trading_multi_indicator": {"percent_ratio": 1.5, "rr_ratio": 3.0, "sl": 30.0},
         }
