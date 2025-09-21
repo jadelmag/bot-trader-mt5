@@ -147,10 +147,10 @@
             "stop_loss_pips": 20.0
         },
         "strategy_ichimoku_kinko_hyo": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
+            "stop_loss_pips": 30.0
         },
         "strategy_ma_crossover": {
             "selected": false,
@@ -177,7 +177,7 @@
             "stop_loss_pips": 30.0
         },
         "strategy_swing_trading_multi_indicator": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 1.5,
             "rr_ratio": 3.0,
             "stop_loss_pips": 30.0
