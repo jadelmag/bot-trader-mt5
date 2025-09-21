@@ -4,7 +4,7 @@
 * Doji: no seleccionar [se usa para otras estrategias] ❌
 * Doji Reversal: ✅✅✅✅ Tasa de Acierto: 60.00%
 * Dragonfly Doji: revisar porque siempre devuelve lo mismo ❌
-* Engulfing: ✅ Tasa de Acierto: 35.71%
+* Engulfing: ✅✅✅✅✅ Tasa de Acierto: 100.00%
 * Evening Star: ✅✅✅✅ Tasa de Acierto: 66.67%
 * Falling Three Methods: no detecta nada ❌
 * Gravestone Doji: ✅✅✅ Tasa de Acierto: 50.00%
@@ -37,7 +37,7 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Engulfing con la configuración por defecto:
+Hanging Man con la configuración por defecto:
 ========================= Resumen de la Simulación =========================
 [12:40:10] Capital Inicial: $1000.00
 [12:40:10] Capital Final: $1009.02

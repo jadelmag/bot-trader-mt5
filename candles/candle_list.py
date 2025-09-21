@@ -176,12 +176,36 @@ class CandlePatterns:
     
     @staticmethod
     def is_engulfing(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         current_candle, prev_candle = candles[index], candles[index-1]
-        if prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['close'] >= prev_candle['open'] and current_candle['open'] <= prev_candle['close']:
+
+        # Envolvente Alcista + Filtros
+        is_bullish_shape = prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['close'] >= prev_candle['open'] and current_candle['open'] <= prev_candle['close']
+        is_downtrend = current_candle['close'] < ema_50.iloc[index]
+        is_oversold = rsi.iloc[index] < 35
+        if is_bullish_shape and is_downtrend and is_oversold:
             return 'long'
-        if prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] >= prev_candle['close'] and current_candle['close'] <= prev_candle['open']:
+
+        # Envolvente Bajista + Filtros
+        is_bearish_shape = prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] >= prev_candle['close'] and current_candle['close'] <= prev_candle['open']
+        is_uptrend = current_candle['close'] > ema_50.iloc[index]
+        is_overbought = rsi.iloc[index] > 65
+        if is_bearish_shape and is_uptrend and is_overbought:
             return 'short'
+
         return None
 
     @staticmethod
