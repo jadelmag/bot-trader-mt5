@@ -360,41 +360,13 @@ class ForexStrategies:
         """
         Estrategia de Scalping MEJORADA con doble filtro de tendencia y confirmación de momentum.
         """
-        required = ['close', 'ema_50', 'stochrsi_k', 'macd_line', 'macd_signal']
-        if not all(col in df.columns for col in required) or len(df) < 100:
-            return None
-
-        # --- 1. Filtro de Tendencia (Doble EMA) ---
-        # Usaremos EMA 21 (rápida) y EMA 50 (lenta) para definir un túnel de tendencia
-        df['ema_21'] = df['close'].ewm(span=21, adjust=False).mean()
+        required = ['close', 'ema_slow', 'stochrsi_k']
+        if not all(col in df.columns for col in required): return None
         price = df['close'].iloc[-1]
-        ema_21 = df['ema_21'].iloc[-1]
-        ema_50 = df['ema_50'].iloc[-1]
-
-        is_strong_uptrend = price > ema_21 and ema_21 > ema_50
-        is_strong_downtrend = price < ema_21 and ema_21 < ema_50
-
-        # --- 2. Señal de Entrada (StochRSI) ---
-        stoch_k = df['stochrsi_k'].iloc[-1]
-        stoch_k_prev = df['stochrsi_k'].iloc[-2]
-        
-        stoch_cross_up = stoch_k > 20 and stoch_k_prev <= 20
-        stoch_cross_down = stoch_k < 80 and stoch_k_prev >= 80
-
-        # --- 3. Confirmación de Momentum (MACD) ---
-        macd_line = df['macd_line'].iloc[-1]
-        macd_signal = df['macd_signal'].iloc[-1]
-        
-        macd_bullish = macd_line > macd_signal
-        macd_bearish = macd_line < macd_signal
-
-        # --- Lógica de Decisión Final ---
-        if is_strong_uptrend and stoch_cross_up and macd_bullish:
+        if price > df['ema_slow'].iloc[-1] and df['stochrsi_k'].iloc[-1] > 20 and df['stochrsi_k'].iloc[-2] <= 20:
             return 'long'
-        
-        if is_strong_downtrend and stoch_cross_down and macd_bearish:
+        if price < df['ema_slow'].iloc[-1] and df['stochrsi_k'].iloc[-1] < 80 and df['stochrsi_k'].iloc[-2] >= 80:
             return 'short'
-
         return None
 
     @staticmethod
