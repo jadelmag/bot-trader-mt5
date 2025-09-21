@@ -58,24 +58,34 @@ class CandlePatterns:
 
     @staticmethod
     def is_marubozu(candles, index=-1):
-        if index < 50: return None # Necesitamos suficientes datos para la EMA de 50
+        if index < 50: return None # Necesitamos datos para EMA y RSI
 
-        # Convertir a DataFrame para calcular la EMA
         df = pd.DataFrame(candles)
         ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+        
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
 
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
         
-        if candle_range > 0 and body_size / candle_range > 0.98:
-            # Filtro de tendencia:
-            # Señal alcista solo si el cierre está por encima de la EMA 50
-            if candle['close'] > candle['open'] and candle['close'] > ema_50.iloc[index]:
-                return 'long'
-            # Señal bajista solo si el cierre está por debajo de la EMA 50
-            elif candle['open'] > candle['close'] and candle['close'] < ema_50.iloc[index]:
-                return 'short'
+        is_marubozu_shape = candle_range > 0 and body_size / candle_range > 0.98
+        if not is_marubozu_shape: return None
+
+        # Filtro de tendencia y momentum
+        # Señal alcista: en tendencia alcista (sobre EMA50) y con momentum alcista (RSI > 55)
+        if candle['close'] > candle['open'] and candle['close'] > ema_50.iloc[index] and rsi.iloc[index] > 55:
+            return 'long'
+        
+        # Señal bajista: en tendencia bajista (bajo EMA50) y con momentum bajista (RSI < 45)
+        elif candle['open'] > candle['close'] and candle['close'] < ema_50.iloc[index] and rsi.iloc[index] < 45:
+            return 'short'
+            
         return None
 
     @staticmethod

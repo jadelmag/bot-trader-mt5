@@ -13,7 +13,7 @@
 * Harami: ✅✅✅✅ Tasa de Acierto: 80%
 * Inverted Hammer: revisar ❌
 * Long Legged Doji: no detecta nada ❌
-* Marubozu: ✅✅✅✅ Tasa de Acierto: 71.43%
+* Marubozu: ✅✅✅ Total Ganancias: $60.05
 * Morning Star: revisar ❌
 * Piercing Line: revisar ❌
 * Rising Three Methods: no detecta nada ❌
@@ -37,20 +37,20 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Hanging Man con la configuración por defecto:
+Marubozu con la configuración por defecto:
 ========================= Resumen de la Simulación =========================
-[12:51:43] Capital Inicial: $1000.00
-[12:51:43] Capital Final: $999.83
-[12:51:43] Beneficio Neto: $-0.17
-[12:51:43] Total Ganancias: $19.98
-[12:51:43] Total Pérdidas: $-20.15
-[12:51:43] Total Arriesgado: $30.14
-[12:51:43] -----------------------------------
-[12:51:43] Operaciones Totales: 3
-[12:51:43] Ganadoras: 1
-[12:51:43] Perdedoras: 2
-[12:51:43] Tasa de Acierto: 33.33%
-[12:51:43] Ganancia Promedio: $19.98
-[12:51:43] Pérdida Promedio: $-10.08
-[12:51:43] Ratio Riesgo/Beneficio Real: 1.98
-[12:51:43] ===========================================================================
+[13:04:12] Capital Inicial: $1000.00
+[13:04:12] Capital Final: $1040.13
+[13:04:12] Beneficio Neto: $40.13
+[13:04:12] Total Ganancias: $60.05
+[13:04:12] Total Pérdidas: $-19.92
+[13:04:12] Total Arriesgado: $49.95
+[13:04:12] -----------------------------------
+[13:04:12] Operaciones Totales: 5
+[13:04:12] Ganadoras: 3
+[13:04:12] Perdedoras: 2
+[13:04:12] Tasa de Acierto: 60.00%
+[13:04:12] Ganancia Promedio: $20.02
+[13:04:12] Pérdida Promedio: $-9.96
+[13:04:12] Ratio Riesgo/Beneficio Real: 2.01
+[13:04:12] ===========================================================================
