@@ -117,16 +117,10 @@
     },
     "forex_strategies": {
         "strategy_bollinger_bands_breakout": {
-            "selected": false,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
-        },
-        "strategy_bollinger_bands_reversion": {
             "selected": true,
             "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
+            "rr_ratio": 1.5,
+            "stop_loss_pips": 25.0
         },
         "strategy_candle_pattern_reversal": {
             "selected": false,

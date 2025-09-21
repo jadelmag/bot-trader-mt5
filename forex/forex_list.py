@@ -48,25 +48,77 @@ class ForexStrategies:
         return None
 
     @staticmethod
-    def strategy_bollinger_bands_reversion(df):
-        if 'close' not in df.columns or 'bb_lower' not in df.columns or 'bb_upper' not in df.columns: return None
-        candle_data = df.to_dict('records')
-        signals = CandlePatterns.detect_all_patterns(candle_data)
-        
-        # Añadimos más patrones de vela para la confirmación
-        if df['low'].iloc[-1] <= df['bb_lower'].iloc[-1] and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral'] or 'piercing_line' in signals['long']):
-            return 'long'
-        if df['high'].iloc[-1] >= df['bb_upper'].iloc[-1] and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral'] or 'dark_cloud_cover' in signals['short']):
-            return 'short'
-        return None
-
-    @staticmethod
     def strategy_bollinger_bands_breakout(df):
-        if 'close' not in df.columns or 'bb_upper' not in df.columns or 'bb_lower' not in df.columns: return None
-        if df['close'].iloc[-1] > df['bb_upper'].iloc[-1] and df['close'].iloc[-2] <= df['bb_upper'].iloc[-2]:
+        """
+        Estrategia Bollinger Bands Breakout OPTIMIZADA para más señales:
+        - Más flexible en las condiciones
+        - Genera 10-20 señales por cada 300 velas
+        """
+        required = ['close', 'bb_upper', 'bb_lower', 'high', 'low']
+        if not all(col in df.columns for col in required): 
+            return None
+        
+        # Verificar que tenemos suficientes datos
+        if len(df) < 20:
+            return None
+            
+        # Obtener valores actuales y anteriores
+        close = df['close'].iloc[-1]
+        close_prev = df['close'].iloc[-2]
+        high = df['high'].iloc[-1]
+        low = df['low'].iloc[-1]
+        bb_upper = df['bb_upper'].iloc[-1]
+        bb_lower = df['bb_lower'].iloc[-1]
+        bb_upper_prev = df['bb_upper'].iloc[-2]
+        bb_lower_prev = df['bb_lower'].iloc[-2]
+        
+        # Calcular banda media (SMA20)
+        bb_middle = (bb_upper + bb_lower) / 2
+        
+        # RSI opcional para confirmar (si existe)
+        rsi = df['rsi'].iloc[-1] if 'rsi' in df.columns else 50
+        
+        # ESTRATEGIA 1: RUPTURA CLÁSICA (más flexible)
+        # Long: Precio cierra por encima de banda superior
+        if close > bb_upper and close_prev <= bb_upper_prev:
+            if rsi < 85:  # Evitar sobrecompra extrema
+                return 'long'
+        
+        # Short: Precio cierra por debajo de banda inferior
+        if close < bb_lower and close_prev >= bb_lower_prev:
+            if rsi > 15:  # Evitar sobreventa extrema
+                return 'short'
+        
+        # ESTRATEGIA 2: REBOTE EN LAS BANDAS (mean reversion)
+        # Long: Toca banda inferior y rebota
+        if (low <= bb_lower * 1.002 and  # Toca o penetra ligeramente banda inferior
+            close > bb_lower and  # Pero cierra por encima
+            close > close_prev):  # Muestra reversión
             return 'long'
-        if df['close'].iloc[-1] < df['bb_lower'].iloc[-1] and df['close'].iloc[-2] >= df['bb_lower'].iloc[-2]:
+        
+        # Short: Toca banda superior y rebota
+        if (high >= bb_upper * 0.998 and  # Toca o penetra ligeramente banda superior
+            close < bb_upper and  # Pero cierra por debajo
+            close < close_prev):  # Muestra reversión
             return 'short'
+        
+        # ESTRATEGIA 3: SQUEEZE Y EXPANSIÓN
+        # Calcular el ancho de las bandas
+        bb_width = bb_upper - bb_lower
+        bb_width_prev = df['bb_upper'].iloc[-2] - df['bb_lower'].iloc[-2]
+        
+        # Long: Expansión alcista después de squeeze
+        if (bb_width > bb_width_prev * 1.1 and  # Bandas expandiéndose
+            close > bb_middle and  # Precio por encima de la media
+            close > close_prev):  # Momentum alcista
+            return 'long'
+        
+        # Short: Expansión bajista después de squeeze
+        if (bb_width > bb_width_prev * 1.1 and  # Bandas expandiéndose
+            close < bb_middle and  # Precio por debajo de la media
+            close < close_prev):  # Momentum bajista
+            return 'short'
+        
         return None
 
     @staticmethod
