@@ -42,39 +42,45 @@
 * strategy_price_action_sr: 
     - Tasa de Acierto:  100.00% [% Ratio 1  | RR Ratio 2 | Stop Loss 20 pips ] ✅ 
 * strategy_scalping_stochrsi_ema: 
-    - Tasa de Acierto: 100.00% [% Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips ] ✅
+    - Tasa de Acierto: 0.00% [% Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips ] ❌
 * strategy_swing_trading_multi_indicator:
     - Tasa de Acierto: 100.00% [% Ratio 1.5  | RR Ratio 3 | Stop Loss: 30 pips ] ✅
 
 
-strategy_price_action_sr: Tasa de Acierto: 0.00%
+strategy_scalping_stochrsi_ema: Tasa de Acierto: 0.00%
+Iniciando simulación desde el modal...
+[15:38:12] StrategySimulator inicializado.
+[15:38:12] Datos de velas recibidos: 300 velas.
+[15:38:12] 
 --- Iniciando Simulación de Estrategia ---
-[15:19:03] Preparando datos y calculando indicadores técnicos manualmente...
-[15:19:03] Indicadores calculados. Velas totales disponibles: 300
-[15:19:03] Simulación comenzará desde el índice 75 para asegurar indicadores confiables
-[15:19:03] Señal de FOREX 'strategy_price_action_sr' (long) en la vela 83 al precio 1.17503
-[15:19:03]     -> Trade ABIERTO: long a 1.17503 | SL: 1.17303 | TP: 1.17903 | Lote: 0.05 | Riesgo: $10.00
-[15:19:03]     -> Trade CERRADO: long de strategy_price_action_sr por Final de la simulación. P/L: $-4.20 (-8.40 pips). Balance: $995.80
-[15:19:03] --- Simulación Finalizada ---
-[15:19:03] 
+[15:38:12] Preparando datos y calculando indicadores técnicos manualmente...
+[15:38:12] Indicadores calculados. Velas totales disponibles: 300
+[15:38:12] Simulación comenzará desde el índice 75 para asegurar indicadores confiables
+[15:38:12] Señal de FOREX 'strategy_scalping_stochrsi_ema' (long) en la vela 81 al precio 1.17521
+[15:38:12]     -> Trade ABIERTO: long a 1.17521 | SL: 1.17221 | TP: 1.17971 | Lote: 0.02 | Riesgo: $6.00
+[15:38:12]     -> Trade CERRADO: long de strategy_scalping_stochrsi_ema por Final de la simulación. P/L: $-2.04 (-10.20 pips). Balance: $997.96
+[15:38:12] --- Simulación Finalizada ---
+[15:38:12] 
 ========================= Resumen de la Simulación =========================
-[15:19:03] Capital Inicial: $1000.00
-[15:19:03] Capital Final: $995.80
-[15:19:03] Beneficio/Pérdida Neta: $-4.20 (-0.42%)
-[15:19:03] -----------------------------------
-[15:19:03] Total Ganancias: $0.00
-[15:19:03] Total Pérdidas: $-4.20
-[15:19:03] Total Arriesgado: $10.00
-[15:19:03] -----------------------------------
-[15:19:03] Operaciones Totales: 1
-[15:19:03] Ganadoras: 0
-[15:19:03] Perdedoras: 1
-[15:19:03] Tasa de Acierto: 0.00%
-[15:19:03] -----------------------------------
-[15:19:03] Ganancia Promedio: $0.00
-[15:19:03] Pérdida Promedio: $-4.20
-[15:19:03] Ratio Riesgo/Beneficio Real: 0.00
-[15:19:03] ===========================================================================
+[15:38:12] Capital Inicial: $1000.00
+[15:38:12] Capital Final: $997.96
+[15:38:12] Beneficio/Pérdida Neta: $-2.04 (-0.20%)
+[15:38:12] -----------------------------------
+[15:38:12] Total Ganancias: $0.00
+[15:38:12] Total Pérdidas: $-2.04
+[15:38:12] Total Arriesgado: $6.00
+[15:38:12] -----------------------------------
+[15:38:12] Operaciones Totales: 1
+[15:38:12] Ganadoras: 0
+[15:38:12] Perdedoras: 1
+[15:38:13] Tasa de Acierto: 0.00%
+[15:38:13] -----------------------------------
+[15:38:13] Ganancia Promedio: $0.00
+[15:38:13] Pérdida Promedio: $-2.04
+[15:38:13] Ratio Riesgo/Beneficio Real: 0.00
+[15:38:13] ===========================================================================
+
+[15:38:13] Configuración de simulación guardada y simulación ejecutada.
 como podemos mejorar la estrategia para que genere las mayores ganancias posible y las menores perdidas??
 
 que % ratio , rr ratio y stop loss le pongo a strategy_swing_trading_multi_indicator
