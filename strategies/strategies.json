@@ -60,16 +60,6 @@
             "config": {}
         },
         "is_inverted_hammer": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
-        },
-        "is_long_legged_doji": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
-        },
-        "is_marubozu": {
             "selected": true,
             "strategy_mode": "Custom",
             "config": {
@@ -82,6 +72,16 @@
                 "atr_tp_multiplier": 3.0,
                 "atr_trailing_multiplier": 1.5
             }
+        },
+        "is_long_legged_doji": {
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
+        },
+        "is_marubozu": {
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_morning_star": {
             "selected": false,

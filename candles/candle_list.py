@@ -420,15 +420,28 @@ class CandlePatterns:
     @staticmethod
     def detect_all_patterns(candles, index=-1):
         all_pattern_functions = [
-            CandlePatterns.is_hammer, CandlePatterns.is_shooting_star, CandlePatterns.is_marubozu,
-            CandlePatterns.is_dragonfly_doji, CandlePatterns.is_gravestone_doji, CandlePatterns.is_hanging_man,
-            CandlePatterns.is_inverted_hammer, CandlePatterns.is_doji, CandlePatterns.is_long_legged_doji,
+            CandlePatterns.is_hammer, 
+            CandlePatterns.is_shooting_star, 
+            CandlePatterns.is_marubozu,
+            CandlePatterns.is_dragonfly_doji, 
+            CandlePatterns.is_gravestone_doji, 
+            CandlePatterns.is_hanging_man,
+            CandlePatterns.is_inverted_hammer,
+            CandlePatterns.is_morning_star,
+            CandlePatterns.is_doji, 
+            CandlePatterns.is_long_legged_doji,
             CandlePatterns.is_doji_reversal, 
-            CandlePatterns.is_engulfing, CandlePatterns.is_harami, CandlePatterns.is_piercing_line,
-            CandlePatterns.is_dark_cloud_cover, CandlePatterns.is_morning_star, CandlePatterns.is_evening_star,
-            CandlePatterns.is_three_white_soldiers, CandlePatterns.is_three_black_crows,
-            CandlePatterns.is_three_inside_up_down, CandlePatterns.is_three_outside_up_down,
-            CandlePatterns.is_rising_three_methods, CandlePatterns.is_falling_three_methods
+            CandlePatterns.is_engulfing, 
+            CandlePatterns.is_harami, 
+            CandlePatterns.is_piercing_line,
+            CandlePatterns.is_dark_cloud_cover, 
+            CandlePatterns.is_evening_star,
+            CandlePatterns.is_three_white_soldiers, 
+            CandlePatterns.is_three_black_crows,
+            CandlePatterns.is_three_inside_up_down, 
+            CandlePatterns.is_three_outside_up_down,
+            CandlePatterns.is_rising_three_methods, 
+            CandlePatterns.is_falling_three_methods
         ]
         
         signals = {'long': [], 'short': [], 'neutral': []}

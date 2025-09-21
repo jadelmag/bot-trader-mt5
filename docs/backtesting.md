@@ -14,7 +14,7 @@
 * Inverted Hammer: revisar ❌
 * Long Legged Doji: no detecta nada ❌
 * Marubozu: ✅✅✅ Total Ganancias: $60.05
-* Morning Star: revisar ❌
+* Morning Star: Tasa de Acierto: 0.00% ❌
 * Piercing Line: revisar ❌
 * Rising Three Methods: no detecta nada ❌
 * Shooting Star: ✅✅✅✅ Tasa de Acierto: 66.67%
@@ -37,20 +37,20 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Marubozu con la configuración por defecto:
+Inverted Hammer con la configuración por defecto:
 ========================= Resumen de la Simulación =========================
-[13:04:12] Capital Inicial: $1000.00
-[13:04:12] Capital Final: $1040.13
-[13:04:12] Beneficio Neto: $40.13
-[13:04:12] Total Ganancias: $60.05
-[13:04:12] Total Pérdidas: $-19.92
-[13:04:12] Total Arriesgado: $49.95
-[13:04:12] -----------------------------------
-[13:04:12] Operaciones Totales: 5
-[13:04:12] Ganadoras: 3
-[13:04:12] Perdedoras: 2
-[13:04:12] Tasa de Acierto: 60.00%
-[13:04:12] Ganancia Promedio: $20.02
-[13:04:12] Pérdida Promedio: $-9.96
-[13:04:12] Ratio Riesgo/Beneficio Real: 2.01
-[13:04:12] ===========================================================================
+[13:16:51] Capital Inicial: $1000.00
+[13:16:51] Capital Final: $970.27
+[13:16:51] Beneficio Neto: $-29.73
+[13:16:51] Total Ganancias: $0.00
+[13:16:51] Total Pérdidas: $-29.73
+[13:16:51] Total Arriesgado: $29.73
+[13:16:51] -----------------------------------
+[13:16:51] Operaciones Totales: 3
+[13:16:51] Ganadoras: 0
+[13:16:51] Perdedoras: 3
+[13:16:51] Tasa de Acierto: 0.00%
+[13:16:51] Ganancia Promedio: $0.00
+[13:16:51] Pérdida Promedio: $-9.91
+[13:16:51] Ratio Riesgo/Beneficio Real: 0.00
+[13:16:51] ===========================================================================
