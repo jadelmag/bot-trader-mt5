@@ -39,19 +39,3 @@
 
 
 
-========================= Resumen de la Simulación =========================
-[12:15:37] Capital Inicial: $1000.00
-[12:15:37] Capital Final: $960.48
-[12:15:37] Beneficio Neto: $-39.52
-[12:15:37] Total Ganancias: $0.00
-[12:15:37] Total Pérdidas: $-39.52
-[12:15:37] Total Arriesgado: $39.52
-[12:15:37] -----------------------------------
-[12:15:37] Operaciones Totales: 4
-[12:15:37] Ganadoras: 0
-[12:15:37] Perdedoras: 4
-[12:15:37] Tasa de Acierto: 0.00%
-[12:15:37] Ganancia Promedio: $0.00
-[12:15:37] Pérdida Promedio: $-9.88
-[12:15:37] Ratio Riesgo/Beneficio Real: 0.00
-[12:15:37] ===========================================================================

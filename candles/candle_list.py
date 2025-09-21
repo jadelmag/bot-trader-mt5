@@ -156,15 +156,30 @@ class CandlePatterns:
 
     @staticmethod
     def is_harami(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA de 50
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         current_candle, prev_candle = candles[index], candles[index-1]
         prev_body_size = abs(prev_candle['close'] - prev_candle['open'])
         current_body_size = abs(current_candle['close'] - current_candle['open'])
-        if prev_body_size < current_body_size * 1.5: return None
-        if prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['open'] > prev_candle['close'] and current_candle['close'] < prev_candle['open']:
+        
+        # Restauramos la condición original para detectar solo patrones fuertes
+        if prev_body_size < current_body_size * 2: return None
+
+        # Harami Alcista (long): vela anterior bajista, actual alcista, dentro de la anterior.
+        # Y ADEMÁS, el precio está por debajo de la EMA50 (buscando reversión de tendencia bajista).
+        is_bullish_harami = prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['open'] > prev_candle['close'] and current_candle['close'] < prev_candle['open']
+        if is_bullish_harami and current_candle['close'] < ema_50.iloc[index]:
             return 'long'
-        if prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] < prev_candle['close'] and current_candle['close'] > prev_candle['open']:
+
+        # Harami Bajista (short): vela anterior alcista, actual bajista, dentro de la anterior.
+        # Y ADEMÁS, el precio está por encima de la EMA50 (buscando reversión de tendencia alcista).
+        is_bearish_harami = prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] < prev_candle['close'] and current_candle['close'] > prev_candle['open']
+        if is_bearish_harami and current_candle['close'] > ema_50.iloc[index]:
             return 'short'
+            
         return None
 
     @staticmethod
