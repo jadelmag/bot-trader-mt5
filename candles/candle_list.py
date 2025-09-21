@@ -130,14 +130,33 @@ class CandlePatterns:
 
     @staticmethod
     def is_long_legged_doji(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.1:
-            upper_shadow = candle['high'] - max(candle['open'], candle['close'])
-            lower_shadow = min(candle['open'], candle['close']) - candle['low']
-            if upper_shadow > body_size * 2.5 and lower_shadow > body_size * 2.5:
-                return 'neutral'
+
+        # Filtro de Forma
+        is_doji_shape = candle_range > 0 and body_size / candle_range < 0.1
+        if not is_doji_shape: return None
+        
+        upper_shadow = candle['high'] - max(candle['open'], candle['close'])
+        lower_shadow = min(candle['open'], candle['close']) - candle['low']
+        is_long_legged = upper_shadow > body_size * 2.5 and lower_shadow > body_size * 2.5
+        if not is_long_legged: return None
+
+        # Filtro de Tendencia para Reversión
+        is_downtrend = candle['close'] < ema_50.iloc[index]
+        if is_downtrend:
+            return 'long'
+
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+        if is_uptrend:
+            return 'short'
+
         return None
 
     @staticmethod

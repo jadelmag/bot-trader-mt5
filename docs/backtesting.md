@@ -11,9 +11,9 @@
 * Hammer: ✅✅✅✅✅ Tasa de Acierto: 100%
 * Hanging Man: ✅✅✅✅✅ Tasa de Acierto: 100.00% 
 * Harami: ✅✅✅✅ Tasa de Acierto: 80%
-* Inverted Hammer: revisar ❌
-* Long Legged Doji: no detecta nada ❌
-* Marubozu: ✅✅✅ Total Ganancias: $60.05
+* Inverted Hammer: NO USAR ❌
+* Long Legged Doji: ✅✅✅✅ Tasa de Acierto: 66.67%
+* Marubozu: ✅✅✅ Tasa de Acierto: $60.00
 * Morning Star: Tasa de Acierto: 0.00% ❌
 * Piercing Line: revisar ❌
 * Rising Three Methods: no detecta nada ❌
@@ -37,20 +37,12 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Inverted Hammer con la configuración por defecto:
+Long Legged Doji con la configuración por defecto:
+--- Iniciando Simulación de Estrategia ---
+[13:27:41] Preparando datos y calculando indicadores técnicos manualmente...
+[13:27:41] Indicadores calculados. Velas disponibles para simulación: 223
+[13:27:41] --- Simulación Finalizada ---
+[13:27:41] 
 ========================= Resumen de la Simulación =========================
-[13:16:51] Capital Inicial: $1000.00
-[13:16:51] Capital Final: $970.27
-[13:16:51] Beneficio Neto: $-29.73
-[13:16:51] Total Ganancias: $0.00
-[13:16:51] Total Pérdidas: $-29.73
-[13:16:51] Total Arriesgado: $29.73
-[13:16:51] -----------------------------------
-[13:16:51] Operaciones Totales: 3
-[13:16:51] Ganadoras: 0
-[13:16:51] Perdedoras: 3
-[13:16:51] Tasa de Acierto: 0.00%
-[13:16:51] Ganancia Promedio: $0.00
-[13:16:51] Pérdida Promedio: $-9.91
-[13:16:51] Ratio Riesgo/Beneficio Real: 0.00
-[13:16:51] ===========================================================================
+[13:27:41] No se realizaron operaciones.
+[13:27:41] Configuración de simulación guardada y simulación ejecutada.
