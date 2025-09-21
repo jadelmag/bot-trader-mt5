@@ -140,6 +140,12 @@ class StrategySimulatorModal(tk.Toplevel):
 
     def _build_forex_tab(self, tab):
         """Construye el contenido de la pestaña de estrategias Forex."""
+        # --- Estrategias a excluir de la selección por defecto ---
+        excluded_strategies = [
+            "strategy_candle_pattern_reversal",
+            "strategy_chart_pattern_breakout"
+        ]
+
         # --- Frame Superior para botones de selección ---
         top_frame = ttk.Frame(tab)
         top_frame.pack(fill=tk.X, pady=(0, 10))
@@ -168,7 +174,9 @@ class StrategySimulatorModal(tk.Toplevel):
             row_frame = ttk.Frame(scrollable_frame, padding=(5, 5))
             row_frame.pack(fill=tk.X, expand=True)
 
-            var = tk.BooleanVar()
+            # Seleccionar por defecto todas excepto las excluidas
+            is_selected_by_default = strategy_name not in excluded_strategies
+            var = tk.BooleanVar(value=is_selected_by_default)
             
             # Checkbox
             chk = ttk.Checkbutton(row_frame, variable=var)
@@ -217,6 +225,20 @@ class StrategySimulatorModal(tk.Toplevel):
 
     def _build_candle_tab(self, tab):
         """Construye el contenido de la pestaña de patrones de velas."""
+        # --- Patrones de velas a seleccionar por defecto ---
+        default_selected_candles = [
+            'is_dark_cloud_cover',
+            'is_doji_reversal',
+            'is_engulfing',
+            'is_evening_star',
+            'is_hammer',
+            'is_hanging_man',
+            'is_harami',
+            'is_long_legged_doji',
+            'is_marubozu',
+            'is_shooting_star'
+        ]
+
         # --- Frame Superior para botones de selección ---
         top_frame = ttk.Frame(tab)
         top_frame.pack(fill=tk.X, pady=(0, 10))
@@ -248,7 +270,9 @@ class StrategySimulatorModal(tk.Toplevel):
             row_frame = ttk.Frame(scrollable_frame, padding=(0, 5))
             row_frame.pack(fill=tk.X, expand=True)
 
-            var = tk.BooleanVar()
+            # Seleccionar por defecto según la lista
+            is_selected_by_default = pattern_name in default_selected_candles
+            var = tk.BooleanVar(value=is_selected_by_default)
             
             # Checkbox
             chk = ttk.Checkbutton(row_frame, variable=var)
