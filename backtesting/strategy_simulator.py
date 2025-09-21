@@ -108,10 +108,44 @@ class StrategySimulator:
         stoch_rsi = (rsi - rsi_min) / (rsi_max - rsi_min)
         df['stochrsi_k'] = stoch_rsi.rolling(window=3).mean() * 100
 
-        # Eliminar filas con NaN generadas por los indicadores
-        self.candles_df.dropna(inplace=True)
-        self.candles_df.reset_index(inplace=True, drop=True) # drop=True para no guardar el viejo índice
-        self.logger.log(f"Indicadores calculados. Velas disponibles para simulación: {len(self.candles_df)}")
+        # IMPORTANTE: En lugar de eliminar filas con NaN, rellenar con métodos apropiados
+        # Para indicadores de tendencia, usar forward fill para mantener el último valor conocido
+        trend_indicators = ['ema_fast', 'ema_slow', 'ema_50', 'ema_200', 
+                          'bb_upper', 'bb_lower', 'tenkan_sen', 'kijun_sen',
+                          'senkou_span_a', 'senkou_span_b']
+        for indicator in trend_indicators:
+            if indicator in df.columns:
+                # Usar ffill() en lugar de fillna(method='ffill')
+                df[indicator] = df[indicator].ffill()
+                # Para los primeros valores donde no hay historial, usar el precio de cierre
+                df[indicator] = df[indicator].fillna(df['close'])
+        
+        # Para osciladores, usar valores neutrales
+        oscillators = {'rsi': 50, 'stochrsi_k': 50}
+        for indicator, neutral_value in oscillators.items():
+            if indicator in df.columns:
+                df[indicator] = df[indicator].fillna(neutral_value)
+        
+        # Para MACD, rellenar con 0
+        macd_indicators = ['macd_line', 'macd_signal', 'macd_hist']
+        for indicator in macd_indicators:
+            if indicator in df.columns:
+                df[indicator] = df[indicator].fillna(0)
+        
+        # Para ATR, usar un valor por defecto basado en el rango promedio
+        if 'atr' in df.columns:
+            default_atr = (df['high'] - df['low']).mean()
+            df['atr'] = df['atr'].fillna(default_atr)
+        
+        # Encontrar el índice mínimo seguro para empezar la simulación
+        # Necesitamos al menos 200 velas para que los indicadores más lentos sean confiables
+        # pero si no hay tantas velas, usar al menos 52 (para Ichimoku)
+        self.min_safe_index = min(200, max(52, len(self.candles_df) // 4))
+        
+        # No eliminar filas con NaN
+        self.candles_df = df
+        self.logger.log(f"Indicadores calculados. Velas totales disponibles: {len(self.candles_df)}")
+        self.logger.log(f"Simulación comenzará desde el índice {self.min_safe_index} para asegurar indicadores confiables")
 
     def _calculate_lot_size(self, stop_loss_pips, risk_percent):
         """Calcula el tamaño del lote basado en el capital actual, el riesgo y el SL."""
@@ -155,8 +189,9 @@ class StrategySimulator:
         ]
 
         # --- Bucle Principal de Simulación ---
-        # Empezar desde el índice 1 para que siempre haya un dato anterior (i-1) disponible
-        for i in range(1, len(self.candles_df)):
+        # Empezar desde el índice mínimo seguro para asegurar que los indicadores sean confiables
+        start_index = getattr(self, 'min_safe_index', 1)  # Por defecto 1 si no se estableció
+        for i in range(start_index, len(self.candles_df)):
             current_candle = self.candles_df.iloc[i]
             current_price = current_candle['close']
             
@@ -193,6 +228,9 @@ class StrategySimulator:
             # --- 3. Gestionar Operaciones Abiertas ---
             self._manage_open_trades(i, current_candle)
 
+        # Cerrar cualquier operación que haya quedado abierta al final
+        self._close_remaining_trades()
+        
         self.logger.success("--- Simulación Finalizada ---")
         self._print_summary()
 
@@ -263,7 +301,7 @@ class StrategySimulator:
             'risked_amount': risked_amount
         }
         self.open_trades.append(trade)
-        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | Lote: {lot_size:.2f} | Riesgo: ${risked_amount:.2f}")
+        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f} | TP: {take_profit:.5f} | Lote: {lot_size:.2f} | Riesgo: ${risked_amount:.2f}")
 
     def _manage_open_trades(self, current_index, current_candle):
         """Gestiona las operaciones abiertas, comprobando si se deben cerrar."""
@@ -318,30 +356,94 @@ class StrategySimulator:
             self.open_trades = [t for t in self.open_trades if t['status'] == 'open']
             self.closed_trades.extend(trades_to_close)
 
-    def _print_summary(self):
-        """Imprime un resumen de los resultados de la simulación."""
-        self.logger.log("\n" + "="*25 + " Resumen de la Simulación " + "="*25)
-        total_trades = len(self.closed_trades)
-        if total_trades == 0:
-            self.logger.log("No se realizaron operaciones.")
-            return
+        # Cerrar automáticamente las operaciones abiertas al final de la simulación
+        if current_index == len(self.candles_df) - 1:
+            for trade in self.open_trades:
+                trade['status'] = 'closed'
+                trade['exit_index'] = current_index
+                trade['exit_price'] = current_candle['close']
+                trade['close_reason'] = 'Final de la simulación'
+                
+                # Calcular P/L en pips y en dinero
+                pnl_pips = (trade['exit_price'] - trade['entry_price']) / self.pip_value if trade['type'] == 'long' else (trade['entry_price'] - trade['exit_price']) / self.pip_value
+                pnl_money = pnl_pips * trade['lot_size'] * self.pip_value_per_lot
+                
+                trade['pnl_pips'] = pnl_pips
+                trade['pnl_money'] = pnl_money
+                self.current_balance += pnl_money
 
+                self.closed_trades.append(trade)
+                log_msg = f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {trade['close_reason']}. P/L: ${pnl_money:.2f} ({pnl_pips:.2f} pips). Balance: ${self.current_balance:.2f}"
+                if pnl_money > 0:
+                    self.logger.success(log_msg)
+                else:
+                    self.logger.error(log_msg)
+            self.open_trades = []
+
+    def _close_remaining_trades(self):
+        """Cierra cualquier operación que haya quedado abierta al final de la simulación."""
+        if self.open_trades:
+            self.logger.log("Cerrando operaciones abiertas restantes...")
+            for trade in self.open_trades:
+                trade['status'] = 'closed'
+                trade['exit_index'] = len(self.candles_df) - 1
+                trade['exit_price'] = self.candles_df.iloc[-1]['close']
+                trade['close_reason'] = 'Final de la simulación'
+                
+                # Calcular P/L en pips y en dinero
+                pnl_pips = (trade['exit_price'] - trade['entry_price']) / self.pip_value if trade['type'] == 'long' else (trade['entry_price'] - trade['exit_price']) / self.pip_value
+                pnl_money = pnl_pips * trade['lot_size'] * self.pip_value_per_lot
+                
+                trade['pnl_pips'] = pnl_pips
+                trade['pnl_money'] = pnl_money
+                self.current_balance += pnl_money
+
+                self.closed_trades.append(trade)
+                log_msg = f"    -> Trade CERRADO: {trade['type']} de {trade['strategy_name']} por {trade['close_reason']}. P/L: ${pnl_money:.2f} ({pnl_pips:.2f} pips). Balance: ${self.current_balance:.2f}"
+                if pnl_money > 0:
+                    self.logger.success(log_msg)
+                else:
+                    self.logger.error(log_msg)
+            self.open_trades = []
+
+    def _print_summary(self):
+        """Imprime un resumen completo de los resultados de la simulación."""
+        self.logger.log("\n" + "="*25 + " Resumen de la Simulación " + "="*25)
+        
+        if len(self.closed_trades) == 0:
+            self.logger.log("No se realizaron operaciones cerradas.")
+            if len(self.open_trades) > 0:
+                self.logger.log(f"Nota: {len(self.open_trades)} operación(es) quedaron abiertas.")
+            return
+        
+        # Calcular estadísticas
         wins = [t for t in self.closed_trades if t['pnl_money'] > 0]
         losses = [t for t in self.closed_trades if t['pnl_money'] <= 0]
+        total_trades = len(self.closed_trades)
         win_rate = (len(wins) / total_trades) * 100 if total_trades > 0 else 0
         
         total_pnl_money = sum(t['pnl_money'] for t in self.closed_trades)
         total_profits = sum(t['pnl_money'] for t in wins)
         total_losses = sum(t['pnl_money'] for t in losses)
         total_risked = sum(t['risked_amount'] for t in self.closed_trades)
-
+        
         avg_win = total_profits / len(wins) if wins else 0
         avg_loss = total_losses / len(losses) if losses else 0
-        risk_reward_ratio = abs(avg_win / avg_loss) if avg_loss != 0 else float('inf')
-
+        
+        # Calcular ratio riesgo/beneficio evitando división por cero
+        if avg_loss != 0:
+            risk_reward_ratio = abs(avg_win / avg_loss)
+        else:
+            risk_reward_ratio = float('inf') if avg_win > 0 else 0
+        
+        # Calcular retorno porcentual
+        return_percentage = ((self.current_balance - self.initial_capital) / self.initial_capital) * 100
+        
+        # Imprimir resumen
         self.logger.log(f"Capital Inicial: ${self.initial_capital:.2f}")
         self.logger.log(f"Capital Final: ${self.current_balance:.2f}")
-        self.logger.log(f"Beneficio Neto: ${total_pnl_money:.2f}")
+        self.logger.log(f"Beneficio/Pérdida Neta: ${total_pnl_money:.2f} ({return_percentage:.2f}%)")
+        self.logger.log("-"*35)
         self.logger.log(f"Total Ganancias: ${total_profits:.2f}")
         self.logger.log(f"Total Pérdidas: ${total_losses:.2f}")
         self.logger.log(f"Total Arriesgado: ${total_risked:.2f}")
@@ -350,7 +452,13 @@ class StrategySimulator:
         self.logger.log(f"Ganadoras: {len(wins)}")
         self.logger.log(f"Perdedoras: {len(losses)}")
         self.logger.log(f"Tasa de Acierto: {win_rate:.2f}%")
+        self.logger.log("-"*35)
         self.logger.log(f"Ganancia Promedio: ${avg_win:.2f}")
         self.logger.log(f"Pérdida Promedio: ${avg_loss:.2f}")
-        self.logger.log(f"Ratio Riesgo/Beneficio Real: {risk_reward_ratio:.2f}")
+        
+        if risk_reward_ratio == float('inf'):
+            self.logger.log(f"Ratio Riesgo/Beneficio: ∞ (sin pérdidas)")
+        else:
+            self.logger.log(f"Ratio Riesgo/Beneficio Real: {risk_reward_ratio:.2f}")
+        
         self.logger.log("="*75 + "\n")

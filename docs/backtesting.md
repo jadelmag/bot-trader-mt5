@@ -37,20 +37,3 @@
 * strategy_scalping_stochrsi_ema: no encuentra
 * strategy_swing_trading_multi_indicator: no encuentra
 
-Three White Soldiers con la configuración por defecto:
-========================= Resumen de la Simulación =========================
-[13:47:41] Capital Inicial: $1000.00
-[13:47:41] Capital Final: $989.94
-[13:47:41] Beneficio Neto: $-10.06
-[13:47:42] Total Ganancias: $0.00
-[13:47:42] Total Pérdidas: $-10.06
-[13:47:42] Total Arriesgado: $10.06
-[13:47:42] -----------------------------------
-[13:47:42] Operaciones Totales: 1
-[13:47:42] Ganadoras: 0
-[13:47:42] Perdedoras: 1
-[13:47:42] Tasa de Acierto: 0.00%
-[13:47:42] Ganancia Promedio: $0.00
-[13:47:42] Pérdida Promedio: $-10.06
-[13:47:42] Ratio Riesgo/Beneficio Real: 0.00
-[13:47:42] ===========================================================================

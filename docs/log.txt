@@ -1,26 +1,4 @@
 
-
-como puede ser que siguiendo este flujo:
-
-Herramientas > Aplicar Estrategia > Seleccionar una solo con esta configuracion:
-- % Ratio: 1.0
-- RR Ratio: 2.0
-- Stop Loss: 100 pips
-
-No detecta ninguna de estas estrategias forex:
-
-* strategy_bollinger_bands_breakout: no encuentra
-* strategy_bollinger_bands_reversion: no encuentra
-* strategy_candle_pattern_reversal: no encuentra
-* strategy_chart_pattern_breakout: no encuentra
-* strategy_fibonacci_reversal: no encuentra
-* strategy_ichimoku_kinko_hyo: no encuentra
-* strategy_ma_crossover: no encuentra
-* strategy_momentum_rsi_macd: no encuentra
-* strategy_price_action_sr: no encuentra
-* strategy_scalping_stochrsi_ema: no encuentra
-* strategy_swing_trading_multi_indicator: no encuentra
-
 while True:
     tick = mt5.symbol_info_tick(symbol)
     
@@ -40,3 +18,6 @@ while True:
             break
 
     time.sleep(1)
+
+
+

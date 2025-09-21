@@ -110,18 +110,9 @@
             "config": {}
         },
         "is_three_white_soldiers": {
-            "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.5,
-                "atr_tp_multiplier": 3.0,
-                "atr_trailing_multiplier": 1.5
-            }
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
         }
     },
     "forex_strategies": {
@@ -132,7 +123,7 @@
             "stop_loss_pips": 20.0
         },
         "strategy_bollinger_bands_reversion": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0
