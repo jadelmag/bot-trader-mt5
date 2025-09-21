@@ -136,13 +136,63 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_swing_trading_multi_indicator(df):
-        required = ['close', 'ema_50', 'ema_200', 'rsi', 'macd_line']
-        if not all(col in df.columns for col in required): return None
+        """
+        Estrategia de Swing Trading MEJORADA.
+        Busca entradas en retrocesos (pullbacks) a la media móvil en una tendencia establecida.
+        """
+        required = ['close', 'ema_50', 'ema_200', 'rsi', 'macd_line', 'macd_signal']
+        if not all(col in df.columns for col in required) or len(df) < 200:
+            return None
+
+        # --- 1. Definir la Tendencia Principal ---
         price = df['close'].iloc[-1]
-        if price > df['ema_200'].iloc[-1] and df['rsi'].iloc[-1] > 50 and df['macd_line'].iloc[-1] > 0:
-            return 'long'
-        if price < df['ema_200'].iloc[-1] and df['rsi'].iloc[-1] < 50 and df['macd_line'].iloc[-1] < 0:
-            return 'short'
+        ema_50 = df['ema_50'].iloc[-1]
+        ema_200 = df['ema_200'].iloc[-1]
+        is_uptrend = ema_50 > ema_200 and price > ema_200
+        is_downtrend = ema_50 < ema_200 and price < ema_200
+
+        # --- 2. Lógica para Señal LONG (en tendencia alcista) ---
+        if is_uptrend:
+            # Condición de Pullback: El precio debe haber tocado o estado cerca de la EMA 50 recientemente
+            is_near_ema50 = (df['low'].iloc[-3:] <= ema_50 * 1.005).any()
+            
+            if is_near_ema50:
+                # Confirmación 1: Cruce alcista de MACD
+                macd_cross_up = df['macd_line'].iloc[-1] > df['macd_signal'].iloc[-1] and df['macd_line'].iloc[-2] <= df['macd_signal'].iloc[-2]
+                
+                # Confirmación 2: RSI saliendo de zona baja (pero no sobrecomprado)
+                rsi_confirm = df['rsi'].iloc[-1] > 45 and df['rsi'].iloc[-1] < 70
+
+                # Confirmación 3: Patrón de vela alcista
+                candle_data = df.to_dict('records')
+                signals = CandlePatterns.detect_all_patterns(candle_data, len(candle_data) - 1)
+                has_bullish_pattern = any(p in signals['long'] for p in ['hammer', 'engulfing', 'piercing_line'])
+
+                # Si tenemos al menos una confirmación fuerte, entramos
+                if (macd_cross_up and rsi_confirm) or has_bullish_pattern:
+                    return 'long'
+
+        # --- 3. Lógica para Señal SHORT (en tendencia bajista) ---
+        if is_downtrend:
+            # Condición de Pullback: El precio debe haber tocado o estado cerca de la EMA 50 recientemente
+            is_near_ema50 = (df['high'].iloc[-3:] >= ema_50 * 0.995).any()
+
+            if is_near_ema50:
+                # Confirmación 1: Cruce bajista de MACD
+                macd_cross_down = df['macd_line'].iloc[-1] < df['macd_signal'].iloc[-1] and df['macd_line'].iloc[-2] >= df['macd_signal'].iloc[-2]
+
+                # Confirmación 2: RSI saliendo de zona alta (pero no sobrevendido)
+                rsi_confirm = df['rsi'].iloc[-1] < 55 and df['rsi'].iloc[-1] > 30
+
+                # Confirmación 3: Patrón de vela bajista
+                candle_data = df.to_dict('records')
+                signals = CandlePatterns.detect_all_patterns(candle_data, len(candle_data) - 1)
+                has_bearish_pattern = any(p in signals['short'] for p in ['shooting_star', 'engulfing', 'dark_cloud_cover'])
+
+                # Si tenemos al menos una confirmación fuerte, entramos
+                if (macd_cross_down and rsi_confirm) or has_bearish_pattern:
+                    return 'short'
+
         return None
 
     @staticmethod
@@ -273,13 +323,44 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_scalping_stochrsi_ema(df):
-        required = ['close', 'ema_slow', 'stochrsi_k']
-        if not all(col in df.columns for col in required): return None
+        """
+        Estrategia de Scalping MEJORADA con doble filtro de tendencia y confirmación de momentum.
+        """
+        required = ['close', 'ema_50', 'stochrsi_k', 'macd_line', 'macd_signal']
+        if not all(col in df.columns for col in required) or len(df) < 100:
+            return None
+
+        # --- 1. Filtro de Tendencia (Doble EMA) ---
+        # Usaremos EMA 21 (rápida) y EMA 50 (lenta) para definir un túnel de tendencia
+        df['ema_21'] = df['close'].ewm(span=21, adjust=False).mean()
         price = df['close'].iloc[-1]
-        if price > df['ema_slow'].iloc[-1] and df['stochrsi_k'].iloc[-1] > 20 and df['stochrsi_k'].iloc[-2] <= 20:
+        ema_21 = df['ema_21'].iloc[-1]
+        ema_50 = df['ema_50'].iloc[-1]
+
+        is_strong_uptrend = price > ema_21 and ema_21 > ema_50
+        is_strong_downtrend = price < ema_21 and ema_21 < ema_50
+
+        # --- 2. Señal de Entrada (StochRSI) ---
+        stoch_k = df['stochrsi_k'].iloc[-1]
+        stoch_k_prev = df['stochrsi_k'].iloc[-2]
+        
+        stoch_cross_up = stoch_k > 20 and stoch_k_prev <= 20
+        stoch_cross_down = stoch_k < 80 and stoch_k_prev >= 80
+
+        # --- 3. Confirmación de Momentum (MACD) ---
+        macd_line = df['macd_line'].iloc[-1]
+        macd_signal = df['macd_signal'].iloc[-1]
+        
+        macd_bullish = macd_line > macd_signal
+        macd_bearish = macd_line < macd_signal
+
+        # --- Lógica de Decisión Final ---
+        if is_strong_uptrend and stoch_cross_up and macd_bullish:
             return 'long'
-        if price < df['ema_slow'].iloc[-1] and df['stochrsi_k'].iloc[-1] < 80 and df['stochrsi_k'].iloc[-2] >= 80:
+        
+        if is_strong_downtrend and stoch_cross_down and macd_bearish:
             return 'short'
+
         return None
 
     @staticmethod
