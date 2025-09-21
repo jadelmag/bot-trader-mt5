@@ -153,6 +153,8 @@ class App:
         options_menu.add_checkbutton(label="Modo Debug", variable=self.debug_mode_var)
         options_menu.add_separator()
         options_menu.add_command(label="Configuración", command=self._open_config_modal)
+        tools_menu.add_separator()
+        options_menu.add_command(label="Guardar Gráfica", command=self._save_chart_to_csv)
 
         # --- Botón de Simulación (Columna 2) ---
         self.simulation_btn = ttk.Menubutton(header, text="Simulación")
@@ -1095,6 +1097,48 @@ class App:
         self.root.destroy()
         print("Saliendo del programa...")
         os._exit(0)
+
+    def _save_chart_to_csv(self):
+        """Guarda los datos actuales del gráfico en un archivo CSV."""
+        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
+            messagebox.showerror("Error al Guardar", "No hay datos de gráfico para guardar. Por favor, inicie el gráfico primero.")
+            self._log_error("Intento de guardar gráfico sin datos disponibles.")
+            return
+        
+        try:
+            # Crear una copia para trabajar
+            df_to_save = self.graphic.candles_df.copy()
+            
+            # El índice es 'time', lo convertimos en una columna 'Date'
+            df_to_save.reset_index(inplace=True)
+            df_to_save.rename(columns={'time': 'Date', 'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'}, inplace=True)
+            
+            # Asegurarse de que solo tenemos las columnas deseadas en el orden correcto
+            required_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+            df_to_save = df_to_save[required_columns]
+            
+            # Crear el nombre del archivo
+            symbol = self.symbol_var.get()
+            timeframe = self.timeframe_var.get()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"chart_{symbol}_{timeframe}_{timestamp}.csv"
+            
+            # Asegurarse de que la carpeta 'audit' existe
+            audit_dir = os.path.join(_project_root, 'audit')
+            if not os.path.exists(audit_dir):
+                os.makedirs(audit_dir)
+            
+            save_path = os.path.join(audit_dir, filename)
+            
+            # Guardar en CSV
+            df_to_save.to_csv(save_path, index=False, date_format='%Y-%m-%d %H:%M:%S')
+            
+            self._log_success(f"Gráfico guardado correctamente en: {save_path}")
+            messagebox.showinfo("Éxito", f"El gráfico se ha guardado como '{filename}' en la carpeta 'audit'.")
+
+        except Exception as e:
+            self._log_error(f"No se pudo guardar el gráfico en CSV: {e}")
+            messagebox.showerror("Error al Guardar", f"Ocurrió un error al guardar el archivo: {e}")
 
 
 if __name__ == "__main__":
