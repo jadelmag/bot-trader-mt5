@@ -31,20 +31,30 @@
     - Tasa de Acierto: 0.00% [% Ratio 1  | RR Ratio 2.5 | Stop Loss 30 pips ] ❌
 * strategy_chart_pattern_breakout: 
     - Tasa de Acierto: 100.00% [% Ratio 1  | RR Ratio 2 | Stop Loss 20 pips ] ✅
-* strategy_fibonacci_reversal: 
+* strategy_fibonacci_reversal: [TODO]
     - Tasa de Acierto: 0.00% 
-* strategy_ichimoku_kinko_hyo: Tasa de Acierto: 0.00%
+* strategy_ichimoku_kinko_hyo: [TODO]
     - Tasa de Acierto: 0.00% 
 * strategy_ma_crossover:
     - Tasa de Acierto: 100.00% [% Ratio 1  | RR Ratio 2 | Stop Loss 20 pips ] ✅
-* strategy_momentum_rsi_macd: 
+* strategy_momentum_rsi_macd: [TODO]
     - Tasa de Acierto: 0.00% 
 * strategy_price_action_sr: 
     - Tasa de Acierto:  100.00% [% Ratio 1  | RR Ratio 2 | Stop Loss 20 pips ] ✅ 
 * strategy_scalping_stochrsi_ema: 
-    - Tasa de Acierto: 0.00% [% Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips ] ❌
+    - Tasa de Acierto: 0.00% [% Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips ] ✅
 * strategy_swing_trading_multi_indicator:
     - Tasa de Acierto: 100.00% [% Ratio 1.5  | RR Ratio 3 | Stop Loss: 30 pips ] ✅
+
+quiero que en srategy_simulator_modal.py cambia los valores por defecto para las siguientes estrategias:
+- strategy_bollinger_bands_breakout: % Ratio 1  | RR Ratio 1.5 | Stop Loss 25 pips
+- strategy_candle_pattern_reversal: % Ratio 1  | RR Ratio 2.5 | Stop Loss 30 pips
+- strategy_chart_pattern_breakout: % Ratio 1  | RR Ratio 2 | Stop Loss 20 pips
+- strategy_ma_crossover: % Ratio 1  | RR Ratio 2 | Stop Loss 20 pips
+- strategy_price_action_sr: % Ratio 1  | RR Ratio 2 | Stop Loss 20 pips
+- strategy_scalping_stochrsi_ema: % Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips
+- strategy_swing_trading_multi_indicator: % Ratio 1.5  | RR Ratio 3 | Stop Loss: 30 pips
+
 
 
 strategy_scalping_stochrsi_ema: Tasa de Acierto: 0.00%

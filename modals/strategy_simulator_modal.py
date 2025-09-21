@@ -39,6 +39,17 @@ class StrategySimulatorModal(tk.Toplevel):
         self.forex_strategies = self._get_forex_strategies()
         self.forex_widgets = {}
 
+        # --- Valores por defecto para estrategias Forex ---
+        self.strategy_defaults = {
+            "strategy_bollinger_bands_breakout": {"percent_ratio": 1.0, "rr_ratio": 1.5, "sl": 25.0},
+            "strategy_candle_pattern_reversal": {"percent_ratio": 1.0, "rr_ratio": 2.5, "sl": 30.0},
+            "strategy_chart_pattern_breakout": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_ma_crossover": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_price_action_sr": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.5, "rr_ratio": 1.5, "sl": 30.0},
+            "strategy_swing_trading_multi_indicator": {"percent_ratio": 1.5, "rr_ratio": 3.0, "sl": 30.0},
+        }
+
         # --- UI Components ---
         self.notebook = None
         self.forex_canvas = None
@@ -166,21 +177,28 @@ class StrategySimulatorModal(tk.Toplevel):
             lbl = ttk.Label(row_frame, text=display_name, width=25)
             lbl.pack(side=tk.LEFT, padx=5)
 
+            # --- Obtener valores por defecto específicos o genéricos ---
+            defaults = self.strategy_defaults.get(strategy_name, {
+                "percent_ratio": 1.0, 
+                "rr_ratio": 2.0, 
+                "sl": 20.0
+            })
+
             # --- Entradas para % Ratio y RR Ratio ---
             # Stop Loss
-            sl_var = tk.DoubleVar(value=20.0)
+            sl_var = tk.DoubleVar(value=defaults["sl"])
             sl_entry = ttk.Entry(row_frame, textvariable=sl_var, width=8)
             sl_entry.pack(side=tk.RIGHT, padx=5)
             ttk.Label(row_frame, text="Stop Loss (pips):").pack(side=tk.RIGHT)
 
             # RR Ratio
-            rr_ratio_var = tk.DoubleVar(value=2.0)
+            rr_ratio_var = tk.DoubleVar(value=defaults["rr_ratio"])
             rr_entry = ttk.Entry(row_frame, textvariable=rr_ratio_var, width=8)
             rr_entry.pack(side=tk.RIGHT, padx=5)
             ttk.Label(row_frame, text="RR Ratio:").pack(side=tk.RIGHT)
 
             # % Ratio
-            percent_ratio_var = tk.DoubleVar(value=1.0)
+            percent_ratio_var = tk.DoubleVar(value=defaults["percent_ratio"])
             percent_entry = ttk.Entry(row_frame, textvariable=percent_ratio_var, width=8)
             percent_entry.pack(side=tk.RIGHT, padx=5)
             ttk.Label(row_frame, text="% Ratio:").pack(side=tk.RIGHT)
