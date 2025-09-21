@@ -89,6 +89,24 @@ class CandlePatterns:
         return None
 
     @staticmethod
+    def is_doji_reversal(candles, index=-1):
+        if index < 1: return None  # Necesitamos al menos una vela anterior para determinar la tendencia
+        candle = candles[index]
+        prev_candle = candles[index - 1]
+
+        body_size = abs(candle['close'] - candle['open'])
+        candle_range = candle['high'] - candle['low']
+
+        # Comprobar si es un Doji
+        if candle_range > 0 and body_size / candle_range < 0.1:
+            # Determinar la señal basada en la vela anterior
+            if prev_candle['close'] < prev_candle['open']:  # Vela anterior es bajista
+                return 'long'  # Posible reversión alcista
+            elif prev_candle['close'] > prev_candle['open']:  # Vela anterior es alcista
+                return 'short'  # Posible reversión bajista
+        return None
+
+    @staticmethod
     def is_hanging_man(candles, index=-1):
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
@@ -275,6 +293,7 @@ class CandlePatterns:
             CandlePatterns.is_hammer, CandlePatterns.is_shooting_star, CandlePatterns.is_marubozu,
             CandlePatterns.is_dragonfly_doji, CandlePatterns.is_gravestone_doji, CandlePatterns.is_hanging_man,
             CandlePatterns.is_inverted_hammer, CandlePatterns.is_doji, CandlePatterns.is_long_legged_doji,
+            CandlePatterns.is_doji_reversal, 
             CandlePatterns.is_engulfing, CandlePatterns.is_harami, CandlePatterns.is_piercing_line,
             CandlePatterns.is_dark_cloud_cover, CandlePatterns.is_morning_star, CandlePatterns.is_evening_star,
             CandlePatterns.is_three_white_soldiers, CandlePatterns.is_three_black_crows,

@@ -1,16 +1,27 @@
 ## CANDLE PATTERNS
 
-* Doji: no usar 
-* Dragonfly Doji: no usar
-* Falling Three Methods: no usar
-* Gravestone Doji: no usar / revisar --> Da resultados negativos
-* Hammer: no usar / revisar --> Da resultados negativos
-* Inverted Hammer: no usar / revisar --> Da resultados negativos
-* Long Legged Doji: no encuentra
-* Morning Star: no usar / revisar --> Da resultados negativos
-* Rising Three Methods: no encuentra
-* Three Inside Up Down: no usar / revisar --> Da resultados negativos
-* Three White Soldiers: no usar / revisar --> Da resultados negativos
+* Dark Cloud Cover: ✅
+* Doji: no seleccionar ❌ [se usa para otras estrategias] ✅
+* Doji Reversal: ✅
+* Dragonfly Doji: revisar porque siempre devuelve lo mismo ❌
+* Engulfing: ✅
+* Evening Star: ✅
+* Falling Three Methods: 
+* Gravestone Doji:
+* Hammer: 
+* Hanging Man: 
+* Harami: 
+* Inverted Hammer: 
+* Long Legged Doji: 
+* Marubozu: 
+* Morning Star: 
+* Piercing Line: 
+* Rising Three Methods:
+* Shooting Star: 
+* Three Black Crows: 
+* Three Inside Up Down:
+* Three Outside Up Down: 
+* Three White Soldiers: 
 
 ## FOREX STRATEGIES
 
