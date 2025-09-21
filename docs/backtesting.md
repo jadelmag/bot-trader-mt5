@@ -36,21 +36,10 @@
 * strategy_scalping_stochrsi_ema: Tasa de Acierto: 0.00% [% Ratio 0.5  | RR Ratio 1.5 | Stop Loss: 30 pips ] ✅
 * strategy_swing_trading_multi_indicator: Tasa de Acierto: 100.00% [% Ratio 1.5  | RR Ratio 3 | Stop Loss: 30 pips ] ✅
 
-<!-- quiero que en srategy_simulator_modal.py cambia los valores por defecto para las siguientes estrategias: -->
-
-
-
 strategy_ichimoku_kinko_hyo: Tasa de Acierto: 0.00%
---- Iniciando Simulación de Estrategia ---
---- Iniciando Simulación de Estrategia ---
-[16:15:03] Preparando datos y calculando indicadores técnicos manualmente...
-[16:15:03] Indicadores calculados. Velas totales disponibles: 300
-[16:15:03] Simulación comenzará desde el índice 75 para asegurar indicadores confiables
-[16:15:03] --- Simulación Finalizada ---
-[16:15:04] 
-========================= Resumen de la Simulación =========================
-[16:15:04] No se realizaron operaciones cerradas.
-[16:15:04] Configuración de simulación guardada y simulación ejecutada.
-como podemos mejorar la estrategia strategy_ichimoku_kinko_hyo para que genere las mayores ganancias posible y las menores perdidas??
+### --- AQUI VA LOGS --- ###
+como podemos mejorar la estrategia 
+strategy_ichimoku_kinko_hyo 
+para que genere las mayores ganancias posible y las menores perdidas??
 
 que % ratio , rr ratio y stop loss le pongo a strategy_ichimoku_kinko_hyo?
