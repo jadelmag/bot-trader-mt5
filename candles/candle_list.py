@@ -150,14 +150,35 @@ class CandlePatterns:
 
     @staticmethod
     def is_hanging_man(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         if body_size == 0: return None
+
         lower_shadow = (candle['open'] - candle['low']) if candle['close'] > candle['open'] else (candle['close'] - candle['low'])
         upper_shadow = (candle['high'] - candle['close']) if candle['close'] > candle['open'] else (candle['high'] - candle['open'])
-        if lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5:
-            if index > 0 and candles[index-1]['close'] > candles[index-1]['open']:
-                return 'short'
+        
+        # Comprobar forma + tendencia alcista (sobre EMA50) + momentum sobrecomprado (RSI > 65)
+        is_hanging_man_shape = lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+        is_overbought = rsi.iloc[index] > 65
+
+        if is_hanging_man_shape and is_uptrend and is_overbought:
+            return 'short'
+
         return None
 
     @staticmethod

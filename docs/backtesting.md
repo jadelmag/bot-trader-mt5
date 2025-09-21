@@ -3,13 +3,13 @@
 * Dark Cloud Cover: ✅✅✅✅✅ Tasa de Acierto: 100.00%
 * Doji: no seleccionar [se usa para otras estrategias] ❌
 * Doji Reversal: ✅✅✅✅ Tasa de Acierto: 60.00%
-* Dragonfly Doji: revisar porque siempre devuelve lo mismo ❌
+* Dragonfly Doji: Tasa de Acierto: 0.00% [resultados negativos] ❌
 * Engulfing: ✅✅✅✅✅ Tasa de Acierto: 100.00%
 * Evening Star: ✅✅✅✅ Tasa de Acierto: 66.67%
 * Falling Three Methods: no detecta nada ❌
 * Gravestone Doji: ✅✅✅ Tasa de Acierto: 50.00%
 * Hammer: ✅✅✅✅✅ Tasa de Acierto: 100%
-* Hanging Man: revisar ❌
+* Hanging Man: ✅✅✅✅✅ Tasa de Acierto: 100.00% 
 * Harami: ✅✅✅✅ Tasa de Acierto: 80%
 * Inverted Hammer: revisar ❌
 * Long Legged Doji: no detecta nada ❌
@@ -39,18 +39,18 @@
 
 Hanging Man con la configuración por defecto:
 ========================= Resumen de la Simulación =========================
-[12:40:10] Capital Inicial: $1000.00
-[12:40:10] Capital Final: $1009.02
-[12:40:10] Beneficio Neto: $9.02
-[12:40:10] Total Ganancias: $100.04
-[12:40:10] Total Pérdidas: $-91.03
-[12:40:10] Total Arriesgado: $141.05
-[12:40:10] -----------------------------------
-[12:40:10] Operaciones Totales: 14
-[12:40:10] Ganadoras: 5
-[12:40:10] Perdedoras: 9
-[12:40:10] Tasa de Acierto: 35.71%
-[12:40:10] Ganancia Promedio: $20.01
-[12:40:10] Pérdida Promedio: $-10.11
-[12:40:10] Ratio Riesgo/Beneficio Real: 1.98
-[12:40:10] ===========================================================================
+[12:51:43] Capital Inicial: $1000.00
+[12:51:43] Capital Final: $999.83
+[12:51:43] Beneficio Neto: $-0.17
+[12:51:43] Total Ganancias: $19.98
+[12:51:43] Total Pérdidas: $-20.15
+[12:51:43] Total Arriesgado: $30.14
+[12:51:43] -----------------------------------
+[12:51:43] Operaciones Totales: 3
+[12:51:43] Ganadoras: 1
+[12:51:43] Perdedoras: 2
+[12:51:43] Tasa de Acierto: 33.33%
+[12:51:43] Ganancia Promedio: $19.98
+[12:51:43] Pérdida Promedio: $-10.08
+[12:51:43] Ratio Riesgo/Beneficio Real: 1.98
+[12:51:43] ===========================================================================

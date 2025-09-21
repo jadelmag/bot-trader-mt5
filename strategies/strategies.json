@@ -25,18 +25,9 @@
             "config": {}
         },
         "is_engulfing": {
-            "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.5,
-                "atr_tp_multiplier": 3.0,
-                "atr_trailing_multiplier": 1.5
-            }
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_evening_star": {
             "selected": false,
@@ -59,9 +50,18 @@
             "config": {}
         },
         "is_hanging_man": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "selected": true,
+            "strategy_mode": "Custom",
+            "config": {
+                "use_signal_change": true,
+                "use_stop_loss": true,
+                "use_take_profit": true,
+                "use_trailing_stop": false,
+                "use_pattern_reversal": false,
+                "atr_sl_multiplier": 1.5,
+                "atr_tp_multiplier": 3.0,
+                "atr_trailing_multiplier": 1.5
+            }
         },
         "is_harami": {
             "selected": false,
