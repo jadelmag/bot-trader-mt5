@@ -1,3 +1,5 @@
+import pandas as pd
+
 class CandlePatterns:
     """
     Clase que contiene listas de patrones de velas japonesas y métodos estáticos para detectar dichos patrones.
@@ -35,13 +37,23 @@ class CandlePatterns:
 
     @staticmethod
     def is_marubozu(candles, index=-1):
+        if index < 50: return None # Necesitamos suficientes datos para la EMA de 50
+
+        # Convertir a DataFrame para calcular la EMA
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
+        
         if candle_range > 0 and body_size / candle_range > 0.98:
-            if candle['close'] > candle['open']:
+            # Filtro de tendencia:
+            # Señal alcista solo si el cierre está por encima de la EMA 50
+            if candle['close'] > candle['open'] and candle['close'] > ema_50.iloc[index]:
                 return 'long'
-            elif candle['open'] > candle['close']:
+            # Señal bajista solo si el cierre está por debajo de la EMA 50
+            elif candle['open'] > candle['close'] and candle['close'] < ema_50.iloc[index]:
                 return 'short'
         return None
 
@@ -148,7 +160,7 @@ class CandlePatterns:
         current_candle, prev_candle = candles[index], candles[index-1]
         prev_body_size = abs(prev_candle['close'] - prev_candle['open'])
         current_body_size = abs(current_candle['close'] - current_candle['open'])
-        if prev_body_size < current_body_size * 2: return None
+        if prev_body_size < current_body_size * 1.5: return None
         if prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['open'] > prev_candle['close'] and current_candle['close'] < prev_candle['open']:
             return 'long'
         if prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] < prev_candle['close'] and current_candle['close'] > prev_candle['open']:

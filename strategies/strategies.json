@@ -35,6 +35,16 @@
             "config": {}
         },
         "is_falling_three_methods": {
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
+        },
+        "is_gravestone_doji": {
+            "selected": false,
+            "strategy_mode": "Default",
+            "config": {}
+        },
+        "is_hammer": {
             "selected": true,
             "strategy_mode": "Custom",
             "config": {
@@ -47,16 +57,6 @@
                 "atr_tp_multiplier": 3.0,
                 "atr_trailing_multiplier": 1.5
             }
-        },
-        "is_gravestone_doji": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
-        },
-        "is_hammer": {
-            "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
         },
         "is_hanging_man": {
             "selected": false,
