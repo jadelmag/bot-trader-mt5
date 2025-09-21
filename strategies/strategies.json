@@ -123,10 +123,10 @@
             "stop_loss_pips": 20.0
         },
         "strategy_candle_pattern_reversal": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 1.0,
-            "rr_ratio": 2.5,
-            "stop_loss_pips": 30.0
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_chart_pattern_breakout": {
             "selected": false,
@@ -171,10 +171,10 @@
             "stop_loss_pips": 20.0
         },
         "strategy_scalping_stochrsi_ema": {
-            "selected": false,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 20.0
+            "selected": true,
+            "percent_ratio": 0.5,
+            "rr_ratio": 1.5,
+            "stop_loss_pips": 30.0
         },
         "strategy_swing_trading_multi_indicator": {
             "selected": false,

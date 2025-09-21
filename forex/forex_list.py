@@ -13,20 +13,54 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_price_action_sr(df, lookback=50):
-        if 'low' not in df.columns or 'high' not in df.columns: return None
-        support = df['low'].iloc[-lookback:-2].min()
-        resistance = df['high'].iloc[-lookback:-2].max()
+        """
+        Estrategia de Price Action MEJORADA que opera en zonas de Soporte/Resistencia
+        con confirmación de tendencia y momentum.
+        """
+        required = ['low', 'high', 'close', 'ema_200', 'rsi']
+        if not all(col in df.columns for col in required) or len(df) < lookback:
+            return None
+
+        # --- 1. Filtro de Tendencia Principal ---
+        price = df['close'].iloc[-1]
+        ema_200 = df['ema_200'].iloc[-1]
+        is_uptrend = price > ema_200
+        is_downtrend = price < ema_200
+
+        # --- 2. Identificar Zonas de Soporte y Resistencia ---
+        # Usamos cuantiles para encontrar zonas en lugar de un solo punto
+        recent_data = df.iloc[-lookback:-2]
+        support_zone_top = recent_data['low'].quantile(0.25)
+        support_zone_bottom = recent_data['low'].quantile(0.05)
+        resistance_zone_bottom = recent_data['high'].quantile(0.75)
+        resistance_zone_top = recent_data['high'].quantile(0.95)
+
+        # --- 3. Detectar Patrones de Velas en la Vela Actual ---
         candle_data = df.to_dict('records')
-        signals = CandlePatterns.detect_all_patterns(candle_data)
-        
-        # Aumentamos la tolerancia a 1% y añadimos más patrones de vela
-        is_near_support = abs(df['low'].iloc[-1] - support) / support < 0.01
-        if is_near_support and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral'] or 'piercing_line' in signals['long']):
-            return 'long'
-        
-        is_near_resistance = abs(df['high'].iloc[-1] - resistance) / resistance < 0.01
-        if is_near_resistance and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral'] or 'dark_cloud_cover' in signals['short']):
-            return 'short'
+        current_index = len(candle_data) - 1
+        signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+        bullish_patterns = ['hammer', 'engulfing', 'morning_star', 'piercing_line']
+        bearish_patterns = ['shooting_star', 'engulfing', 'evening_star', 'dark_cloud_cover']
+        has_bullish_pattern = any(p in signals['long'] for p in bullish_patterns)
+        has_bearish_pattern = any(p in signals['short'] for p in bearish_patterns)
+
+        # --- 4. Lógica de Decisión ---
+        # Lógica para LONG: Tendencia alcista + Rebote en zona de soporte + Confirmación
+        if is_uptrend:
+            is_in_support_zone = support_zone_bottom <= df['low'].iloc[-1] <= support_zone_top
+            rsi_confirm = df['rsi'].iloc[-1] < 45 # Precio en un retroceso
+
+            if is_in_support_zone and has_bullish_pattern and rsi_confirm:
+                return 'long'
+
+        # Lógica para SHORT: Tendencia bajista + Rebote en zona de resistencia + Confirmación
+        if is_downtrend:
+            is_in_resistance_zone = resistance_zone_bottom <= df['high'].iloc[-1] <= resistance_zone_top
+            rsi_confirm = df['rsi'].iloc[-1] > 55 # Precio en un retroceso
+
+            if is_in_resistance_zone and has_bearish_pattern and rsi_confirm:
+                return 'short'
+
         return None
 
     @staticmethod
@@ -165,7 +199,7 @@ class ForexStrategies:
 
                 # Confirmación 3: Patrón de vela alcista
                 candle_data = df.to_dict('records')
-                signals = CandlePatterns.detect_all_patterns(candle_data, len(candle_data) - 1)
+                signals = CandlePatterns.detect_all_patterns(candle_data)
                 has_bullish_pattern = any(p in signals['long'] for p in ['hammer', 'engulfing', 'piercing_line'])
 
                 # Si tenemos al menos una confirmación fuerte, entramos
@@ -186,7 +220,7 @@ class ForexStrategies:
 
                 # Confirmación 3: Patrón de vela bajista
                 candle_data = df.to_dict('records')
-                signals = CandlePatterns.detect_all_patterns(candle_data, len(candle_data) - 1)
+                signals = CandlePatterns.detect_all_patterns(candle_data)
                 has_bearish_pattern = any(p in signals['short'] for p in ['shooting_star', 'engulfing', 'dark_cloud_cover'])
 
                 # Si tenemos al menos una confirmación fuerte, entramos
