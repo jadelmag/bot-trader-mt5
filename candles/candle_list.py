@@ -1,3 +1,5 @@
+import pandas as pd
+
 class CandlePatterns:
     """
     Clase que contiene listas de patrones de velas japonesas y métodos estáticos para detectar dichos patrones.
@@ -11,14 +13,35 @@ class CandlePatterns:
     
     @staticmethod
     def is_hammer(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         if body_size == 0: return None
+
         lower_shadow = (candle['open'] - candle['low']) if candle['close'] > candle['open'] else (candle['close'] - candle['low'])
         upper_shadow = (candle['high'] - candle['close']) if candle['close'] > candle['open'] else (candle['high'] - candle['open'])
-        if lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5:
-            if index > 0 and candles[index-1]['close'] < candles[index-1]['open']:
-                return 'long'
+        
+        # Comprobar forma de martillo + filtro de tendencia (bajo EMA50) + filtro de momentum (RSI < 35)
+        is_hammer_shape = lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5
+        is_downtrend = candle['close'] < ema_50.iloc[index]
+        is_oversold = rsi.iloc[index] < 35
+
+        if is_hammer_shape and is_downtrend and is_oversold:
+            return 'long'
+            
         return None
 
     @staticmethod
@@ -35,14 +58,34 @@ class CandlePatterns:
 
     @staticmethod
     def is_marubozu(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para EMA y RSI
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+        
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range > 0.98:
-            if candle['close'] > candle['open']:
-                return 'long'
-            elif candle['open'] > candle['close']:
-                return 'short'
+        
+        is_marubozu_shape = candle_range > 0 and body_size / candle_range > 0.98
+        if not is_marubozu_shape: return None
+
+        # Filtro de tendencia y momentum
+        # Señal alcista: en tendencia alcista (sobre EMA50) y con momentum alcista (RSI > 55)
+        if candle['close'] > candle['open'] and candle['close'] > ema_50.iloc[index] and rsi.iloc[index] > 55:
+            return 'long'
+        
+        # Señal bajista: en tendencia bajista (bajo EMA50) y con momentum bajista (RSI < 45)
+        elif candle['open'] > candle['close'] and candle['close'] < ema_50.iloc[index] and rsi.iloc[index] < 45:
+            return 'short'
+            
         return None
 
     @staticmethod
@@ -58,13 +101,22 @@ class CandlePatterns:
 
     @staticmethod
     def is_gravestone_doji(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
-        if candle_range > 0 and body_size / candle_range < 0.15:
-            if (min(candle['close'], candle['open']) - candle['low']) / candle_range < 0.20:
-                if index > 0 and candles[index-1]['close'] > candles[index-1]['open']:
-                    return 'short'
+
+        # Comprobar forma + tendencia alcista (sobre EMA50)
+        is_gravestone_shape = candle_range > 0 and body_size / candle_range < 0.15 and (min(candle['close'], candle['open']) - candle['low']) / candle_range < 0.20
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+
+        if is_gravestone_shape and is_uptrend:
+            return 'short'
+
         return None
 
     @staticmethod
@@ -78,26 +130,84 @@ class CandlePatterns:
 
     @staticmethod
     def is_long_legged_doji(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         candle_range = candle['high'] - candle['low']
+
+        # Filtro de Forma
+        is_doji_shape = candle_range > 0 and body_size / candle_range < 0.1
+        if not is_doji_shape: return None
+        
+        upper_shadow = candle['high'] - max(candle['open'], candle['close'])
+        lower_shadow = min(candle['open'], candle['close']) - candle['low']
+        is_long_legged = upper_shadow > body_size * 2.5 and lower_shadow > body_size * 2.5
+        if not is_long_legged: return None
+
+        # Filtro de Tendencia para Reversión
+        is_downtrend = candle['close'] < ema_50.iloc[index]
+        if is_downtrend:
+            return 'long'
+
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+        if is_uptrend:
+            return 'short'
+
+        return None
+
+    @staticmethod
+    def is_doji_reversal(candles, index=-1):
+        if index < 1: return None  # Necesitamos al menos una vela anterior para determinar la tendencia
+        candle = candles[index]
+        prev_candle = candles[index - 1]
+
+        body_size = abs(candle['close'] - candle['open'])
+        candle_range = candle['high'] - candle['low']
+
+        # Comprobar si es un Doji
         if candle_range > 0 and body_size / candle_range < 0.1:
-            upper_shadow = candle['high'] - max(candle['open'], candle['close'])
-            lower_shadow = min(candle['open'], candle['close']) - candle['low']
-            if upper_shadow > body_size * 2.5 and lower_shadow > body_size * 2.5:
-                return 'neutral'
+            # Determinar la señal basada en la vela anterior
+            if prev_candle['close'] < prev_candle['open']:  # Vela anterior es bajista
+                return 'long'  # Posible reversión alcista
+            elif prev_candle['close'] > prev_candle['open']:  # Vela anterior es alcista
+                return 'short'  # Posible reversión bajista
         return None
 
     @staticmethod
     def is_hanging_man(candles, index=-1):
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         candle = candles[index]
         body_size = abs(candle['close'] - candle['open'])
         if body_size == 0: return None
+
         lower_shadow = (candle['open'] - candle['low']) if candle['close'] > candle['open'] else (candle['close'] - candle['low'])
         upper_shadow = (candle['high'] - candle['close']) if candle['close'] > candle['open'] else (candle['high'] - candle['open'])
-        if lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5:
-            if index > 0 and candles[index-1]['close'] > candles[index-1]['open']:
-                return 'short'
+        
+        # Comprobar forma + tendencia alcista (sobre EMA50) + momentum sobrecomprado (RSI > 65)
+        is_hanging_man_shape = lower_shadow >= 2 * body_size and upper_shadow < body_size * 0.5
+        is_uptrend = candle['close'] > ema_50.iloc[index]
+        is_overbought = rsi.iloc[index] > 65
+
+        if is_hanging_man_shape and is_uptrend and is_overbought:
+            return 'short'
+
         return None
 
     @staticmethod
@@ -116,25 +226,64 @@ class CandlePatterns:
     
     @staticmethod
     def is_engulfing(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         current_candle, prev_candle = candles[index], candles[index-1]
-        if prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['close'] >= prev_candle['open'] and current_candle['open'] <= prev_candle['close']:
+
+        # Envolvente Alcista + Filtros
+        is_bullish_shape = prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['close'] >= prev_candle['open'] and current_candle['open'] <= prev_candle['close']
+        is_downtrend = current_candle['close'] < ema_50.iloc[index]
+        is_oversold = rsi.iloc[index] < 35
+        if is_bullish_shape and is_downtrend and is_oversold:
             return 'long'
-        if prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] >= prev_candle['close'] and current_candle['close'] <= prev_candle['open']:
+
+        # Envolvente Bajista + Filtros
+        is_bearish_shape = prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] >= prev_candle['close'] and current_candle['close'] <= prev_candle['open']
+        is_uptrend = current_candle['close'] > ema_50.iloc[index]
+        is_overbought = rsi.iloc[index] > 65
+        if is_bearish_shape and is_uptrend and is_overbought:
             return 'short'
+
         return None
 
     @staticmethod
     def is_harami(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA de 50
+
+        df = pd.DataFrame(candles)
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
         current_candle, prev_candle = candles[index], candles[index-1]
         prev_body_size = abs(prev_candle['close'] - prev_candle['open'])
         current_body_size = abs(current_candle['close'] - current_candle['open'])
+        
+        # Restauramos la condición original para detectar solo patrones fuertes
         if prev_body_size < current_body_size * 2: return None
-        if prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['open'] > prev_candle['close'] and current_candle['close'] < prev_candle['open']:
+
+        # Harami Alcista (long): vela anterior bajista, actual alcista, dentro de la anterior.
+        # Y ADEMÁS, el precio está por debajo de la EMA50 (buscando reversión de tendencia bajista).
+        is_bullish_harami = prev_candle['close'] < prev_candle['open'] and current_candle['close'] > current_candle['open'] and current_candle['open'] > prev_candle['close'] and current_candle['close'] < prev_candle['open']
+        if is_bullish_harami and current_candle['close'] < ema_50.iloc[index]:
             return 'long'
-        if prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] < prev_candle['close'] and current_candle['close'] > prev_candle['open']:
+
+        # Harami Bajista (short): vela anterior alcista, actual bajista, dentro de la anterior.
+        # Y ADEMÁS, el precio está por encima de la EMA50 (buscando reversión de tendencia alcista).
+        is_bearish_harami = prev_candle['close'] > prev_candle['open'] and current_candle['close'] < current_candle['open'] and current_candle['open'] < prev_candle['close'] and current_candle['close'] > prev_candle['open']
+        if is_bearish_harami and current_candle['close'] > ema_50.iloc[index]:
             return 'short'
+            
         return None
 
     @staticmethod
@@ -149,12 +298,30 @@ class CandlePatterns:
 
     @staticmethod
     def is_dark_cloud_cover(candles, index=-1):
-        if index < 1: return None
+        if index < 50: return None # Necesitamos datos para la EMA y el RSI
+
+        df = pd.DataFrame(candles)
+        
+        # Calcular EMA 50 para el filtro de tendencia
+        ema_50 = df['close'].ewm(span=50, adjust=False).mean()
+
+        # Calcular RSI 14 para el filtro de momentum
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/14, adjust=False).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
         c1, c2 = candles[index-1], candles[index]
-        if not (c1['close'] > c1['open'] and c2['close'] < c2['open']): return None
-        mid_point_c1 = (c1['open'] + c1['close']) / 2
-        if c2['open'] > c1['close'] and c2['close'] < mid_point_c1:
+
+        # Comprobar forma + tendencia alcista (sobre EMA50) + momentum sobrecomprado (RSI > 65)
+        is_dark_cloud_shape = (c1['close'] > c1['open'] and c2['close'] < c2['open']) and (c2['open'] > c1['close'] and c2['close'] < (c1['open'] + c1['close']) / 2)
+        is_uptrend = c1['close'] > ema_50.iloc[index-1]
+        is_overbought = rsi.iloc[index] > 65
+
+        if is_dark_cloud_shape and is_uptrend and is_overbought:
             return 'short'
+
         return None
 
     
@@ -272,14 +439,28 @@ class CandlePatterns:
     @staticmethod
     def detect_all_patterns(candles, index=-1):
         all_pattern_functions = [
-            CandlePatterns.is_hammer, CandlePatterns.is_shooting_star, CandlePatterns.is_marubozu,
-            CandlePatterns.is_dragonfly_doji, CandlePatterns.is_gravestone_doji, CandlePatterns.is_hanging_man,
-            CandlePatterns.is_inverted_hammer, CandlePatterns.is_doji, CandlePatterns.is_long_legged_doji,
-            CandlePatterns.is_engulfing, CandlePatterns.is_harami, CandlePatterns.is_piercing_line,
-            CandlePatterns.is_dark_cloud_cover, CandlePatterns.is_morning_star, CandlePatterns.is_evening_star,
-            CandlePatterns.is_three_white_soldiers, CandlePatterns.is_three_black_crows,
-            CandlePatterns.is_three_inside_up_down, CandlePatterns.is_three_outside_up_down,
-            CandlePatterns.is_rising_three_methods, CandlePatterns.is_falling_three_methods
+            CandlePatterns.is_hammer, 
+            CandlePatterns.is_shooting_star, 
+            CandlePatterns.is_marubozu,
+            CandlePatterns.is_dragonfly_doji, 
+            CandlePatterns.is_gravestone_doji, 
+            CandlePatterns.is_hanging_man,
+            CandlePatterns.is_inverted_hammer,
+            CandlePatterns.is_morning_star,
+            CandlePatterns.is_doji, 
+            CandlePatterns.is_long_legged_doji,
+            CandlePatterns.is_doji_reversal, 
+            CandlePatterns.is_engulfing, 
+            CandlePatterns.is_harami, 
+            CandlePatterns.is_piercing_line,
+            CandlePatterns.is_dark_cloud_cover, 
+            CandlePatterns.is_evening_star,
+            CandlePatterns.is_three_white_soldiers, 
+            CandlePatterns.is_three_black_crows,
+            CandlePatterns.is_three_inside_up_down, 
+            CandlePatterns.is_three_outside_up_down,
+            CandlePatterns.is_rising_three_methods, 
+            CandlePatterns.is_falling_three_methods
         ]
         
         signals = {'long': [], 'short': [], 'neutral': []}
