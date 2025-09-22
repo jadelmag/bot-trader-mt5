@@ -11,9 +11,9 @@ def create_header(app):
     app.analysis_tools_btn.grid(row=0, column=0, padx=(6, 12))
     tools_menu = tk.Menu(app.analysis_tools_btn, tearoff=False)
     app.analysis_tools_btn["menu"] = tools_menu
-    tools_menu.add_command(label="Aplicar estrategias", command=app._apply_strategies_action)
-    tools_menu.add_command(label="Detectar patrones de velas", command=app._open_detect_candle_modal)
-    tools_menu.add_command(label="Detectar Estrategias forex", command=app._open_detect_forex_modal)
+    tools_menu.add_command(label="Aplicar estrategias", command=app.action_handler.apply_strategies_action)
+    tools_menu.add_command(label="Detectar patrones de velas", command=app.action_handler.open_detect_candle_modal)
+    tools_menu.add_command(label="Detectar Estrategias forex", command=app.action_handler.open_detect_forex_modal)
     tools_menu.add_separator()
     tools_menu.add_command(label="Iniciar Backtesting", command=app._run_perfect_backtesting)
     tools_menu.add_command(label="Finalizar backtesting", command=app._finalize_backtesting_action)
@@ -26,11 +26,11 @@ def create_header(app):
     app.options_btn["menu"] = options_menu
     options_menu.add_checkbutton(label="Modo Debug", variable=app.debug_mode_var)
     options_menu.add_separator()
-    options_menu.add_command(label="Guardar Gráfica", command=app._save_chart_to_csv)
+    options_menu.add_command(label="Guardar Gráfica", command=app.action_handler.save_chart_to_csv)
     options_menu.add_separator()
-    options_menu.add_command(label="Configuración", command=app._open_config_modal)
+    options_menu.add_command(label="Configuración", command=app.action_handler.open_config_modal)
     options_menu.add_separator()
-    options_menu.add_command(label="Limpiar log", command=app._clear_log_action)
+    options_menu.add_command(label="Limpiar log", command=app.action_handler.clear_log)
 
     # --- Botón de Simulación (Columna 2) ---
     app.simulation_btn = ttk.Menubutton(header, text="Simulación")
@@ -92,7 +92,7 @@ def create_header(app):
     app.status_label = ttk.Label(header, textvariable=app.status_var, foreground="black")
     app.status_label.grid(row=0, column=10, padx=(12, 12))
 
-    conectar_btn = ttk.Button(header, text="Conectar", command=app._open_login_modal)
+    conectar_btn = ttk.Button(header, text="Conectar", command=app.login_handler.open_login_modal)
     conectar_btn.grid(row=0, column=11, padx=(6, 12))
 
     # Configuración de las columnas del header

@@ -18,11 +18,7 @@ if _project_root not in sys.path:
 
 try:
     from modals.loggin_modal import LoginModal
-    from modals.detect_all_candles_modal import DetectAllCandlesModal
-    from modals.detect_all_forex_modal import DetectAllForexModal
-    from modals.strategy_simulator_modal import StrategySimulatorModal
     from modals.simulation_strategies_modal import SimulationStrategiesModal
-    from modals.config_app_modal import ConfigAppModal
     from loggin.loggin import LoginMT5
     from loggin.audit_log import AuditLogger # Importar la clase
     from gui.body_graphic import BodyGraphic
@@ -37,6 +33,8 @@ try:
     from main.body_builder import create_body
     from main.preferences_manager import PreferencesManager
     from main.login_handler import LoginHandler
+    from main.action_handler import ActionHandler
+    from main.analysis_handler import AnalysisHandler
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -79,9 +77,6 @@ class App:
         self.queue = queue.Queue()
         self.thread = None
 
-        # Create required directories
-        self._create_required_dirs()
-
         # State for status label
         self.status_var = tk.StringVar(value="Estado: -----")
 
@@ -106,6 +101,12 @@ class App:
 
         # Login Handler
         self.login_handler = LoginHandler(self)
+
+        # Action Handler
+        self.action_handler = ActionHandler(self)
+
+        # Analysis Handler
+        self.analysis_handler = AnalysisHandler(self)
 
         # Track whether chart has been started/shown
         self.chart_started = False
@@ -418,154 +419,21 @@ class App:
             self.logger.error(msg)
 
     def _open_detect_candle_modal(self):
-        global DetectAllCandlesModal
-        if DetectAllCandlesModal is None:
-            try:
-                from modals.detect_all_candles_modal import DetectAllCandlesModal as DACM
-                DetectAllCandlesModal = DACM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de detección de velas: {e}")
-                return
-        
-        modal = DetectAllCandlesModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Iniciando detección para los siguientes patrones: {', '.join(modal.result)}")
-            self._run_pattern_analysis(modal.result)
-        else:
-            self._log_info("Detección de patrones cancelada.")
+        self.action_handler.open_detect_candle_modal()
 
     def _open_detect_forex_modal(self):
-        """Abre el modal para seleccionar y analizar estrategias de Forex."""
-        global DetectAllForexModal
-        if DetectAllForexModal is None:
-            try:
-                from modals.detect_all_forex_modal import DetectAllForexModal as DAFM
-                DetectAllForexModal = DAFM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de estrategias: {e}")
-                return
-        
-        modal = DetectAllForexModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Iniciando análisis para las siguientes estrategias: {', '.join(modal.result)}")
-            self._run_strategy_analysis(modal.result)
-        else:
-            self._log_info("Análisis de estrategias cancelado.")
+        self.action_handler.open_detect_forex_modal()
 
     def _apply_strategies_action(self):
-        """Abre el modal para configurar y aplicar estrategias."""
-        # Primero, verificar si el gráfico tiene datos válidos
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
-            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Por favor, inicie el gráfico con 'Iniciar MT5' antes de configurar una simulación.")
-            return
-
-        global StrategySimulatorModal
-        if StrategySimulatorModal is None:
-            try:
-                from modals.strategy_simulator_modal import StrategySimulatorModal as SSM
-                StrategySimulatorModal = SSM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
-                return
-        
-        # Pasar el DataFrame de velas y el logger al modal
-        modal = StrategySimulatorModal(self.root, candles_df=self.graphic.candles_df, logger=self.logger)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Configuración de simulación guardada y simulación ejecutada.")
-            # La lógica de ejecución ya está dentro del modal y el simulador
-        else:
-            self._log_info("Simulación de estrategias cancelada.")
+        self.action_handler.apply_strategies_action()
 
     def _run_pattern_analysis(self, selected_patterns):
         """Ejecuta el análisis de patrones y muestra los resultados."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
-            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
-            return
-        
-        if CandleDetector is None:
-            self._log_error("El detector de velas no está disponible.")
-            return
-
-        try:
-            # Crear una copia del DataFrame para el análisis para no afectar al original
-            candles_df_copy = self.graphic.candles_df.copy()
-            # Asegurar que las columnas estén en minúsculas para el detector
-            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
-            detector = CandleDetector(candles_df_copy)
-            stats = detector.analyze_patterns(selected_patterns)
-
-            # Formatear los resultados usando el método de la clase
-            summary_lines, total_profit, total_loss = CandleDetector.format_analysis_summary(stats)
-            self._display_analysis_summary(summary_lines, total_profit, total_loss)
-
-        except Exception as e:
-            self._log_error(f"Ocurrió un error durante el análisis de patrones: {e}")
+        self.analysis_handler.run_pattern_analysis(selected_patterns)
 
     def _run_strategy_analysis(self, selected_strategies):
         """Ejecuta el análisis de estrategias y muestra los resultados."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
-            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
-            return
-        
-        if StrategyAnalyzer is None:
-            self._log_error("El analizador de estrategias no está disponible.")
-            return
-
-        try:
-            # Crear una copia para no modificar el DataFrame original
-            candles_df_copy = self.graphic.candles_df.copy()
-            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
-            
-            # Añadir todos los indicadores necesarios
-            candles_df_copy = add_all_indicators(candles_df_copy)
-
-            analyzer = StrategyAnalyzer(candles_df_copy)
-            stats = analyzer.analyze_strategies(selected_strategies)
-
-            self._display_strategy_summary(stats)
-
-        except Exception as e:
-            self._log_error(f"Ocurrió un error durante el análisis de estrategias: {e}")
-
-    def _display_analysis_summary(self, lines, total_profit, total_loss):
-        """Muestra el resumen del análisis de patrones en el logger."""
-        for line in lines:
-            # El primer título y los totales tienen colores, el resto es info normal
-            if "RESUMEN" in line or "="*15 in line:
-                self._log_success(line)
-            else:
-                self._log_info(line)
-        
-        self.logger.log_summary(
-            f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit:.2f} $",
-            f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss:.2f} $"
-        )
-        self._log_success("="*75 + "\n")
-
-    def _display_strategy_summary(self, stats):
-        """Formatea y muestra el resumen del análisis de estrategias en el logger."""
-        if StrategyAnalyzer is None:
-            return
-
-        summary_lines, total_profit, total_loss = StrategyAnalyzer.format_strategy_summary(stats)
-
-        for line in summary_lines:
-            if "RESUMEN" in line or "="*15 in line:
-                self._log_success(line)
-            else:
-                self._log_info(line)
-
-        self.logger.log_summary(
-            f"BENEFICIO TOTAL (TODAS LAS ESTRATEGIAS): {total_profit:.2f} $",
-            f"PÉRDIDA TOTAL (TODAS LAS ESTRATEGIAS): {total_loss:.2f} $"
-        )
-        self._log_success("="*75 + "\n")
+        self.analysis_handler.run_strategy_analysis(selected_strategies)
 
     def _add_technical_indicators(self, df):
         """Añade una serie de indicadores técnicos al DataFrame."""
@@ -784,13 +652,23 @@ class App:
                 self._log_error(f"Error al intentar cerrar posiciones abiertas: {e}")
 
             # Guardar el log de la sesión
-            self._save_session_log()
+            self.action_handler.save_session_log()
 
             self.simulation_instance = None
             self._log_success("Simulación detenida y operaciones cerradas.")
 
             # Actualizar y limpiar las etiquetas de la UI
-            self._update_final_labels()
+            try:
+                account_info = mt5.account_info()
+                if account_info:
+                    self.initial_balance_var.set(f"{account_info.balance:.2f} $")
+                    self.equity_var.set(f"{account_info.equity:.2f} $")
+                    self.margin_var.set("0.00 $")
+                    self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
+            finally:
+                # Limpiar labels de profit/loss ya que no hay simulación activa
+                self.profit_var.set("----")
+                self.loss_var.set("----")
 
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
@@ -838,178 +716,17 @@ class App:
         if self.simulation_running:
             self.root.after(1000, self._start_simulation_loop)
 
-    def _save_session_log(self):
-        """Guarda el contenido actual del logger en un archivo."""
-        if not hasattr(self.logger, 'get_content'):
-            self._log_error("El logger no soporta la exportación de contenido.")
-            return
-
-        try:
-            log_content = self.logger.get_content()
-            if not log_content.strip():
-                return # No guardar si el log está vacío
-
-            log_dir = os.path.join(_project_root, 'simulation_logs')
-            os.makedirs(log_dir, exist_ok=True)
-
-            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            filename = f"simulacion_{timestamp}.log"
-            
-            save_path = os.path.join(log_dir, filename)
-
-            with open(save_path, 'w', encoding='utf-8') as f:
-                f.write(log_content)
-            
-            self._log_success(f"Log de la sesión guardado en: {save_path}")
-
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
-
-    def _update_final_labels(self):
-        """Actualiza los labels una última vez y luego los limpia."""
-        try:
-            account_info = mt5.account_info()
-            if account_info:
-                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
-                self.equity_var.set(f"{account_info.equity:.2f} $")
-                self.margin_var.set("0.00 $")
-                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
-        finally:
-            # Limpiar labels de profit/loss ya que no hay simulación activa
-            self.profit_var.set("----")
-            self.loss_var.set("----")
-
     def _clear_log_action(self):
         """Limpia el contenido del logger.""" 
-        if hasattr(self, 'logger') and hasattr(self.logger, 'clear'):
-            self.logger.clear()
-
-    def _save_session_log(self):
-        """Guarda el contenido actual del logger en un archivo."""
-        if not hasattr(self.logger, 'get_content'):
-            self._log_error("El logger no soporta la exportación de contenido.")
-            return
-
-        try:
-            log_content = self.logger.get_content()
-            if not log_content.strip():
-                return # No guardar si el log está vacío
-
-            log_dir = os.path.join(_project_root, 'simulation_logs')
-            os.makedirs(log_dir, exist_ok=True)
-
-            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            filename = f"simulacion_{timestamp}.log"
-            
-            save_path = os.path.join(log_dir, filename)
-
-            with open(save_path, 'w', encoding='utf-8') as f:
-                f.write(log_content)
-            
-            self._log_success(f"Log de la sesión guardado en: {save_path}")
-
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
-
-    def _update_final_labels(self):
-        """Actualiza los labels una última vez y luego los limpia."""
-        try:
-            account_info = mt5.account_info()
-            if account_info:
-                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
-                self.equity_var.set(f"{account_info.equity:.2f} $")
-                self.margin_var.set("0.00 $")
-                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
-        finally:
-            # Limpiar labels de profit/loss ya que no hay simulación activa
-            self.profit_var.set("----")
-            self.loss_var.set("----")
-
-    def _create_required_dirs(self):
-        """Crea los directorios necesarios para la aplicación si no existen."""
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        dirs_to_create = ["email", "audit"]
-        for dir_name in dirs_to_create:
-            try:
-                os.makedirs(os.path.join(base_path, dir_name), exist_ok=True)
-            except OSError as e:
-                # Log a warning but don't crash the app
-                self._log_error(f"No se pudo crear el directorio '{dir_name}': {e}")
-
-    def _open_config_modal(self):
-        """Abre el modal de configuración de la aplicación."""
-        global ConfigAppModal
-        if ConfigAppModal is None:
-            try:
-                from modals.config_app_modal import ConfigAppModal as CAM
-                ConfigAppModal = CAM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de configuración: {e}")
-                return
-        
-        modal = ConfigAppModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info("Configuración guardada correctamente.")
-            # Recargar la configuración del logger de auditoría
-            AuditLogger()._load_config()
-            AuditLogger()._setup_log_file()
-        else:
-            self._log_info("La configuración no fue modificada.")
+        self.action_handler.clear_log()
 
     def _on_exit(self):
-        """Handle application closing.""" 
-        # Si la simulación está corriendo, detenerla antes de salir
-        if self.simulation_running:
-            self._detener_simulacion_action()
-
-        self.prefs_manager.save(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
-        self.root.destroy()
-        print("Saliendo del programa...")
-        os._exit(0)
+        """Maneja el cierre de la aplicación de forma segura."""
+        self.action_handler.on_exit()
 
     def _save_chart_to_csv(self):
         """Guarda los datos actuales del gráfico en un archivo CSV."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
-            messagebox.showerror("Error al Guardar", "No hay datos de gráfico para guardar. Por favor, inicie el gráfico primero.")
-            self._log_error("Intento de guardar gráfico sin datos disponibles.")
-            return
-        
-        try:
-            # Crear una copia para trabajar
-            df_to_save = self.graphic.candles_df.copy()
-            
-            # El índice es 'time', lo convertimos en una columna 'Date'
-            df_to_save.reset_index(inplace=True)
-            df_to_save.rename(columns={'time': 'Date', 'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'}, inplace=True)
-            
-            # Asegurarse de que solo tenemos las columnas deseadas en el orden correcto
-            required_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
-            df_to_save = df_to_save[required_columns]
-            
-            # Crear el nombre del archivo
-            symbol = self.symbol_var.get()
-            timeframe = self.timeframe_var.get()
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"chart_{symbol}_{timeframe}_{timestamp}.csv"
-            
-            # Asegurarse de que la carpeta 'audit' existe
-            audit_dir = os.path.join(_project_root, 'audit')
-            if not os.path.exists(audit_dir):
-                os.makedirs(audit_dir)
-            
-            save_path = os.path.join(audit_dir, filename)
-
-            # Guardar en CSV
-            df_to_save.to_csv(save_path, index=False, date_format='%Y-%m-%d %H:%M:%S')
-            
-            self._log_success(f"Gráfico guardado correctamente en: {save_path}")
-            messagebox.showinfo("Éxito", f"El gráfico se ha guardado como '{filename}' en la carpeta 'audit'.")
-
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el gráfico en CSV: {e}")
-            messagebox.showerror("Error al Guardar", f"Ocurrió un error al guardar el archivo: {e}")
+        self.action_handler.save_chart_to_csv()
 
 
 if __name__ == "__main__":
