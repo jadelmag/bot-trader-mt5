@@ -114,6 +114,7 @@ class App:
         # Instance for the simulation
         self.simulation_instance = None
         self.simulation_running = False
+        self.updates_paused = False # Estado para el toggle de actualizaciones
 
         # Configure a simple layout: header on top, main body below
         self.root.columnconfigure(0, weight=1)
@@ -161,12 +162,10 @@ class App:
                     self._handle_login_success()
                 elif message_type == "chart_data_ready":
                     self.graphic.render_chart_data(data)
-                    # Habilitar botones una vez que el gráfico está listo
+                    # Habilitar solo el botón de simulación una vez que el gráfico está listo
                     try:
-                        self.analysis_tools_btn.state(["!disabled"])
                         self.simulation_btn.state(["!disabled"])
                     except tk.TclError:
-                        self.analysis_tools_btn.configure(state="normal")
                         self.simulation_btn.configure(state="normal")
                     # Iniciar actualizaciones en vivo después de renderizar el gráfico
                     self.graphic.start_live_updates()
@@ -674,18 +673,42 @@ class App:
             self._log_error(f"Error al detener la simulación: {e}")
 
     def _detener_actualizacion_action(self):
-        """Detiene el bucle de actualización de la simulación y del gráfico."""
-        self._log_info("Deteniendo actualizaciones en tiempo real...")
+        """Pausa o reanuda las actualizaciones del gráfico y del balance."""
+        if not self.updates_paused:
+            # --- PAUSAR ACTUALIZACIONES ---
+            self.updates_paused = True
+            self._log_info("Pausando actualizaciones en tiempo real...")
 
-        # Detener el bucle de la simulación que actualiza el balance
-        self.simulation_running = False
+            # Detener bucles de actualización
+            self.simulation_running = False
+            if hasattr(self, 'graphic'):
+                self.graphic._stop_live_updates()
 
-        # Detener las actualizaciones en vivo del gráfico (precio y velas)
-        if hasattr(self, 'graphic') and hasattr(self.graphic, '_stop_live_updates'):
-            self.graphic._stop_live_updates()
-            self._log_success("Las actualizaciones del gráfico y del balance han sido detenidas.")
+            # Cambiar texto del menú y habilitar herramientas
+            self.simulation_menu.entryconfig("Detener actualización", label="Reanudar actualización")
+            self.analysis_tools_btn.state(["!disabled"])
+            self.analysis_tools_btn.update_idletasks()
+            self._log_success("Actualizaciones pausadas. Herramientas de análisis habilitadas.")
+
+            # Si hay una simulación, detenerla
+            if self.simulation_instance:
+                self._detener_simulacion_action()
         else:
-            self._log_info("El gráfico no está iniciado o no soporta la detención de actualizaciones.")
+            # --- REANUDAR ACTUALIZACIONES ---
+            self.updates_paused = False
+            self._log_info("Reanudando actualizaciones en tiempo real...")
+
+            # Cambiar texto del menú y deshabilitar herramientas
+            self.simulation_menu.entryconfig("Reanudar actualización", label="Detener actualización")
+            self.analysis_tools_btn.state(["disabled"])
+            self.analysis_tools_btn.update_idletasks()
+
+            # Refrescar el gráfico para obtener los datos perdidos
+            if hasattr(self, 'graphic'):
+                self.graphic.refresh()
+                # Las actualizaciones en vivo se reinician automáticamente después de 'refresh' a través de la cola
+
+            self._log_success("Actualizaciones reanudadas. Herramientas de análisis deshabilitadas.")
 
     def _start_simulation_loop(self):
         """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""
