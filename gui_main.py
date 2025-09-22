@@ -33,6 +33,10 @@ try:
     from backtesting.report_generator import ReportGenerator
     from backtesting.indicators import add_all_indicators
     from simulation.simulation import Simulation
+    from main.header_builder import create_header
+    from main.body_builder import create_body
+    from main.preferences_manager import PreferencesManager
+    from main.login_handler import LoginHandler
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -96,8 +100,12 @@ class App:
         self.profit_var = tk.StringVar(value="----")
         self.loss_var = tk.StringVar(value="----")
 
-        # Load persisted preferences (overrides defaults)
-        self._load_prefs()
+        # Preferences Manager
+        self.prefs_manager = PreferencesManager(self)
+        self.prefs_manager.load()
+
+        # Login Handler
+        self.login_handler = LoginHandler(self)
 
         # Track whether chart has been started/shown
         self.chart_started = False
@@ -128,146 +136,10 @@ class App:
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
     def _build_header(self):
-        header = ttk.Frame(self.root, padding=(16, 10))
-        header.grid(row=0, column=0, sticky="ew")
-
-        # --- Botón de Herramientas de Análisis (Columna 0) ---
-        self.analysis_tools_btn = ttk.Menubutton(header, text="Herramientas")
-        self.analysis_tools_btn.grid(row=0, column=0, padx=(6, 12))
-        tools_menu = tk.Menu(self.analysis_tools_btn, tearoff=False)
-        self.analysis_tools_btn["menu"] = tools_menu
-        tools_menu.add_command(label="Aplicar estrategias", command=self._apply_strategies_action)
-        tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
-        tools_menu.add_command(label="Detectar Estrategias forex", command=self._open_detect_forex_modal)
-        tools_menu.add_separator()
-        tools_menu.add_command(label="Iniciar Backtesting", command=self._run_perfect_backtesting)
-        tools_menu.add_command(label="Finalizar backtesting", command=self._finalize_backtesting_action)
-        self.analysis_tools_btn.state(["disabled"])
-
-        # --- Menú de Opciones (Columna 1) ---
-        self.options_btn = ttk.Menubutton(header, text="Opciones")
-        self.options_btn.grid(row=0, column=1, padx=(10, 0))
-        options_menu = tk.Menu(self.options_btn, tearoff=False)
-        self.options_btn["menu"] = options_menu
-        options_menu.add_checkbutton(label="Modo Debug", variable=self.debug_mode_var)
-        options_menu.add_separator()
-        options_menu.add_command(label="Guardar Gráfica", command=self._save_chart_to_csv)
-        options_menu.add_separator()
-        options_menu.add_command(label="Configuración", command=self._open_config_modal)
-        options_menu.add_separator()
-        options_menu.add_command(label="Limpiar log", command=self._clear_log_action)
-
-        # --- Botón de Simulación (Columna 2) ---
-        self.simulation_btn = ttk.Menubutton(header, text="Simulación")
-        self.simulation_btn.grid(row=0, column=2, padx=(10, 0)) # 10px de separación a la izquierda
-        simulation_menu = tk.Menu(self.simulation_btn, tearoff=False)
-        self.simulation_btn["menu"] = simulation_menu
-        simulation_menu.add_command(label="Iniciar simulación", command=self._iniciar_simulacion_action)
-        simulation_menu.add_separator()
-        simulation_menu.add_command(label="Detener simulación", command=self._detener_simulacion_action)
-        self.simulation_btn.state(["disabled"])
-
-        # --- Labels for Simulation Results (Columna 3) ---
-        results_frame = ttk.Frame(header, padding=(10, 0))
-        results_frame.grid(row=0, column=3, sticky="ew", padx=(10, 0))
-
-        # Use a grid layout within the frame for better alignment
-        results_frame.columnconfigure(1, minsize=80) # Space for values
-        results_frame.columnconfigure(3, minsize=80)
-        results_frame.columnconfigure(5, minsize=80)
-
-        ttk.Label(results_frame, text="Dinero inicial:").grid(row=0, column=0, sticky="w", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.initial_balance_var, foreground="black").grid(row=0, column=1, sticky="w")
-
-        ttk.Label(results_frame, text="Equity:").grid(row=0, column=2, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.equity_var, foreground="#007ACC").grid(row=0, column=3, sticky="w")
-
-        ttk.Label(results_frame, text="Beneficios:").grid(row=0, column=4, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.profit_var, foreground="green").grid(row=0, column=5, sticky="w")
-
-        ttk.Label(results_frame, text="Margen:").grid(row=1, column=0, sticky="w", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.margin_var, foreground="#E59400").grid(row=1, column=1, sticky="w")
-
-        ttk.Label(results_frame, text="Margen Libre:").grid(row=1, column=2, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.free_margin_var, foreground="#33A133").grid(row=1, column=3, sticky="w")
-
-        ttk.Label(results_frame, text="Pérdidas:").grid(row=1, column=4, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.loss_var, foreground="red").grid(row=1, column=5, sticky="w")
-
-        # Spacer para empujar los controles a la derecha (Columna 4)
-        spacer = ttk.Frame(header)
-        spacer.grid(row=0, column=4, sticky="ew")
-
-        # El resto de los controles (desde la Columna 5 en adelante)
-        ttk.Label(header, text="Símbolo:").grid(row=0, column=5, padx=(0, 6))
-        self.symbol_cb = ttk.Combobox(header, textvariable=self.symbol_var, width=12, state="disabled")
-        self.symbol_cb["values"] = ("EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "BTCUSD")
-        self.symbol_cb.grid(row=0, column=6)
-        self.symbol_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
-
-        ttk.Label(header, text="Timeframe:").grid(row=0, column=7, padx=(12, 6))
-        self.timeframe_cb = ttk.Combobox(header, textvariable=self.timeframe_var, width=8, state="disabled")
-        self.timeframe_cb["values"] = ("M1", "M5", "M15", "M30", "H1", "H4", "D1")
-        self.timeframe_cb.grid(row=0, column=8)
-        self.timeframe_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
-
-        self.start_btn = ttk.Button(header, text="Iniciar MT5", command=self._start_mt5_chart)
-        self.start_btn.grid(row=0, column=9, padx=(12, 12))
-        self.start_btn.state(["disabled"])
-
-        self.status_label = ttk.Label(header, textvariable=self.status_var, foreground="black")
-        self.status_label.grid(row=0, column=10, padx=(12, 12))
-
-        conectar_btn = ttk.Button(header, text="Conectar", command=self._open_login_modal)
-        conectar_btn.grid(row=0, column=11, padx=(6, 12))
-
-        # Configuración de las columnas del header
-        header.columnconfigure(4, weight=1)  # El spacer (col 4) se expande
+        self.header = create_header(self)
 
     def _build_body(self):
-        container = ttk.Frame(self.root, padding=(12, 10))
-        container.grid(row=1, column=0, sticky="nsew")
-        container.columnconfigure(0, weight=1)
-        # Split rows: top chart (3x), bottom logger (1x)
-        container.rowconfigure(0, weight=3)
-        container.rowconfigure(1, weight=1)
-
-        # Bottom: Logger (create it first)
-        if BodyLogger is None:
-            self.logger = ttk.Frame(container)
-            ttk.Label(self.logger, text="Logger no disponible").pack(expand=True, fill="both")
-        else:
-            self.logger = BodyLogger(container)
-        self.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
-
-        # Top: Graphic placeholder (shown until Start MT5 is pressed)
-        self.graphic_placeholder = ttk.Frame(container)
-        self.graphic_placeholder.grid(row=0, column=0, sticky="nsew")
-        placeholder_lbl = ttk.Label(
-            self.graphic_placeholder,
-            text="Pulsa 'Iniciar MT5' para cargar el gráfico",
-            anchor="center",
-            font=("Segoe UI", 12),
-            foreground="#555",
-        )
-        placeholder_lbl.pack(expand=True, fill="both")
-
-        # Prepare the graphic but do not show it yet
-        if BodyGraphic is None:
-            self.graphic = ttk.Frame(container)
-            ttk.Label(self.graphic, text="Gráfico no disponible").pack(expand=True, fill="both")
-        else:
-            # Pass the logger and app instance to the graphic
-            self.graphic = BodyGraphic(
-                container, 
-                app=self, # Pass the whole app instance
-                symbol=self.symbol_var.get(), 
-                timeframe=self.timeframe_var.get(), 
-                bars=300,
-                logger=self.logger,  # Pass logger instance
-                debug_mode_var=self.debug_mode_var # Pass debug mode variable
-            )
-        # Do not grid the graphic now; it will be gridded when started
+        self.body = create_body(self)
 
     def process_queue(self):
         """Procesa mensajes de la cola de hilos en el hilo principal de la GUI."""
@@ -358,22 +230,7 @@ class App:
             self._log_error(f"No se pudo iniciar el gráfico: {e})")
 
     def _open_login_modal(self):
-        global LoginModal, LoginMT5
-        if LoginModal is None:
-            try:
-                from modals.loggin_modal import LoginModal as LM
-                LoginModal = LM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal: {e}")
-                return
-
-        # Open modal and wait for result
-        modal = LoginModal(self.root)
-        self.root.wait_window(modal)
-        result = getattr(modal, "result", None)
-
-        if result:
-            self._attempt_login(result)
+        self.login_handler.open_login_modal()
 
     def _attempt_login(self, creds: dict):
         global LoginMT5
@@ -487,7 +344,7 @@ class App:
         symbol = self.symbol_var.get().strip()
         timeframe = self.timeframe_var.get().strip()
         # Save selection to preferences
-        self._save_prefs(symbol=symbol, timeframe=timeframe)
+        self.prefs_manager.save(symbol=symbol, timeframe=timeframe)
         # Only update the chart if it has been started
         if self.chart_started and symbol and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
             self._log_info(f"Cambiando gráfico a {symbol} ({timeframe})")
@@ -1107,7 +964,7 @@ class App:
         if self.simulation_running:
             self._detener_simulacion_action()
 
-        self._save_prefs(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
+        self.prefs_manager.save(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
         self.root.destroy()
         print("Saliendo del programa...")
         os._exit(0)
@@ -1143,7 +1000,7 @@ class App:
                 os.makedirs(audit_dir)
             
             save_path = os.path.join(audit_dir, filename)
-            
+
             # Guardar en CSV
             df_to_save.to_csv(save_path, index=False, date_format='%Y-%m-%d %H:%M:%S')
             
