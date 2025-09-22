@@ -298,6 +298,9 @@ class App:
                     self._display_analysis_summary(data['lines'], data['profit'], data['loss'])
                 elif message_type == "strategy_results":
                     self._display_strategy_summary(data)
+                elif message_type == "realtime_candle_update":
+                    if hasattr(self, 'graphic') and self.simulation_running:
+                        self.graphic.update_simulation_chart(data)
                 # Añade aquí más tipos de mensajes según sea necesario
 
         except queue.Empty:
@@ -872,7 +875,9 @@ class App:
                     symbol=self.symbol_var.get(),
                     timeframe=self.timeframe_var.get(),
                     strategies_config=strategies_config,
-                    logger=self.logger
+                    logger=self.logger,
+                    on_candle_update_callback=self.graphic.update_realtime_candle,
+                    debug_mode=self.debug_mode_var.get()
                 )
                 
                 self.simulation_running = True
@@ -900,6 +905,10 @@ class App:
         try:
             # Indicar a la simulación que se detenga
             self.simulation_running = False
+
+            # Reactivar las actualizaciones en vivo del gráfico
+            if hasattr(self, 'graphic'):
+                self.graphic.refresh() # Recargamos el gráfico para mostrar el estado final real
 
             # Cerrar todas las posiciones abiertas para el símbolo actual
             try:
@@ -985,12 +994,13 @@ class App:
 
             timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             filename = f"simulacion_{timestamp}.log"
-            filepath = os.path.join(log_dir, filename)
+            
+            save_path = os.path.join(log_dir, filename)
 
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(save_path, 'w', encoding='utf-8') as f:
                 f.write(log_content)
             
-            self._log_success(f"Log de la sesión guardado en: {filepath}")
+            self._log_success(f"Log de la sesión guardado en: {save_path}")
 
         except Exception as e:
             self._log_error(f"No se pudo guardar el log de la sesión: {e}")
@@ -1030,12 +1040,13 @@ class App:
 
             timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
             filename = f"simulacion_{timestamp}.log"
-            filepath = os.path.join(log_dir, filename)
+            
+            save_path = os.path.join(log_dir, filename)
 
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(save_path, 'w', encoding='utf-8') as f:
                 f.write(log_content)
             
-            self._log_success(f"Log de la sesión guardado en: {filepath}")
+            self._log_success(f"Log de la sesión guardado en: {save_path}")
 
         except Exception as e:
             self._log_error(f"No se pudo guardar el log de la sesión: {e}")

@@ -5,5 +5,5 @@
     "email_interval_hours": 2,
     "money_limit": 0.0,
     "audit_log_enabled": true,
-    "risk_per_trade_percent": 1.0
+    "risk_per_trade_percent": 0.00001
 }

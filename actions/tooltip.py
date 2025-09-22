@@ -47,6 +47,25 @@ class TooltipHandler:
             self._hide_tooltip()
             return
         
+        # --- Lógica de posicionamiento dinámico del tooltip ---
+        canvas_width, canvas_height = self.canvas.get_width_height()
+
+        # Posicionamiento Horizontal
+        if event.x > canvas_width / 2:
+            self.tooltip.set_horizontalalignment('right')
+            x_offset = -20 # Mover a la izquierda
+        else:
+            self.tooltip.set_horizontalalignment('left')
+            x_offset = 20 # Mover a la derecha
+
+        # Posicionamiento Vertical (event.y en matplotlib es desde abajo)
+        if event.y > canvas_height / 2:
+            y_offset = -40 # Mover hacia abajo
+        else:
+            y_offset = 20 # Mover hacia arriba
+
+        self.tooltip.xyann = (x_offset, y_offset)
+
         x = event.xdata
         y = event.ydata
         if x is None or y is None:

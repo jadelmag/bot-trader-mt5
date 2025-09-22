@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 from matplotlib.backend_bases import MouseButton
 from matplotlib.patches import Rectangle
@@ -24,9 +24,10 @@ class ChartActions:
     - Double middle click: reset to initial view
     """
 
-    def __init__(self, canvas, ax):
+    def __init__(self, canvas, ax, on_zoom_pan: Callable[[], None] = None):
         self.canvas = canvas
         self.ax = ax
+        self.on_zoom_pan = on_zoom_pan
 
         self._rect: Optional[Rectangle] = None
         self._pan_state: Optional[_PanState] = None
@@ -48,6 +49,8 @@ class ChartActions:
             self.ax.set_xlim(self._initial_xlim)
             self.ax.set_ylim(self._initial_ylim)
             self.canvas.draw_idle()
+            if self.on_zoom_pan:
+                self.on_zoom_pan(is_reset=True)
 
     # ---- event handlers ----
     def _on_scroll(self, event):
@@ -76,6 +79,8 @@ class ChartActions:
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
         self.canvas.draw_idle()
+        if self.on_zoom_pan:
+            self.on_zoom_pan()
 
     def _on_press(self, event):
         if event.inaxes != self.ax:
@@ -150,6 +155,8 @@ class ChartActions:
             self.ax.set_xlim((x, x + w))
             self.ax.set_ylim((y, y + h))
             self.canvas.draw_idle()
+            if self.on_zoom_pan:
+                self.on_zoom_pan()
 
     def _apply_pan(self, event):
         if self._pan_state is None:
@@ -163,3 +170,5 @@ class ChartActions:
         dy = event.ydata - y0
         self.ax.set_xlim((xlim0[0] - dx, xlim0[1] - dx))
         self.ax.set_ylim((ylim0[0] - dy, ylim0[1] - dy))
+        if self.on_zoom_pan:
+            self.on_zoom_pan()

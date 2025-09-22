@@ -39,7 +39,9 @@ class BodyGraphic(ttk.Frame):
         self.price_line = None
         self.price_text = None
         self.candles_df: pd.DataFrame | None = None
+        self.realtime_data = [] # Para almacenar datos de la simulación
         self.ma: pd.Series | None = None
+        self.is_zoomed = False # Para rastrear si el usuario ha hecho zoom/pan
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -54,7 +56,7 @@ class BodyGraphic(ttk.Frame):
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.grid(row=0, column=0, sticky="nsew")
 
-        self.actions = ChartActions(self.canvas, self.ax) if ChartActions else None
+        self.actions = ChartActions(self.canvas, self.ax, on_zoom_pan=self._set_zoomed_flag) if ChartActions else None
 
         self.tooltip_handler = TooltipHandler(self.ax, self.canvas) if TooltipHandler else None
 
@@ -85,6 +87,8 @@ class BodyGraphic(ttk.Frame):
     def _fetch_chart_data_threaded(self, queue):
         """Se ejecuta en un hilo para obtener los datos del gráfico y los pone en la cola."""
         try:
+            # Al cargar nuevos datos, reseteamos el estado de zoom
+            self.is_zoomed = False
             tf = self._mt5_timeframe()
             if tf is None:
                 queue.put(("log_error", "Timeframe inválido"))
@@ -112,6 +116,12 @@ class BodyGraphic(ttk.Frame):
         """Renderiza los datos del gráfico en el hilo principal de la UI."""
         self._stop_live_updates()
         self.candles_df = df
+
+        # --- Guardar estado del zoom --- 
+        xlim, ylim = (None, None)
+        if self.is_zoomed:
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
 
         self.ax.clear()
         self.fig.patch.set_facecolor('black')
@@ -183,10 +193,58 @@ class BodyGraphic(ttk.Frame):
         self.fig.tight_layout()
         self.canvas.draw()
 
-        if self.actions:
-            self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
+        # --- Restaurar estado del zoom ---
+        if xlim and ylim:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+            self.canvas.draw_idle() # Redibujar con el zoom restaurado
 
-        self._schedule_live_update()
+        if self.actions:
+            # Si no estábamos haciendo zoom, actualizamos la vista inicial
+            if not self.is_zoomed:
+                self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
+
+        # self._schedule_live_update() # Desactivamos la actualización en vivo por defecto
+
+    def update_simulation_chart(self, candle_data):
+        """Procesa y dibuja los datos de una vela de la simulación."""
+        if not candle_data:
+            return
+
+        # Convertir el diccionario de la vela a un formato compatible con el DataFrame
+        candle_data['time'] = pd.to_datetime(candle_data['time'])
+        new_candle = pd.DataFrame([candle_data]).set_index('time')
+        new_candle.rename(columns={
+            'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'
+        }, inplace=True)
+
+        if self.candles_df is None or self.candles_df.empty:
+            self.candles_df = new_candle
+        else:
+            # Si la vela es nueva, la añadimos. Si ya existe, la actualizamos.
+            if new_candle.index[0] > self.candles_df.index[-1]:
+                self.candles_df = pd.concat([self.candles_df, new_candle])
+            else:
+                self.candles_df.loc[new_candle.index[0]] = new_candle.iloc[0]
+        
+        # Mantenemos solo las últimas 'self.bars' velas para que el gráfico no se sature
+        if len(self.candles_df) > self.bars:
+            self.candles_df = self.candles_df.iloc[-self.bars:]
+
+        # Re-renderizar el gráfico con los datos actualizados
+        # No reseteamos el zoom aquí, la propia función render se encarga
+        self.render_chart_data(self.candles_df)
+
+    def update_realtime_candle(self, candle_data):
+        """Callback para ser llamado desde la simulación. Pone los datos en la cola de la app."""
+        self.app.queue.put(("realtime_candle_update", candle_data))
+
+    def _set_zoomed_flag(self, is_reset=False):
+        """Callback que se activa con el zoom/pan para mantener el estado."""
+        if is_reset:
+            self.is_zoomed = False
+        else:
+            self.is_zoomed = True
 
     def _mt5_timeframe(self):
         if mt5 is None:

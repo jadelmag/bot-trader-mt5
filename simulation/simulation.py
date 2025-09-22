@@ -28,7 +28,7 @@ class Simulation:
     """
     Manages the state of a trading simulation, including account metrics, open trades, and P/L.
     """
-    def __init__(self, initial_balance: float, symbol: str, timeframe: str, strategies_config: dict = None, logger=None):
+    def __init__(self, initial_balance: float, symbol: str, timeframe: str, strategies_config: dict = None, logger=None, on_candle_update_callback=None, debug_mode: bool = False):
         """
         Initializes the simulation with a starting balance.
 
@@ -38,6 +38,8 @@ class Simulation:
             timeframe (str): The timeframe for candles (e.g., 'M1', 'M5').
             strategies_config (dict, optional): Configuration for candle and forex strategies. Defaults to None.
             logger (BodyLogger, optional): Instance of the logger for UI feedback. Defaults to None.
+            on_candle_update_callback (callable, optional): Callback function to notify of real-time candle updates.
+            debug_mode (bool): Flag to enable or disable debug logging.
         """
         self.balance = initial_balance
         self.equity = initial_balance
@@ -54,6 +56,8 @@ class Simulation:
 
         # --- Logger and Configs ---
         self.logger = logger
+        self.on_candle_update_callback = on_candle_update_callback
+        self.debug_mode = debug_mode
         self.strategies_config = strategies_config if strategies_config is not None else {}
         self.general_config = self._load_general_config()
 
@@ -120,7 +124,10 @@ class Simulation:
                 self._log(f"[SIM] Nueva vela {self.timeframe} formada a las {candle_start_time}. Contador de trades reseteado.")
 
                 new_row = pd.DataFrame([self.current_candle])
-                self.candles_df = pd.concat([self.candles_df, new_row], ignore_index=True)
+                if self.candles_df.empty:
+                    self.candles_df = new_row
+                else:
+                    self.candles_df = pd.concat([self.candles_df, new_row], ignore_index=True)
                 # A new candle has been confirmed, run analysis
                 self._analyze_market_and_execute_strategy()
 
@@ -137,6 +144,10 @@ class Simulation:
             self.current_candle['high'] = max(self.current_candle['high'], price)
             self.current_candle['low'] = min(self.current_candle['low'], price)
             self.current_candle['close'] = price
+            
+            # Notificar a la GUI sobre la actualización de la vela en tiempo real
+            if self.on_candle_update_callback:
+                self.on_candle_update_callback(self.current_candle)
 
         # Update floating P/L for open trades based on the latest price
         self.update_trades({self.symbol: price})
@@ -268,7 +279,7 @@ class Simulation:
 
     def _calculate_volume(self, sl_pips: float):
         """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
-        if not mt5 or not mt5.terminal_info() or sl_pips <= 0:
+        if not mt5 or not mt5.terminal_info():
             return 0.0
 
         try:

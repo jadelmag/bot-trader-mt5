@@ -1,7 +1,7 @@
 {
     "slots": {
-        "forex": 1,
-        "candle": 1
+        "forex": 10,
+        "candle": 10
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
