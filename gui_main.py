@@ -83,6 +83,9 @@ class App:
         # State for debug mode
         self.debug_mode_var = tk.BooleanVar(value=False)
 
+        # State for aggressive mode
+        self.modo_agresivo_activo = tk.BooleanVar(value=False)
+
         # State for chart selectors (defaults)
         self.symbol_var = tk.StringVar(value="EURUSD")
         self.timeframe_var = tk.StringVar(value="M5")
@@ -576,7 +579,37 @@ class App:
 
     def _modo_agresivo_action(self):
         """Activa/desactiva el modo agresivo."""
-        pass
+        # El estado se gestiona a través del Checkbutton y self.modo_agresivo_activo.
+        # Esta función se llama cuando el usuario hace clic, así que solo registramos el estado.
+        is_active = self.modo_agresivo_activo.get()
+        if is_active:
+            self._log_custom("Modo Agresivo ACTIVADO. Las próximas simulaciones usarán parámetros de mayor riesgo.", "#FF8C00")
+        else:
+            self._log_info("Modo Agresivo DESACTIVADO. Las próximas simulaciones usarán la configuración estándar.")
+
+    def _aplicar_config_agresiva(self, config):
+        """Modifica la configuración de estrategias para hacerla más agresiva."""
+        self._log_info("Aplicando transformación de configuración a MODO AGRESIVO.")
+        new_config = config.copy() # Trabajar sobre una copia
+
+        # --- Modificar Riesgo Global ---
+        # Aumentar el riesgo por operación a un 0.5% del equity
+        if 'general' not in new_config:
+            new_config['general'] = {}
+        new_config['general']['risk_per_trade_percent'] = "0.5"
+        self._log_custom("  - Riesgo por operación aumentado a 0.5%", "#FF8C00")
+
+        # --- Modificar Estrategias Forex ---
+        if 'forex_strategies' in new_config:
+            for strategy_name, params in new_config['forex_strategies'].items():
+                if params.get('selected'):
+                    # Aumentar la relación riesgo/beneficio (más Take Profit)
+                    params['rr_ratio'] = 3.0
+                    # Reducir el Stop Loss para mejorar la relación R/R
+                    params['stop_loss_pips'] = 15.0
+                    self._log_custom(f"  - Estrategia Forex '{strategy_name}': RR Ratio -> 3.0, SL Pips -> 15.0", "#FF8C00")
+
+        return new_config
 
     def _iniciar_simulacion_action(self):
         """Abre el modal de configuración y, si se acepta, inicia la simulación."""
@@ -595,6 +628,12 @@ class App:
         # Solo iniciar la simulación si el usuario guardó la configuración en el modal
         if hasattr(modal, 'result') and modal.result:
             strategies_config = modal.result
+
+            # --- APLICAR MODO AGRESIVO SI ESTÁ ACTIVO ---
+            if self.modo_agresivo_activo.get():
+                strategies_config = self._aplicar_config_agresiva(strategies_config)
+            # --------------------------------------------
+
             self._log_success("Configuración de estrategias aceptada. Iniciando simulación...")
 
             try:
@@ -614,6 +653,9 @@ class App:
                 self.simulation_running = True
                 self._start_simulation_loop()
                 self._log_success(f"Simulación iniciada para {self.symbol_var.get()} con un balance de {initial_balance:.2f} $.")
+
+                # Habilitar el control del modo agresivo, sin activarlo por defecto
+                self.simulation_menu.entryconfig("Modo agresivo", state="normal")
 
             except Exception as e:
                 self._log_error(f"Error al iniciar la simulación: {e}")
@@ -636,6 +678,12 @@ class App:
         try:
             # Indicar a la simulación que se detenga
             self.simulation_running = False
+
+            # Deshabilitar y resetear el modo agresivo
+            self.simulation_menu.entryconfig("Modo agresivo", state="disabled")
+            if self.modo_agresivo_activo.get():
+                self.modo_agresivo_activo.set(False)
+                self._log_info("Modo Agresivo DESACTIVADO al detener la simulación.")
 
             # Reactivar las actualizaciones en vivo del gráfico
             if hasattr(self, 'graphic'):

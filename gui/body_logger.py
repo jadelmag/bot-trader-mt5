@@ -35,19 +35,30 @@ class BodyLogger(ttk.Frame):
         self.text.tag_configure("WARN", foreground="#D7BA7D")
         self.text.tag_configure("TIME", foreground="#888888")
 
-    def _append(self, message: str, tag: str = "INFO"):
+    def _append(self, message: str, tag: str = "INFO", color: str = None):
+        """Añade un mensaje al log. Si se proporciona 'color', se usa para una etiqueta dinámica."""
         # Ensure thread-safe UI update
         def _write():
             self.text.configure(state="normal")
             now = datetime.now().strftime("%H:%M:%S")
             self.text.insert("end", f"[{now}] ", ("TIME",))
-            self.text.insert("end", message + "\n", (tag,))
+
+            # Usar color personalizado si se proporciona
+            if color:
+                custom_tag = f"custom_{color.replace('#', '')}"
+                self.text.tag_configure(custom_tag, foreground=color)
+                final_tag = custom_tag
+            else:
+                final_tag = tag
+
+            self.text.insert("end", message + "\n", (final_tag,))
             self.text.see("end")
             self.text.configure(state="disabled")
         self.after(0, _write)
 
-    def log(self, message: str):
-        self._append(message, "INFO")
+    def log(self, message: str, color: str = None):
+        """Registra un mensaje informativo, con un color opcional."""
+        self._append(message, "INFO", color=color)
 
     def success(self, message: str):
         self._append(message, "SUCCESS")

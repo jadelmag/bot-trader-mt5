@@ -41,7 +41,8 @@ def create_header(app):
     simulation_menu.add_command(label="Iniciar simulación", command=app._iniciar_simulacion_action)
     simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action)
     simulation_menu.add_separator()
-    simulation_menu.add_checkbutton(label="Modo agresivo", command=app._modo_agresivo_action)
+    simulation_menu.add_checkbutton(label="Modo agresivo", variable=app.modo_agresivo_activo, command=app._modo_agresivo_action)
+    simulation_menu.entryconfig("Modo agresivo", state="disabled") # Deshabilitado por defecto
     simulation_menu.add_separator()
     simulation_menu.add_checkbutton(label="Detener actualización", command=app._detener_actualizacion_action)
     app.simulation_btn.state(["disabled"])
