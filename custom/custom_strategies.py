@@ -1,3 +1,11 @@
+import time
+
+try:
+    import MetaTrader5 as mt5
+    from simulation.simulation import Simulation
+except ImportError:
+    mt5 = None
+    Simulation = None
 
 class CustomStrategies:
     """
@@ -23,3 +31,85 @@ class CustomStrategies:
             elif df['open'] > df['close']:
                 return "short"
         return None
+
+    @staticmethod
+    def run_pico_y_pala(symbol: str, volume: float, logger=None):
+        """
+        Estrategia de scalping de alta frecuencia "Pico y Pala".
+        1. Analiza el momentum en los primeros 10s de una vela para decidir dirección.
+        2. Abre una operación y la gestiona activamente durante 20s para un cierre rápido.
+        """
+        if not mt5 or not Simulation:
+            if logger:
+                logger.error("[PICO Y PALA] MT5 o la clase Simulation no están disponibles.")
+            return
+
+        # --- Fase 1: Determinar la dirección (10 segundos) ---
+        if logger: logger.log("[PICO Y PALA] Fase 1: Analizando momentum durante 10 segundos...")
+        
+        ups = 0
+        downs = 0
+        last_price = 0
+        start_time = time.time()
+
+        while time.time() - start_time < 10:
+            tick = mt5.symbol_info_tick(symbol)
+            if tick and tick.last != last_price:
+                if last_price != 0:
+                    if tick.last > last_price:
+                        ups += 1
+                    else:
+                        downs += 1
+                last_price = tick.last
+            time.sleep(0.1) # Pequeña pausa para no saturar la CPU
+
+        direction = 'long' if ups > downs else 'short'
+        if logger: logger.log(f"[PICO Y PALA] Dirección determinada: {direction.upper()} (Ups: {ups}, Downs: {downs})")
+
+        # --- Fase 2: Abrir y gestionar la operación (20 segundos) ---
+        sim = Simulation(initial_balance=0, symbol=symbol, timeframe="", logger=logger)
+        
+        # Abrir la operación sin TP y con un SL de emergencia amplio
+        result = sim.open_trade(trade_type=direction, symbol=symbol, volume=volume, sl_pips=50, tp_pips=0)
+        if not result or result.retcode != mt5.TRADE_RETCODE_DONE:
+            if logger: logger.error("[PICO Y PALA] No se pudo abrir la operación.")
+            return
+
+        position_ticket = result.order
+        if logger: logger.log(f"[PICO Y PALA] Fase 2: Operación {direction.upper()} abierta (Ticket: {position_ticket}). Gestionando durante 20 segundos...")
+
+        start_time_manage = time.time()
+        peak_price = 0
+        trough_price = float('inf')
+        
+        while time.time() - start_time_manage < 20:
+            tick = mt5.symbol_info_tick(symbol)
+            if not tick: 
+                time.sleep(0.1)
+                continue
+
+            current_price = tick.last
+            
+            if direction == 'long':
+                # Actualizar el precio máximo alcanzado
+                if current_price > peak_price: peak_price = current_price
+                # Si el precio, tras caer, vuelve al pico, cerramos (objetivo principal)
+                if current_price < peak_price and current_price >= peak_price * 0.9999: # Cerca del pico
+                    if logger: logger.log(f"[PICO Y PALA] Objetivo LONG alcanzado. Cerrando cerca del pico {peak_price}.")
+                    sim.close_trade(position_ticket, volume, 'long')
+                    return
+            
+            elif direction == 'short':
+                # Actualizar el precio mínimo alcanzado
+                if current_price < trough_price: trough_price = current_price
+                # Si el precio, tras subir, vuelve al mínimo, cerramos (objetivo principal)
+                if current_price > trough_price and current_price <= trough_price * 1.0001: # Cerca del mínimo
+                    if logger: logger.log(f"[PICO Y PALA] Objetivo SHORT alcanzado. Cerrando cerca del mínimo {trough_price}.")
+                    sim.close_trade(position_ticket, volume, 'short')
+                    return
+
+            time.sleep(0.1)
+
+        # Si el tiempo se agota, cerramos la operación forzosamente
+        if logger: logger.log("[PICO Y PALA] Tiempo de gestión agotado. Forzando cierre.")
+        sim.close_trade(position_ticket, volume, direction)
