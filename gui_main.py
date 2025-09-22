@@ -574,6 +574,10 @@ class App:
             self._log_info("Dibujos del gráfico eliminados.")
         self._clear_log_action()
 
+    def _modo_agresivo_action(self):
+        """Activa/desactiva el modo agresivo."""
+        pass
+
     def _iniciar_simulacion_action(self):
         """Abre el modal de configuración y, si se acepta, inicia la simulación."""
         if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df.empty:

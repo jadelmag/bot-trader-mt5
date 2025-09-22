@@ -39,10 +39,11 @@ def create_header(app):
     app.simulation_btn["menu"] = simulation_menu
     app.simulation_menu = simulation_menu
     simulation_menu.add_command(label="Iniciar simulación", command=app._iniciar_simulacion_action)
-    simulation_menu.add_separator()
     simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action)
     simulation_menu.add_separator()
-    simulation_menu.add_command(label="Detener actualización", command=app._detener_actualizacion_action)
+    simulation_menu.add_checkbutton(label="Modo agresivo", command=app._modo_agresivo_action)
+    simulation_menu.add_separator()
+    simulation_menu.add_checkbutton(label="Detener actualización", command=app._detener_actualizacion_action)
     app.simulation_btn.state(["disabled"])
 
     # --- Labels for Simulation Results (Columna 3) ---
