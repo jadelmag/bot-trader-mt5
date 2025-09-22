@@ -291,7 +291,8 @@ class Simulation:
                 return 0.0
 
             equity = account_info.equity
-            risk_percent = self.general_config.get('risk_per_trade_percent', 1.0)
+            risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
+            risk_percent = float(risk_percent_str)
             
             money_to_risk = equity * (risk_percent / 100.0)
 

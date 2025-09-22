@@ -142,7 +142,6 @@ class App:
         tools_menu.add_separator()
         tools_menu.add_command(label="Iniciar Backtesting", command=self._run_perfect_backtesting)
         tools_menu.add_command(label="Finalizar backtesting", command=self._finalize_backtesting_action)
-        tools_menu.add_command(label="Limpiar log", command=self._clear_log_action)
         self.analysis_tools_btn.state(["disabled"])
 
         # --- Menú de Opciones (Columna 1) ---
@@ -152,9 +151,11 @@ class App:
         self.options_btn["menu"] = options_menu
         options_menu.add_checkbutton(label="Modo Debug", variable=self.debug_mode_var)
         options_menu.add_separator()
-        options_menu.add_command(label="Configuración", command=self._open_config_modal)
-        tools_menu.add_separator()
         options_menu.add_command(label="Guardar Gráfica", command=self._save_chart_to_csv)
+        options_menu.add_separator()
+        options_menu.add_command(label="Configuración", command=self._open_config_modal)
+        options_menu.add_separator()
+        options_menu.add_command(label="Limpiar log", command=self._clear_log_action)
 
         # --- Botón de Simulación (Columna 2) ---
         self.simulation_btn = ttk.Menubutton(header, text="Simulación")

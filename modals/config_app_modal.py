@@ -116,7 +116,10 @@ class ConfigAppModal(tk.Toplevel):
             self.interval_var.set(str(config.get("email_interval_hours", "24")))
             self.money_limit_var.set(str(config.get("money_limit", "")))
             self.audit_log_var.set(config.get("audit_log_enabled", False))
-            self.risk_per_trade_var.set(str(config.get("risk_per_trade_percent", "1.0")))
+            
+            # Cargar y formatear el valor de riesgo para evitar notación científica en la UI
+            risk_value = config.get("risk_per_trade_percent", "1.0")
+            self.risk_per_trade_var.set(f"{float(risk_value):.8f}")
 
         except (json.JSONDecodeError, TypeError):
             messagebox.showerror("Error", f"El archivo de configuración '{os.path.basename(CONFIG_PATH)}' está corrupto.", parent=self)
@@ -139,7 +142,8 @@ class ConfigAppModal(tk.Toplevel):
                 "email_interval_hours": interval_hours,
                 "money_limit": money_limit,
                 "audit_log_enabled": self.audit_log_var.get(),
-                "risk_per_trade_percent": risk_percent
+                # Guardar como string formateado para evitar notación científica
+                "risk_per_trade_percent": f"{risk_percent:.8f}"
             }
 
             # Ensure directory exists
