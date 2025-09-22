@@ -673,6 +673,20 @@ class App:
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
 
+    def _detener_actualizacion_action(self):
+        """Detiene el bucle de actualización de la simulación y del gráfico."""
+        self._log_info("Deteniendo actualizaciones en tiempo real...")
+
+        # Detener el bucle de la simulación que actualiza el balance
+        self.simulation_running = False
+
+        # Detener las actualizaciones en vivo del gráfico (precio y velas)
+        if hasattr(self, 'graphic') and hasattr(self.graphic, '_stop_live_updates'):
+            self.graphic._stop_live_updates()
+            self._log_success("Las actualizaciones del gráfico y del balance han sido detenidas.")
+        else:
+            self._log_info("El gráfico no está iniciado o no soporta la detención de actualizaciones.")
+
     def _start_simulation_loop(self):
         """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""
         if not self.simulation_running or not self.simulation_instance or not mt5 or not mt5.terminal_info():

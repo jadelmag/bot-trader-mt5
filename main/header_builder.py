@@ -40,6 +40,8 @@ def create_header(app):
     simulation_menu.add_command(label="Iniciar simulación", command=app._iniciar_simulacion_action)
     simulation_menu.add_separator()
     simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action)
+    simulation_menu.add_separator()
+    simulation_menu.add_command(label="Detener actualización", command=app._detener_actualizacion_action)
     app.simulation_btn.state(["disabled"])
 
     # --- Labels for Simulation Results (Columna 3) ---
