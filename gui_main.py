@@ -294,6 +294,8 @@ class App:
                     except tk.TclError:
                         self.analysis_tools_btn.configure(state="normal")
                         self.simulation_btn.configure(state="normal")
+                    # Iniciar actualizaciones en vivo después de renderizar el gráfico
+                    self.graphic.start_live_updates()
                 elif message_type == "analysis_results":
                     self._display_analysis_summary(data['lines'], data['profit'], data['loss'])
                 elif message_type == "strategy_results":
