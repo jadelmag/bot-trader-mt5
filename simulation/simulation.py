@@ -343,16 +343,12 @@ class Simulation:
             risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
             risk_percent = float(risk_percent_str)
             
-            # Aplicar el multiplicador de la estrategia específica
             final_risk_percent = risk_percent * risk_multiplier
 
             money_to_risk = equity * (final_risk_percent / 100.0)
 
             sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
             loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-
-            if loss_per_lot <= 0:
-                return 0.0
 
             volume = money_to_risk / loss_per_lot
 

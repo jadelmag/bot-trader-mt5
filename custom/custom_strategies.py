@@ -42,14 +42,14 @@ class CustomStrategies:
             return
 
         # --- Fase 1: Determinar la dirección (10 segundos) ---
-        if logger: logger.log("[PICO Y PALA] Fase 1: Analizando momentum durante 10 segundos...")
+        if logger: logger.log("[PICO Y PALA] Fase 1: Analizando momentum durante 20 segundos...")
         
         ups = 0
         downs = 0
         last_price = 0
         start_time = time.time()
 
-        while time.time() - start_time < 10:
+        while time.time() - start_time < 20:
             tick = mt5.symbol_info_tick(symbol)
             if tick and tick.last != last_price:
                 if last_price != 0:
@@ -66,6 +66,9 @@ class CustomStrategies:
         # --- Fase 2: Abrir y gestionar la operación (20 segundos) ---
         # Ya no se crea una instancia de Simulation, se usa la que se pasa como argumento
         
+        # Añadir una pequeña pausa para dar tiempo al servidor a prepararse
+        time.sleep(1)
+
         # Abrir la operación sin TP y con un SL de emergencia amplio
         result = simulation_instance.open_trade(trade_type=direction, symbol=symbol, volume=volume, sl_pips=50, tp_pips=0)
         if not result or result.retcode != mt5.TRADE_RETCODE_DONE:
