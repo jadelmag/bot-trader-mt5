@@ -208,7 +208,8 @@ class Simulation:
         current_price = self.candles_df.iloc[-1]['close']
 
         sl_pips = forex_params.get('stop_loss_pips', 20.0)
-        volume = self._calculate_volume(sl_pips)
+        risk_multiplier = forex_params.get('percent_ratio', 1.0)
+        volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
 
         if volume <= 0:
             return
@@ -254,12 +255,13 @@ class Simulation:
                     # Para Pico y Pala, el volumen se calcula con un SL nocional para el riesgo
                     # La estrategia en sí no usa SL para el cierre, pero lo necesitamos para el cálculo de riesgo.
                     volume = self._calculate_volume(sl_pips=50.0) 
+                    self._log(f"[SIM-DEBUG] Volumen calculado para Pico y Pala: {volume:.4f} lots")
                     if volume > 0:
                         self._log(f"[SIM] Lanzando estrategia personalizada '{strategy_name}' en un nuevo hilo.")
                         # Ejecutar en un hilo para no bloquear la simulación
                         thread = threading.Thread(
                             target=CustomStrategies.run_pico_y_pala, 
-                            args=(self.symbol, volume, self.logger)
+                            args=(self, self.symbol, volume, self.logger)
                         )
                         thread.daemon = True # El hilo se cerrará si el programa principal termina
                         thread.start()
@@ -324,7 +326,7 @@ class Simulation:
                 }
         return {'percent_ratio': 1.0, 'rr_ratio': 2.0, 'stop_loss_pips': 20.0}
 
-    def _calculate_volume(self, sl_pips: float):
+    def _calculate_volume(self, sl_pips: float, risk_multiplier: float = 1.0):
         """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
         if not mt5 or not mt5.terminal_info():
             return 0.0
@@ -341,7 +343,10 @@ class Simulation:
             risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
             risk_percent = float(risk_percent_str)
             
-            money_to_risk = equity * (risk_percent / 100.0)
+            # Aplicar el multiplicador de la estrategia específica
+            final_risk_percent = risk_percent * risk_multiplier
+
+            money_to_risk = equity * (final_risk_percent / 100.0)
 
             sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
             loss_per_lot = sl_in_points * symbol_info.trade_tick_value

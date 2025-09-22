@@ -2,10 +2,8 @@ import time
 
 try:
     import MetaTrader5 as mt5
-    from simulation.simulation import Simulation
 except ImportError:
     mt5 = None
-    Simulation = None
 
 class CustomStrategies:
     """
@@ -33,15 +31,14 @@ class CustomStrategies:
         return None
 
     @staticmethod
-    def run_pico_y_pala(symbol: str, volume: float, logger=None):
+    def run_pico_y_pala(simulation_instance, symbol: str, volume: float, logger=None):
         """
         Estrategia de scalping de alta frecuencia "Pico y Pala".
-        1. Analiza el momentum en los primeros 10s de una vela para decidir dirección.
-        2. Abre una operación y la gestiona activamente durante 20s para un cierre rápido.
+        Recibe la instancia de la simulación activa para interactuar con ella.
         """
-        if not mt5 or not Simulation:
+        if not mt5:
             if logger:
-                logger.error("[PICO Y PALA] MT5 o la clase Simulation no están disponibles.")
+                logger.error("[PICO Y PALA] MT5 no está disponible.")
             return
 
         # --- Fase 1: Determinar la dirección (10 segundos) ---
@@ -67,10 +64,10 @@ class CustomStrategies:
         if logger: logger.log(f"[PICO Y PALA] Dirección determinada: {direction.upper()} (Ups: {ups}, Downs: {downs})")
 
         # --- Fase 2: Abrir y gestionar la operación (20 segundos) ---
-        sim = Simulation(initial_balance=0, symbol=symbol, timeframe="", logger=logger)
+        # Ya no se crea una instancia de Simulation, se usa la que se pasa como argumento
         
         # Abrir la operación sin TP y con un SL de emergencia amplio
-        result = sim.open_trade(trade_type=direction, symbol=symbol, volume=volume, sl_pips=50, tp_pips=0)
+        result = simulation_instance.open_trade(trade_type=direction, symbol=symbol, volume=volume, sl_pips=50, tp_pips=0)
         if not result or result.retcode != mt5.TRADE_RETCODE_DONE:
             if logger: logger.error("[PICO Y PALA] No se pudo abrir la operación.")
             return
@@ -96,7 +93,7 @@ class CustomStrategies:
                 # Si el precio, tras caer, vuelve al pico, cerramos (objetivo principal)
                 if current_price < peak_price and current_price >= peak_price * 0.9999: # Cerca del pico
                     if logger: logger.log(f"[PICO Y PALA] Objetivo LONG alcanzado. Cerrando cerca del pico {peak_price}.")
-                    sim.close_trade(position_ticket, volume, 'long')
+                    simulation_instance.close_trade(position_ticket, volume, 'long')
                     return
             
             elif direction == 'short':
@@ -105,11 +102,11 @@ class CustomStrategies:
                 # Si el precio, tras subir, vuelve al mínimo, cerramos (objetivo principal)
                 if current_price > trough_price and current_price <= trough_price * 1.0001: # Cerca del mínimo
                     if logger: logger.log(f"[PICO Y PALA] Objetivo SHORT alcanzado. Cerrando cerca del mínimo {trough_price}.")
-                    sim.close_trade(position_ticket, volume, 'short')
+                    simulation_instance.close_trade(position_ticket, volume, 'short')
                     return
 
             time.sleep(0.1)
 
         # Si el tiempo se agota, cerramos la operación forzosamente
         if logger: logger.log("[PICO Y PALA] Tiempo de gestión agotado. Forzando cierre.")
-        sim.close_trade(position_ticket, volume, direction)
+        simulation_instance.close_trade(position_ticket, volume, direction)
