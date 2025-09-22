@@ -232,11 +232,16 @@ class Simulation:
         fast_ma = df['close'].rolling(window=10).mean().iloc[-1]
         slow_ma = df['close'].rolling(window=50).mean().iloc[-1]
         
+        signal = 'neutral'
         if fast_ma > slow_ma:
-            return 'long'
+            signal = 'long'
         elif fast_ma < slow_ma:
-            return 'short'
-        return 'neutral'
+            signal = 'short'
+
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: {signal}")
+
+        return signal
 
     def _get_candle_signal(self, df):
         """Analyzes the last candle for patterns selected in the strategy config."""
@@ -261,7 +266,8 @@ class Simulation:
             if detection_func:
                 signal = detection_func(df.to_dict('records'), last_candle_index)
                 if signal in ['long', 'short']:
-                    self._log(f"[SIM] Candle signal detected: {pattern_name} -> {signal}")
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Señal de Patrón de Vela detectada: {pattern_name} -> {signal}")
                     return signal # Return the first signal found
         return 'neutral'
 
