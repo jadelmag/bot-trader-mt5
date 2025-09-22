@@ -158,6 +158,13 @@ class BodyGraphic(ttk.Frame):
             tight_layout=True
         )
 
+        # Añadir margen a la derecha del gráfico
+        current_xlim = self.ax.get_xlim()
+        range_width = current_xlim[1] - current_xlim[0]
+        # Añadimos un 15% de margen a la derecha, que es un buen compromiso visual
+        new_xlim_right = current_xlim[1] + (range_width * 0.15)
+        self.ax.set_xlim(current_xlim[0], new_xlim_right)
+
         period = 20
         if len(df) >= period:
             self.ma = df['Close'].rolling(window=period).mean()
