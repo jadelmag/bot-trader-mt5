@@ -3,6 +3,7 @@ import pandas as pd
 import sys
 import os
 import json
+import threading
 
 # --- MT5 Integration ---
 try:
@@ -22,6 +23,7 @@ CONFIG_PATH = os.path.join(PROJECT_ROOT, "strategies", "config.json")
 
 from backtesting.detect_candles import CandleDetector
 from backtesting.apply_strategies import StrategyAnalyzer
+from custom.custom_strategies import CustomStrategies
 
 
 class Simulation:
@@ -184,7 +186,14 @@ class Simulation:
         # --- 3. Lógica de Cierre de Operaciones ---
         self._check_for_closing_signals(ma_signal, candle_signal)
 
-        # --- 4. Lógica de Apertura de Operaciones ---
+        # --- 4. Lógica de Apertura de Operaciones (Forex/Candle) ---
+        self._execute_forex_strategies(ma_signal, candle_signal)
+
+        # --- 5. Lógica de Apertura de Estrategias Personalizadas ---
+        self._execute_custom_strategies()
+
+    def _execute_forex_strategies(self, ma_signal, candle_signal):
+        """Maneja la lógica de apertura para estrategias Forex y de Velas estándar."""
         open_positions = mt5.positions_get(symbol=self.symbol)
         if open_positions is None:
             open_positions = []
@@ -223,6 +232,38 @@ class Simulation:
                 sl_pips=sl_pips,
                 tp_pips=sl_pips * forex_params.get('rr_ratio', 2.0)
             )
+
+    def _execute_custom_strategies(self):
+        """Maneja la lógica de ejecución para estrategias personalizadas."""
+        custom_strategies_config = self.strategies_config.get('custom_strategies', {})
+        if not custom_strategies_config:
+            return
+
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        if open_positions is None: open_positions = []
+        
+        active_slots = len(open_positions)
+        max_custom_slots = self.strategies_config.get('slots', {}).get('custom', 0)
+
+        if active_slots >= max_custom_slots:
+            return
+
+        for strategy_name, config in custom_strategies_config.items():
+            if config.get('selected'):
+                if strategy_name == 'run_pico_y_pala':
+                    # Para Pico y Pala, el volumen se calcula con un SL nocional para el riesgo
+                    # La estrategia en sí no usa SL para el cierre, pero lo necesitamos para el cálculo de riesgo.
+                    volume = self._calculate_volume(sl_pips=50.0) 
+                    if volume > 0:
+                        self._log(f"[SIM] Lanzando estrategia personalizada '{strategy_name}' en un nuevo hilo.")
+                        # Ejecutar en un hilo para no bloquear la simulación
+                        thread = threading.Thread(
+                            target=CustomStrategies.run_pico_y_pala, 
+                            args=(self.symbol, volume, self.logger)
+                        )
+                        thread.daemon = True # El hilo se cerrará si el programa principal termina
+                        thread.start()
+
 
     def _get_ma_signal(self, df):
         """Calculates moving averages and returns a 'long', 'short', or 'neutral' signal."""
