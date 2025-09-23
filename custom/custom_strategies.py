@@ -64,7 +64,7 @@ class CustomStrategies:
             return
         
         initial_close_price = rates[0]['close']
-        if logger: logger.log(f"[PICO Y PALA] Precio de cierre de referencia: {initial_close_price}")
+        if logger: logger.log(f"[PICO Y PALA] Precio de cierre de referencia: {initial_close_price} $")
 
         # --- Fase 2: Recopilar 10 ticks y comparar con el precio de referencia ---
         if logger: logger.log("[PICO Y PALA] Recopilando 10 ticks...")
@@ -166,14 +166,14 @@ class CustomStrategies:
             drawdown_from_peak = ((max_profit_price - current_price) / max_profit_price) * 10000  # en pips aproximados
             
             if drawdown_from_peak >= 3.0:  # 3 pips de drawdown desde el pico
-                if logger: logger.log(f"[PICO Y PALA LONG] Cerrando en máximo beneficio. Drawdown: {drawdown_from_peak:.2f} pips")
-                simulation_instance.close_trade(position_ticket, volume, 'long')
+                context_msg = f"Cierre por drawdown desde pico ({drawdown_from_peak:.2f} pips)."
+                simulation_instance.close_trade(position_ticket, volume, 'long', strategy_context=context_msg)
                 return
             
             # Estrategia 2: Cierre por tiempo/condición secundaria
             if ticks_without_improvement >= max_ticks_without_improvement:
-                if logger: logger.log(f"[PICO Y PALA LONG] Cerrando por falta de mejora ({ticks_without_improvement} ticks)")
-                simulation_instance.close_trade(position_ticket, volume, 'long')
+                context_msg = f"Cierre por falta de mejora ({ticks_without_improvement} ticks)."
+                simulation_instance.close_trade(position_ticket, volume, 'long', strategy_context=context_msg)
                 return
             
             time.sleep(0.5)  # Esperar medio segundo entre comprobaciones
@@ -212,14 +212,14 @@ class CustomStrategies:
             drawdown_from_peak = ((current_price - max_profit_price) / max_profit_price) * 10000  # en pips aproximados
             
             if drawdown_from_peak >= 3.0:  # 3 pips de drawdown desde el pico
-                if logger: logger.log(f"[PICO Y PALA SHORT] Cerrando en máximo beneficio. Drawdown: {drawdown_from_peak:.2f} pips")
-                simulation_instance.close_trade(position_ticket, volume, 'short')
+                context_msg = f"Cierre por drawdown desde pico ({drawdown_from_peak:.2f} pips)."
+                simulation_instance.close_trade(position_ticket, volume, 'short', strategy_context=context_msg)
                 return
             
             # Estrategia 2: Cierre por tiempo/condición secundaria
             if ticks_without_improvement >= max_ticks_without_improvement:
-                if logger: logger.log(f"[PICO Y PALA SHORT] Cerrando por falta de mejora ({ticks_without_improvement} ticks)")
-                simulation_instance.close_trade(position_ticket, volume, 'short')
+                context_msg = f"Cierre por falta de mejora ({ticks_without_improvement} ticks)."
+                simulation_instance.close_trade(position_ticket, volume, 'short', strategy_context=context_msg)
                 return
             
             time.sleep(0.5)  # Esperar medio segundo entre comprobaciones

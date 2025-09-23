@@ -572,9 +572,15 @@ class Simulation:
         self.equity = self.balance + total_floating_pl
         self.free_margin = self.equity - self.margin
 
-    def close_trade(self, position_ticket: int, volume: float, trade_type: str):
+    def close_trade(self, position_ticket: int, volume: float, trade_type: str, strategy_context: str = None):
         """
         Closes an open position in MetaTrader 5.
+
+        Args:
+            position_ticket (int): The ticket of the position to close.
+            volume (float): The volume to close.
+            trade_type (str): 'long' or 'short'.
+            strategy_context (str, optional): A specific message from the calling strategy.
         """
         if not mt5 or not mt5.terminal_info():
             self._log("[SIM-ERROR] MT5 no está conectado. No se puede cerrar la operación.", 'error')
@@ -623,7 +629,12 @@ class Simulation:
 
             if deals and len(deals) > 0:
                 profit = deals[0].profit
-                log_msg_base = f"[SIM] Operación {trade_type.upper()} [{strategy_name_from_pos}] cerrada ({volume:.2f} lots). Ticket: {position_ticket}."
+                log_msg_base = f"[SIM] Operación {trade_type.upper()} [{strategy_name_from_pos}] cerrada ({volume:.2f} lots)."
+                
+                # Añadir contexto de la estrategia si está disponible
+                if strategy_context:
+                    log_msg_base += f" {strategy_context}"
+
                 if profit >= 0:
                     self._log(f"{log_msg_base} Beneficio: {profit:.2f} $", 'success')
                 else:
