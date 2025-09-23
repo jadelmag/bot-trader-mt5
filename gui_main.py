@@ -98,6 +98,10 @@ class App:
         self.profit_var = tk.StringVar(value="----")
         self.loss_var = tk.StringVar(value="----")
 
+        # --- Acumuladores para P/L realizado ---
+        self.total_profit_realized = 0.0
+        self.total_loss_realized = 0.0
+
         # Preferences Manager
         self.prefs_manager = PreferencesManager(self)
         self.prefs_manager.load()
@@ -163,6 +167,8 @@ class App:
                     self._set_status(data['text'], data['color'])
                 elif message_type == "login_success":
                     self._handle_login_success()
+                elif message_type == "login_failure":
+                    self._handle_login_failure(data)
                 elif message_type == "chart_data_ready":
                     self.graphic.render_chart_data(data)
                     # Habilitar solo el botón de simulación una vez que el gráfico está listo
@@ -179,6 +185,8 @@ class App:
                 elif message_type == "realtime_candle_update":
                     if hasattr(self, 'graphic') and self.simulation_running:
                         self.graphic.update_simulation_chart(data)
+                elif message_type == "trade_closed":
+                    self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
 
         except queue.Empty:
@@ -236,61 +244,64 @@ class App:
         self.login_handler.open_login_modal()
 
     def _attempt_login(self, creds: dict):
+        """Inicia el proceso de login en un hilo secundario para no bloquear la GUI."""
+        self._set_status("Conectando...", "orange")
+        self._log_info(f"Intentando conexión a MT5 con cuenta {creds.get('cuenta')}...")
+
+        # Crear y empezar el hilo para la tarea de login
+        self.thread = threading.Thread(target=self._login_worker, args=(creds,), daemon=True)
+        self.thread.start()
+
+    def _login_worker(self, creds: dict):
+        """Esta función se ejecuta en un hilo separado para manejar la conexión bloqueante."""
         global LoginMT5
         if LoginMT5 is None:
             try:
                 from loggin.loggin import LoginMT5 as LM5
                 LoginMT5 = LM5
             except Exception as e:
-                messagebox.showerror("Error", f"No se pudo importar LoginMT5: {e}")
-                self._set_status("Error", "red")
+                self.queue.put(("login_failure", {"error": f"No se pudo importar LoginMT5: {e}"}))
                 return
 
         try:
-            # Pasar credenciales directamente al constructor
             client = LoginMT5(
                 account=creds.get("cuenta"),
                 password=creds.get("contraseña"),
                 server=creds.get("servidor")
             )
 
-            self._log_info(f"Intentando conexión a MT5 con cuenta {client.account} en {client.server}…")
             connected = client.login()
             if connected:
-                self._set_status("Conectado", "green")
-                self._log_success("Conexión establecida correctamente.")
-                # Try to populate symbol list from MT5
-                self._populate_symbols()
-                # Enable Start MT5 button and symbol/timeframe selectors
-                try:
-                    self.start_btn.state(["!disabled"])  
-                except Exception:
-                    self.start_btn.configure(state="normal")
-                try:
-                    self.symbol_cb.state(["!disabled"])  
-                except Exception:
-                    self.symbol_cb.configure(state="normal")
-                try:
-                    self.timeframe_cb.state(["!disabled"])  
-                except Exception:
-                    self.timeframe_cb.configure(state="normal")
-                # If chart already started, refresh it
-                try:
-                    if self.chart_started and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
-                        self.graphic.load_symbol(
-                            symbol=self.symbol_var.get(), 
-                            timeframe=self.timeframe_var.get(),
-                            queue=self.queue
-                        )
-                except Exception:
-                    pass
+                self.queue.put(("login_success", None))
             else:
-                self._set_status("Error", "red")
-                self._log_error("No se pudo establecer conexión (login() devolvió False).")
+                self.queue.put(("login_failure", {"error": "Credenciales incorrectas o terminal no disponible."}))
+
         except Exception as e:
-            messagebox.showerror("Error de conexión", f"No se pudo conectar a MT5: {e}")
-            self._set_status("Error", "red")
-            self._log_error(f"Excepción durante la conexión: {e}")
+            self.queue.put(("login_failure", {"error": f"Excepción durante la conexión: {e}"}))
+
+    def _handle_login_success(self):
+        """Maneja las actualizaciones de la GUI después de un login exitoso."""
+        self._set_status("Conectado", "green")
+        self._log_success("Conexión establecida correctamente.")
+        self._populate_symbols()
+        try:
+            self.start_btn.state(["!disabled"])
+            self.symbol_cb.state(["!disabled"])
+            self.timeframe_cb.state(["!disabled"])
+        except tk.TclError:
+            self.start_btn.configure(state="normal")
+            self.symbol_cb.configure(state="normal")
+            self.timeframe_cb.configure(state="normal")
+
+        if self.chart_started:
+            self._apply_chart_selection()
+
+    def _handle_login_failure(self, data):
+        """Maneja las actualizaciones de la GUI después de un login fallido."""
+        error_msg = data.get('error', 'Error desconocido')
+        messagebox.showerror("Error de conexión", f"No se pudo conectar a MT5: {error_msg}")
+        self._set_status("Error de conexión", "red")
+        self._log_error(f"Fallo en la conexión: {error_msg}")
 
     def _populate_symbols(self):
         if mt5 is None:
@@ -816,6 +827,17 @@ class App:
     def _save_chart_to_csv(self):
         """Guarda los datos actuales del gráfico en un archivo CSV."""
         self.action_handler.save_chart_to_csv()
+
+    def _handle_trade_closed(self, data):
+        """Actualiza los contadores de P/L acumulado cuando se cierra una operación."""
+        profit = data.get('profit', 0.0)
+        if profit >= 0:
+            self.total_profit_realized += profit
+            self.profit_var.set(f"{self.total_profit_realized:.2f} $")
+        else:
+            # Las pérdidas se suman como valores positivos
+            self.total_loss_realized += abs(profit)
+            self.loss_var.set(f"{self.total_loss_realized:.2f} $")
 
 
 if __name__ == "__main__":

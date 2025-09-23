@@ -262,6 +262,11 @@ class Simulation:
                     self._log(f"[SIM-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
 
         # --- 3. Analizar Estrategias de Forex (Si no hubo señal de vela) ---
+        if len(open_positions) > 0:
+            if self.debug_mode:
+                self._log("[SIM-DEBUG] Ya hay una operación abierta. Omitiendo análisis de estrategias Forex.")
+            return
+
         forex_strategies = self.strategies_config.get('forex_strategies', {})
         selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
         
@@ -557,7 +562,7 @@ class Simulation:
 
         position_info = mt5.positions_get(ticket=position_ticket)
         if not position_info:
-            self._log(f"[SIM-ERROR] No se encontró la posición con ticket {position_ticket}.", 'error')
+            self._log(f"[SIM] La posición con ticket {position_ticket} ya estaba cerrada. No se requiere acción.", 'info')
             return None
         position_info = position_info[0]
 
@@ -584,11 +589,19 @@ class Simulation:
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}", 'error')
         else:
-            profit = result.profit
-            if profit >= 0:
-                self._log(f"[SIM] Posición {position_ticket} cerrada. Beneficio: {profit:.2f} $", 'success')
+            # El resultado de order_send no tiene 'profit'. Hay que consultar el historial del deal.
+            deal_ticket = result.deal
+            deals = mt5.history_deals_get(ticket=deal_ticket)
+            if deals and len(deals) > 0:
+                profit = deals[0].profit
+                if self.queue:
+                    self.queue.put(("trade_closed", {'profit': profit}))
+                if profit >= 0:
+                    self._log(f"[SIM] Posición {position_ticket} cerrada. Beneficio: {profit:.2f} $", 'success')
+                else:
+                    self._log(f"[SIM] Posición {position_ticket} cerrada. Pérdida: {profit:.2f} $", 'error')
             else:
-                self._log(f"[SIM] Posición {position_ticket} cerrada. Pérdida: {profit:.2f} $", 'error')
+                self._log(f"[SIM] Posición {position_ticket} cerrada, pero no se pudo obtener el P/L del historial.", 'warn')
 
         return result
 
