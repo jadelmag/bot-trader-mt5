@@ -1,8 +1,15 @@
-[22:48:37] Simulación iniciada para EURUSD con un balance de 100000.00 $.
-[22:49:05] [SIM] Nueva vela M1 formada a las 2025-09-22 23:49:00. Contador de trades reseteado.
-[22:49:05] [SIM-DEBUG] Volumen calculado para Pico y Pala: 2.3600 lots
-[22:49:05] [SIM] Lanzando estrategia personalizada 'run_pico_y_pala' en un nuevo hilo.
-[22:49:05] [PICO Y PALA] Fase 1: Analizando momentum durante 20 segundos...
-[22:49:25] [PICO Y PALA] Dirección determinada: SHORT (Ups: 0, Downs: 0)
-[22:49:26] [SIM-ERROR] order_send falló, retcode=10030
-[22:49:26] [PICO Y PALA] No se pudo abrir la operación.
+mi idea para esta estrategia es:
+1. cuando iniciamos la simulacion esperamos a que se forme una vela nueva y obtenemos el precio al que se ha cerrado.
+mediante un tick y lo guardamos en una constante.
+2. Esperamos 10 ticks y los guardamos en una lista.
+3. calculamos cuantos de esos ticks son mayores al precio actual.
+4. si la cantidad de ticks > precio actual, abrimos una operacion de LONG.
+5. si la cantidad de ticks < precio actual, abrimos una operacion de SHORT.
+
+CASO LONG:
+1. intentamos cerrar la operacion con el mayor beneficio posible.
+2. Sino intentamos cerrar la operacion con el menor beneficio posible.
+
+CASO SHORT:
+1. intentamos cerrar la operacion con el mayor beneficio posible.
+2. Sino intentamos cerrar la operacion con el menor beneficio posible.

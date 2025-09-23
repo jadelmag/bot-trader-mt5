@@ -71,6 +71,8 @@ class Simulation:
         self.ma_slow = None
         self.atr = None # Añadir para ATR
 
+        self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
+
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
         mapping = {
@@ -255,7 +257,8 @@ class Simulation:
                             symbol=self.symbol,
                             volume=volume,
                             sl_pips=sl_pips,
-                            tp_pips=tp_pips
+                            tp_pips=tp_pips,
+                            strategy_name=f"candle {pattern_name}"
                         )
                         return # Salir después de abrir la operación
                 else:
@@ -298,7 +301,8 @@ class Simulation:
                         symbol=self.symbol,
                         volume=volume,
                         sl_pips=sl_pips,
-                        tp_pips=sl_pips * rr_ratio
+                        tp_pips=sl_pips * rr_ratio,
+                        strategy_name=f"forex {strategy_name}"
                     )
                     return # Salir después de la primera operación exitosa
 
@@ -465,7 +469,7 @@ class Simulation:
             return volume
 
         except Exception as e:
-            self._log(f"[SIM-ERROR] Error al calcular el volumen: {e}", 'error')
+            self._log(f"[SIM-ERROR] Error al calcular el volumen: {str(e)}", 'error')
             return 0.0
 
     def _check_for_closing_signals(self, ma_signal, candle_signal):
@@ -486,7 +490,7 @@ class Simulation:
                 self._log(f"[SIM] Señal contraria detectada. Cerrando posición SHORT #{position.ticket}.", 'warn')
                 self.close_trade(position.ticket, position.volume, 'short')
 
-    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0):
+    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
         """
         Opens a new trade by sending an order to MetaTrader 5.
         """
@@ -518,7 +522,7 @@ class Simulation:
             "tp": tp,
             "deviation": 20,
             "magic": 234000,
-            "comment": "Sent by Bot-Trader-MT5",
+            "comment": strategy_name, # Guardar el nombre de la estrategia en el comentario
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
@@ -529,10 +533,26 @@ class Simulation:
             self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}", 'error')
         else:
             money_risked = self._calculate_money_risk(volume, sl_pips)
-            self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots). Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
+            if strategy_name:
+                self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots) con estrategia '{strategy_name}'. Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
+            else:
+                self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots). Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
             self.trades_in_current_candle += 1
 
         return result
+
+    def _calculate_money_risk(self, volume, sl_pips):
+        """Calcula el riesgo monetario aproximado de una operación."""
+        try:
+            symbol_info = mt5.symbol_info(self.symbol)
+            if not symbol_info:
+                return 0.0
+            
+            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
+            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            return loss_per_lot * volume
+        except Exception:
+            return 0.0
 
     def update_trades(self, current_prices: dict):
         """
@@ -589,34 +609,29 @@ class Simulation:
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}", 'error')
         else:
-            # El resultado de order_send no tiene 'profit'. Hay que consultar el historial del deal.
+            # --- Lógica de reintento para obtener el P/L del historial ---
             deal_ticket = result.deal
-            deals = mt5.history_deals_get(ticket=deal_ticket)
+            deals = None
+            for i in range(3): # Intentar hasta 3 veces
+                deals = mt5.history_deals_get(ticket=deal_ticket)
+                if deals and len(deals) > 0:
+                    break # Salir del bucle si se encontraron los detalles
+                time.sleep(0.2) # Esperar 200ms antes de reintentar
+
+            # Obtener el comentario de la posición original para el log
+            strategy_name_from_pos = position_info.comment
+
             if deals and len(deals) > 0:
                 profit = deals[0].profit
-                if self.queue:
-                    self.queue.put(("trade_closed", {'profit': profit}))
+                log_msg_base = f"[SIM] Operación {trade_type.upper()} [{strategy_name_from_pos}] cerrada ({volume:.2f} lots). Ticket: {position_ticket}."
                 if profit >= 0:
-                    self._log(f"[SIM] Posición {position_ticket} cerrada. Beneficio: {profit:.2f} $", 'success')
+                    self._log(f"{log_msg_base} Beneficio: {profit:.2f} $", 'success')
                 else:
-                    self._log(f"[SIM] Posición {position_ticket} cerrada. Pérdida: {profit:.2f} $", 'error')
+                    self._log(f"{log_msg_base} Pérdida: {profit:.2f} $", 'error')
             else:
-                self._log(f"[SIM] Posición {position_ticket} cerrada, pero no se pudo obtener el P/L del historial.", 'warn')
+                self._log(f"[SIM] Posición {position_ticket} [{strategy_name_from_pos}] cerrada, pero no se pudo obtener el P/L del historial tras varios intentos.", 'warn')
 
         return result
-
-    def _calculate_money_risk(self, volume, sl_pips):
-        """Calcula el riesgo monetario aproximado de una operación."""
-        try:
-            symbol_info = mt5.symbol_info(self.symbol)
-            if not symbol_info:
-                return 0.0
-            
-            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-            return loss_per_lot * volume
-        except Exception:
-            return 0.0
 
     def get_account_summary(self):
         """

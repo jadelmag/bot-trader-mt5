@@ -1,4 +1,6 @@
 import time
+from datetime import datetime, timedelta
+import pandas as pd
 
 try:
     import MetaTrader5 as mt5
@@ -31,92 +33,183 @@ class CustomStrategies:
         return None
 
     @staticmethod
-    def run_pico_y_pala(simulation_instance, symbol: str, volume: float, logger=None):
+    def run_pico_y_pala(simulation_instance, symbol: str, volume: float, logger=None, threshold_pips: float = 1.0):
         """
-        Estrategia de scalping de alta frecuencia "Pico y Pala".
-        Recibe la instancia de la simulación activa para interactuar con ella.
+        Estrategia de scalping modificada basada en ticks.
+        1. Esperar a que se forme una vela nueva y obtener el precio de cierre
+        2. Esperar 10 ticks y contar cuántos son mayores/menores al precio de referencia
+        3. Abrir operación según el resultado
         """
+
+        # --- Comprobación de operación existente ---
+        open_positions = mt5.positions_get(symbol=symbol)
+        if open_positions:
+            for pos in open_positions:
+                if pos.comment == "custom Pico y Pala":
+                    if logger: logger.log("[PICO Y PALA] Ya existe una operación de esta estrategia. No se abrirá una nueva.")
+                    return
+
         if not mt5:
             if logger:
                 logger.error("[PICO Y PALA] MT5 no está disponible.")
             return
 
-        # --- Fase 1: Determinar la dirección (10 segundos) ---
-        if logger: logger.log("[PICO Y PALA] Fase 1: Analizando momentum durante 20 segundos...")
+        # --- Fase 1: Esperar vela nueva y obtener precio de cierre ---
+        if logger: logger.log("[PICO Y PALA] Esperando nueva vela M1...")
         
-        ups = 0
-        downs = 0
-        
-        # Inicializar last_price con el precio actual antes de empezar el bucle
-        initial_tick = mt5.symbol_info_tick(symbol)
-        if not initial_tick:
-            if logger: logger.error("[PICO Y PALA] No se pudo obtener el tick inicial.")
+        # Obtener la última vela completa
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, 1)
+        if rates is None or len(rates) == 0:
+            if logger: logger.error("[PICO Y PALA] No se pudieron obtener datos de velas M1.")
             return
-        last_price = initial_tick.last
-
-        start_time = time.time()
-
-        while time.time() - start_time < 20:
-            tick = mt5.symbol_info_tick(symbol)
-            if tick and tick.last != last_price:
-                if tick.last > last_price:
-                    ups += 1
-                else:
-                    downs += 1
-                # Actualizar siempre el precio para la siguiente comparación
-                last_price = tick.last
-            time.sleep(0.1) # Pequeña pausa para no saturar la CPU
-
-        direction = 'long' if ups > downs else 'short'
-        if logger: logger.log(f"[PICO Y PALA] Dirección determinada: {direction.upper()} (Ups: {ups}, Downs: {downs})")
-
-        # --- Fase 2: Abrir y gestionar la operación (20 segundos) ---
-        # Ya no se crea una instancia de Simulation, se usa la que se pasa como argumento
         
-        # Añadir una pequeña pausa para dar tiempo al servidor a prepararse
-        time.sleep(1)
+        initial_close_price = rates[0]['close']
+        if logger: logger.log(f"[PICO Y PALA] Precio de cierre de referencia: {initial_close_price}")
 
-        # Abrir la operación sin TP y con un SL de emergencia amplio
-        result = simulation_instance.open_trade(trade_type=direction, symbol=symbol, volume=volume, sl_pips=50, tp_pips=0)
+        # --- Fase 2: Recopilar 10 ticks y comparar con el precio de referencia ---
+        if logger: logger.log("[PICO Y PALA] Recopilando 10 ticks...")
+        
+        ticks_data = []
+        tick_count = 0
+        max_ticks = 10
+        
+        while tick_count < max_ticks:
+            current_tick = mt5.symbol_info_tick(symbol)
+            if current_tick and current_tick.time > rates[0].time:  # Solo ticks después de la vela de referencia
+                ticks_data.append(current_tick.last)
+                tick_count += 1
+                if logger: logger.log(f"[PICO Y PALA] Tick {tick_count}/{max_ticks}: {current_tick.last}")
+            
+            time.sleep(0.1)  # Pequeña pausa para evitar sobrecarga
+
+        # --- Fase 3: Calcular ticks mayores/menores al precio de referencia ---
+        ticks_above = sum(1 for tick_price in ticks_data if tick_price > initial_close_price)
+        ticks_below = sum(1 for tick_price in ticks_data if tick_price < initial_close_price)
+        
+        if logger: logger.log(f"[PICO Y PALA] Resultados - Ticks arriba: {ticks_above}, Ticks abajo: {ticks_below}")
+
+        # --- Fase 4: Determinar dirección de la operación ---
+        if ticks_above > ticks_below:
+            direction = 'long'
+            if logger: logger.log(f"[PICO Y PALA] Señal LONG (más ticks arriba: {ticks_above} vs {ticks_below})")
+        elif ticks_below > ticks_above:
+            direction = 'short'
+            if logger: logger.log(f"[PICO Y PALA] Señal SHORT (más ticks abajo: {ticks_below} vs {ticks_above})")
+        else:
+            if logger: logger.warn("[PICO Y PALA] Empate en ticks. No se opera.")
+            return
+
+        # --- Fase 5: Abrir operación ---
+        result = simulation_instance.open_trade(
+            trade_type=direction, 
+            symbol=symbol, 
+            volume=volume, 
+            sl_pips=50, 
+            tp_pips=0,
+            strategy_name="custom Pico y Pala"
+        )
+        
         if not result or result.retcode != mt5.TRADE_RETCODE_DONE:
             if logger: logger.error("[PICO Y PALA] No se pudo abrir la operación.")
             return
 
         position_ticket = result.order
-        if logger: logger.log(f"[PICO Y PALA] Fase 2: Operación {direction.upper()} abierta (Ticket: {position_ticket}). Gestionando durante 20 segundos...")
+        if logger: logger.log(f"[PICO Y PALA] Operación {direction.upper()} abierta (Ticket: {position_ticket}). Gestionando...")
 
-        start_time_manage = time.time()
-        peak_price = 0
-        trough_price = float('inf')
+        # --- Fase 6: Gestión de la operación ---
+        if direction == 'long':
+            manage_long_position(simulation_instance, position_ticket, volume, initial_close_price, logger)
+        else:
+            manage_short_position(simulation_instance, position_ticket, volume, initial_close_price, logger)
+
+    @staticmethod
+    def manage_long_position(simulation_instance, position_ticket: int, volume: float, reference_price: float, logger=None):
+        """
+        Gestiona operación LONG:
+        1. Intentar cerrar con mayor beneficio posible
+        2. Sino, cerrar con menor beneficio posible
+            """
+        if logger: logger.log("[PICO Y PALA LONG] Iniciando gestión LONG...")
         
-        while time.time() - start_time_manage < 20:
-            tick = mt5.symbol_info_tick(symbol)
-            if not tick: 
-                time.sleep(0.1)
+        max_profit_price = reference_price
+        min_profit_price = reference_price
+        ticks_without_improvement = 0
+        max_ticks_without_improvement = 5
+        
+        while True:
+            current_tick = mt5.symbol_info_tick(simulation_instance.symbol)
+            if not current_tick:
                 continue
-
-            current_price = tick.last
             
-            if direction == 'long':
-                # Actualizar el precio máximo alcanzado
-                if current_price > peak_price: peak_price = current_price
-                # Si el precio, tras caer, vuelve al pico, cerramos (objetivo principal)
-                if current_price < peak_price and current_price >= peak_price * 0.9999: # Cerca del pico
-                    if logger: logger.log(f"[PICO Y PALA] Objetivo LONG alcanzado. Cerrando cerca del pico {peak_price}.")
-                    simulation_instance.close_trade(position_ticket, volume, 'long')
-                    return
+            current_price = current_tick.last
             
-            elif direction == 'short':
-                # Actualizar el precio mínimo alcanzado
-                if current_price < trough_price: trough_price = current_price
-                # Si el precio, tras subir, vuelve al mínimo, cerramos (objetivo principal)
-                if current_price > trough_price and current_price <= trough_price * 1.0001: # Cerca del mínimo
-                    if logger: logger.log(f"[PICO Y PALA] Objetivo SHORT alcanzado. Cerrando cerca del mínimo {trough_price}.")
-                    simulation_instance.close_trade(position_ticket, volume, 'short')
-                    return
+            # Actualizar máximo beneficio
+            if current_price > max_profit_price:
+                max_profit_price = current_price
+                ticks_without_improvement = 0
+                if logger: logger.log(f"[PICO Y PALA LONG] Nuevo máximo: {max_profit_price}")
+            else:
+                ticks_without_improvement += 1
+            
+            # Estrategia 1: Cerrar con mayor beneficio posible
+            # Si el precio baja un 30% desde el máximo alcanzado, cerramos
+            drawdown_from_peak = ((max_profit_price - current_price) / max_profit_price) * 10000  # en pips aproximados
+            
+            if drawdown_from_peak >= 3.0:  # 3 pips de drawdown desde el pico
+                if logger: logger.log(f"[PICO Y PALA LONG] Cerrando en máximo beneficio. Drawdown: {drawdown_from_peak:.2f} pips")
+                simulation_instance.close_trade(position_ticket, volume, 'long')
+                return
+            
+            # Estrategia 2: Cierre por tiempo/condición secundaria
+            if ticks_without_improvement >= max_ticks_without_improvement:
+                if logger: logger.log(f"[PICO Y PALA LONG] Cerrando por falta de mejora ({ticks_without_improvement} ticks)")
+                simulation_instance.close_trade(position_ticket, volume, 'long')
+                return
+            
+            time.sleep(0.5)  # Esperar medio segundo entre comprobaciones
 
-            time.sleep(0.1)
-
-        # Si el tiempo se agota, cerramos la operación forzosamente
-        if logger: logger.log("[PICO Y PALA] Tiempo de gestión agotado. Forzando cierre.")
-        simulation_instance.close_trade(position_ticket, volume, direction)
+    @staticmethod
+    def manage_short_position(simulation_instance, position_ticket: int, volume: float, reference_price: float, logger=None):
+        """
+        Gestiona operación SHORT:
+        1. Intentar cerrar con mayor beneficio posible
+        2. Sino, cerrar con menor beneficio posible
+        """
+        if logger: logger.log("[PICO Y PALA SHORT] Iniciando gestión SHORT...")
+        
+        max_profit_price = reference_price  # Para short, el mejor precio es el más bajo
+        min_profit_price = reference_price
+        ticks_without_improvement = 0
+        max_ticks_without_improvement = 5
+        
+        while True:
+            current_tick = mt5.symbol_info_tick(simulation_instance.symbol)
+            if not current_tick:
+                continue
+            
+            current_price = current_tick.last
+            
+            # Actualizar máximo beneficio (para short, precio más bajo es mejor)
+            if current_price < max_profit_price:
+                max_profit_price = current_price
+                ticks_without_improvement = 0
+                if logger: logger.log(f"[PICO Y PALA SHORT] Nuevo mínimo: {max_profit_price}")
+            else:
+                ticks_without_improvement += 1
+            
+            # Estrategia 1: Cerrar con mayor beneficio posible
+            # Si el precio sube un 30% desde el mínimo alcanzado, cerramos
+            drawdown_from_peak = ((current_price - max_profit_price) / max_profit_price) * 10000  # en pips aproximados
+            
+            if drawdown_from_peak >= 3.0:  # 3 pips de drawdown desde el pico
+                if logger: logger.log(f"[PICO Y PALA SHORT] Cerrando en máximo beneficio. Drawdown: {drawdown_from_peak:.2f} pips")
+                simulation_instance.close_trade(position_ticket, volume, 'short')
+                return
+            
+            # Estrategia 2: Cierre por tiempo/condición secundaria
+            if ticks_without_improvement >= max_ticks_without_improvement:
+                if logger: logger.log(f"[PICO Y PALA SHORT] Cerrando por falta de mejora ({ticks_without_improvement} ticks)")
+                simulation_instance.close_trade(position_ticket, volume, 'short')
+                return
+            
+            time.sleep(0.5)  # Esperar medio segundo entre comprobaciones
