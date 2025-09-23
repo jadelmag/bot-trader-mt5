@@ -46,17 +46,24 @@ class CustomStrategies:
         
         ups = 0
         downs = 0
-        last_price = 0
+        
+        # Inicializar last_price con el precio actual antes de empezar el bucle
+        initial_tick = mt5.symbol_info_tick(symbol)
+        if not initial_tick:
+            if logger: logger.error("[PICO Y PALA] No se pudo obtener el tick inicial.")
+            return
+        last_price = initial_tick.last
+
         start_time = time.time()
 
         while time.time() - start_time < 20:
             tick = mt5.symbol_info_tick(symbol)
             if tick and tick.last != last_price:
-                if last_price != 0:
-                    if tick.last > last_price:
-                        ups += 1
-                    else:
-                        downs += 1
+                if tick.last > last_price:
+                    ups += 1
+                else:
+                    downs += 1
+                # Actualizar siempre el precio para la siguiente comparación
                 last_price = tick.last
             time.sleep(0.1) # Pequeña pausa para no saturar la CPU
 

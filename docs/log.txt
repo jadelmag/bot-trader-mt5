@@ -1,0 +1,8 @@
+[22:48:37] Simulación iniciada para EURUSD con un balance de 100000.00 $.
+[22:49:05] [SIM] Nueva vela M1 formada a las 2025-09-22 23:49:00. Contador de trades reseteado.
+[22:49:05] [SIM-DEBUG] Volumen calculado para Pico y Pala: 2.3600 lots
+[22:49:05] [SIM] Lanzando estrategia personalizada 'run_pico_y_pala' en un nuevo hilo.
+[22:49:05] [PICO Y PALA] Fase 1: Analizando momentum durante 20 segundos...
+[22:49:25] [PICO Y PALA] Dirección determinada: SHORT (Ups: 0, Downs: 0)
+[22:49:26] [SIM-ERROR] order_send falló, retcode=10030
+[22:49:26] [PICO Y PALA] No se pudo abrir la operación.

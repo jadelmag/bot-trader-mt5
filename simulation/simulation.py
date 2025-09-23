@@ -4,6 +4,7 @@ import sys
 import os
 import json
 import threading
+from forex.forex_list import ForexStrategies
 
 # --- MT5 Integration ---
 try:
@@ -68,6 +69,7 @@ class Simulation:
         self.current_candle = None
         self.ma_fast = None
         self.ma_slow = None
+        self.atr = None # Añadir para ATR
 
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
@@ -131,6 +133,7 @@ class Simulation:
                 else:
                     self.candles_df = pd.concat([self.candles_df, new_row], ignore_index=True)
                 # A new candle has been confirmed, run analysis
+                self._calculate_indicators()
                 self._analyze_market_and_execute_strategy()
 
             # Start a new candle
@@ -153,6 +156,27 @@ class Simulation:
 
         # Update floating P/L for open trades based on the latest price
         self.update_trades({self.symbol: price})
+
+    def _calculate_indicators(self):
+        """Calcula los indicadores técnicos necesarios para las estrategias."""
+        if self.candles_df.empty:
+            return
+
+        # --- ATR (Average True Range) ---
+        # Se necesita para el cálculo dinámico de SL/TP en estrategias de velas
+        try:
+            high_low = self.candles_df['high'] - self.candles_df['low']
+            high_close = (self.candles_df['high'] - self.candles_df['close'].shift()).abs()
+            low_close = (self.candles_df['low'] - self.candles_df['close'].shift()).abs()
+            tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+            # Usamos una media móvil simple para el ATR para simplicidad en tiempo real
+            self.atr = tr.rolling(window=14).mean().iloc[-1]
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] ATR calculado: {self.atr:.5f}")
+        except Exception as e:
+            self.atr = None # Resetear si hay un error
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] No se pudo calcular el ATR: {e}", 'warn')
 
     def _analyze_market_and_execute_strategy(self):
         """
@@ -181,7 +205,7 @@ class Simulation:
 
         # --- 2. Obtener señales de mercado ---
         ma_signal = self._get_ma_signal(analysis_df)
-        candle_signal = self._get_candle_signal(analysis_df)
+        candle_signal, pattern_name = self._get_candle_signal(analysis_df)
 
         # --- 3. Lógica de Cierre de Operaciones ---
         self._check_for_closing_signals(ma_signal, candle_signal)
@@ -197,42 +221,81 @@ class Simulation:
         open_positions = mt5.positions_get(symbol=self.symbol)
         if open_positions is None:
             open_positions = []
-        
+
+        # --- 1. Calcular Slots Disponibles --- 
+        # Usamos una lógica unificada de slots, ya que MT5 no distingue la fuente de la operación
         active_slots = len(open_positions)
-        max_slots = self.strategies_config.get('slots', {}).get('forex', 1)
+        max_forex_slots = self.strategies_config.get('slots', {}).get('forex', 1)
+        max_candle_slots = self.strategies_config.get('slots', {}).get('candle', 1)
+        total_max_slots = max_forex_slots + max_candle_slots
 
-        if active_slots >= max_slots:
+        if active_slots >= total_max_slots:
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] Slots ocupados ({active_slots}/{total_max_slots}). No se abrirán nuevas operaciones.")
             return
 
-        forex_params = self._get_active_forex_params()
-        current_price = self.candles_df.iloc[-1]['close']
+        # --- 2. Analizar Estrategias de Velas (Tienen Prioridad) ---
+        candle_strategies = self.strategies_config.get('candle_strategies', {})
+        selected_candle_patterns = {name: cfg for name, cfg in candle_strategies.items() if cfg.get('selected')}
 
-        sl_pips = forex_params.get('stop_loss_pips', 20.0)
-        risk_multiplier = forex_params.get('percent_ratio', 1.0)
-        volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
+        if selected_candle_patterns:
+            candle_signal, pattern_name = self._get_candle_signal(self.candles_df)
+            if candle_signal in ['long', 'short']:
+                self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Intentando abrir operación.")
+                
+                # Cargar configuración específica para este patrón
+                pattern_config = self._load_candle_pattern_config(pattern_name)
+                sl_pips, tp_pips = self._get_sl_tp_for_candle_pattern(pattern_config)
 
-        if volume <= 0:
-            return
+                if sl_pips > 0:
+                    volume = self._calculate_volume(sl_pips=sl_pips)
+                    if volume > 0:
+                        self.open_trade(
+                            trade_type=candle_signal,
+                            symbol=self.symbol,
+                            volume=volume,
+                            sl_pips=sl_pips,
+                            tp_pips=tp_pips
+                        )
+                        return # Salir después de abrir la operación
+                else:
+                    self._log(f"[SIM-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
 
-        if ma_signal == 'long' and candle_signal == 'long':
-            self._log(f"[SIM] Open LONG signal confirmed at {current_price}")
-            self.open_trade(
-                trade_type='long', 
-                symbol=self.symbol, 
-                volume=volume,
-                sl_pips=sl_pips,
-                tp_pips=sl_pips * forex_params.get('rr_ratio', 2.0)
-            )
+        # --- 3. Analizar Estrategias de Forex (Si no hubo señal de vela) ---
+        forex_strategies = self.strategies_config.get('forex_strategies', {})
+        selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
         
-        elif ma_signal == 'short' and candle_signal == 'short':
-            self._log(f"[SIM] Open SHORT signal confirmed at {current_price}")
-            self.open_trade(
-                trade_type='short', 
-                symbol=self.symbol, 
-                volume=volume,
-                sl_pips=sl_pips,
-                tp_pips=sl_pips * forex_params.get('rr_ratio', 2.0)
-            )
+        if not selected_forex_strategies:
+            return
+
+        # Iterar sobre cada estrategia de Forex seleccionada y evaluarla
+        df_copy = self.candles_df.copy()
+
+        for strategy_name, params in selected_forex_strategies.items():
+            strategy_func = getattr(ForexStrategies, strategy_name, None)
+            if not strategy_func:
+                continue
+
+            # Llamar a la función de la estrategia directamente
+            trade_type = strategy_func(df_copy)
+
+            if trade_type in ['long', 'short']:
+                sl_pips = params.get('stop_loss_pips', 20.0)
+                rr_ratio = params.get('rr_ratio', 2.0)
+                risk_multiplier = params.get('percent_ratio', 1.0)
+
+                volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
+
+                if volume > 0:
+                    self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Abriendo operación.")
+                    self.open_trade(
+                        trade_type=trade_type,
+                        symbol=self.symbol,
+                        volume=volume,
+                        sl_pips=sl_pips,
+                        tp_pips=sl_pips * rr_ratio
+                    )
+                    return # Salir después de la primera operación exitosa
 
     def _execute_custom_strategies(self):
         """Maneja la lógica de ejecución para estrategias personalizadas."""
@@ -289,9 +352,6 @@ class Simulation:
     def _get_candle_signal(self, df):
         """Analyzes the last candle for patterns selected in the strategy config."""
         candle_strategies = self.strategies_config.get('candle_strategies', {})
-        if not candle_strategies:
-            return 'neutral'
-
         selected_patterns = [
             name.replace('is_', '') 
             for name, config in candle_strategies.items() 
@@ -299,7 +359,7 @@ class Simulation:
         ]
 
         if not selected_patterns:
-            return 'neutral'
+            return 'neutral', None
 
         detector = CandleDetector(df)
         last_candle_index = len(df) - 1
@@ -311,8 +371,8 @@ class Simulation:
                 if signal in ['long', 'short']:
                     if self.debug_mode:
                         self._log(f"[SIM-DEBUG] Señal de Patrón de Vela detectada: {pattern_name} -> {signal}")
-                    return signal # Return the first signal found
-        return 'neutral'
+                    return signal, pattern_name # Devolver también el nombre del patrón
+        return 'neutral', None
 
     def _get_active_forex_params(self):
         """Encuentra la primera estrategia de forex activa y devuelve sus parámetros."""
@@ -325,6 +385,41 @@ class Simulation:
                     'stop_loss_pips': config.get('stop_loss_pips', 20.0)
                 }
         return {'percent_ratio': 1.0, 'rr_ratio': 2.0, 'stop_loss_pips': 20.0}
+
+    def _load_candle_pattern_config(self, pattern_name):
+        """Carga la configuración JSON para un patrón de vela específico."""
+        config_filename = f"{pattern_name.replace('is_', '')}.json"
+        config_path = os.path.join(PROJECT_ROOT, "strategies", config_filename)
+        
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                self._log(f"[SIM-WARN] Error al cargar config para '{pattern_name}': {e}. Usando valores por defecto.", 'warn')
+        return {}
+
+    def _get_sl_tp_for_candle_pattern(self, config):
+        """Calcula SL y TP en pips para una estrategia de vela, usando ATR si está disponible."""
+        use_atr = config.get('use_atr_for_sl_tp', False)
+        point = mt5.symbol_info(self.symbol).point
+
+        if use_atr and self.atr is not None and self.atr > 0:
+            # --- Lógica basada en ATR ---
+            atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
+            atr_tp_multiplier = config.get('atr_tp_multiplier', 2.0)
+            
+            sl_pips = (self.atr * atr_sl_multiplier) / point
+            tp_pips = (self.atr * atr_tp_multiplier) / point
+            self._log(f"[SIM-DEBUG] SL/TP calculado con ATR: SL={sl_pips:.1f} pips, TP={tp_pips:.1f} pips")
+            return sl_pips, tp_pips
+        else:
+            # --- Lógica basada en Pips Fijos (Fallback) ---
+            sl_pips = config.get('fixed_sl_pips', 30.0)
+            tp_pips = config.get('fixed_tp_pips', 60.0)
+            if use_atr: # Si se quería usar ATR pero no se pudo
+                self._log("[SIM-WARN] No se pudo usar ATR para SL/TP. Usando pips fijos como fallback.", 'warn')
+            return sl_pips, tp_pips
 
     def _calculate_volume(self, sl_pips: float, risk_multiplier: float = 1.0):
         """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
@@ -420,7 +515,7 @@ class Simulation:
             "magic": 234000,
             "comment": "Sent by Bot-Trader-MT5",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
@@ -481,7 +576,7 @@ class Simulation:
             "magic": 234000,
             "comment": "Closed by Bot-Trader-MT5",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
