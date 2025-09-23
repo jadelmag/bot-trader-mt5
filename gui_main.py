@@ -748,7 +748,7 @@ class App:
                 self.graphic._stop_live_updates()
 
             # Cambiar texto del menú y habilitar herramientas
-            self.simulation_menu.entryconfig("Detener actualización", label="Reanudar actualización")
+            self.simulation_menu.entryconfig("Pausar", label="Reanudar")
             self.analysis_tools_btn.state(["!disabled"])
             self.analysis_tools_btn.update_idletasks()
             self._log_success("Actualizaciones pausadas. Herramientas de análisis habilitadas.")
@@ -762,7 +762,7 @@ class App:
             self._log_info("Reanudando actualizaciones en tiempo real...")
 
             # Cambiar texto del menú y deshabilitar herramientas
-            self.simulation_menu.entryconfig("Reanudar actualización", label="Detener actualización")
+            self.simulation_menu.entryconfig("Reanudar", label="Pausar")
             self.analysis_tools_btn.state(["disabled"])
             self.analysis_tools_btn.update_idletasks()
 

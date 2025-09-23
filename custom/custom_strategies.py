@@ -74,13 +74,23 @@ class CustomStrategies:
         max_ticks = 10
         
         while tick_count < max_ticks:
-            current_tick = mt5.symbol_info_tick(symbol)
-            if current_tick and current_tick.time > rates[0].time:  # Solo ticks después de la vela de referencia
-                ticks_data.append(current_tick.last)
+            # --- MODIFICACIÓN PARA SIMULACIÓN ---
+            # En lugar de un tick real, usamos el precio de cierre actual de la simulación.
+            # Esto asume que el precio no cambia drásticamente en los pocos segundos que dura la recogida de ticks.
+            if simulation_instance.current_candle:
+                current_price = simulation_instance.current_candle['close']
+                current_time_unix = int(time.time())
+            else:
+                # Fallback por si la vela actual no está disponible
+                time.sleep(0.1)
+                continue
+
+            if current_time_unix > rates[0]['time']:
+                ticks_data.append(current_price)
                 tick_count += 1
-                if logger: logger.log(f"[PICO Y PALA] Tick {tick_count}/{max_ticks}: {current_tick.last}")
+                if logger: logger.log(f"[PICO Y PALA] Tick simulado {tick_count}/{max_ticks}: {current_price}")
             
-            time.sleep(0.1)  # Pequeña pausa para evitar sobrecarga
+            time.sleep(0.1)  # Pequeña pausa para simular el paso del tiempo
 
         # --- Fase 3: Calcular ticks mayores/menores al precio de referencia ---
         ticks_above = sum(1 for tick_price in ticks_data if tick_price > initial_close_price)
