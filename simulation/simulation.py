@@ -3,6 +3,9 @@ import pandas as pd
 import sys
 import os
 import json
+import threading
+import datetime
+from forex.forex_list import ForexStrategies
 
 # --- MT5 Integration ---
 try:
@@ -22,6 +25,7 @@ CONFIG_PATH = os.path.join(PROJECT_ROOT, "strategies", "config.json")
 
 from backtesting.detect_candles import CandleDetector
 from backtesting.apply_strategies import StrategyAnalyzer
+from custom.custom_strategies import CustomStrategies
 
 
 class Simulation:
@@ -66,6 +70,13 @@ class Simulation:
         self.current_candle = None
         self.ma_fast = None
         self.ma_slow = None
+        self.atr = None # Añadir para ATR
+
+        self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
+    
+        # --- Inicializar MetaTrader 5 ---
+        self._init_mt5()
+        self._fetch_initial_candles() # Cargar velas históricas
 
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
@@ -94,6 +105,59 @@ class Simulation:
         }
         log_methods.get(level, self.logger.log)(message)
 
+    def _init_mt5(self):
+        """Inicializa la conexión con MetaTrader 5 si no está activa."""
+        if not mt5:
+            self._log("[SIM-ERROR] La librería MetaTrader5 no está disponible.", 'error')
+            return False
+
+        if not mt5.initialize():
+            self._log(f"[SIM-ERROR] No se pudo inicializar MT5: {mt5.last_error()}", 'error')
+            return False
+
+        info = mt5.account_info()
+        if info:
+            self._log(f"[SIM] Conectado a MetaTrader 5. Cuenta: {info.login}, Balance: {info.balance}", 'success')
+        else:
+            self._log("[SIM-WARN] MT5 inicializado pero no se pudo obtener información de la cuenta.", 'warn')
+        return True
+
+    def _fetch_initial_candles(self):
+        """Carga un historial inicial de velas para asegurar que los indicadores se puedan calcular."""
+        if not mt5 or not mt5.terminal_info():
+            self._log("[SIM-WARN] No se pueden cargar velas históricas, MT5 no está conectado.", 'warn')
+            return
+
+        timeframe_map = {
+            "M1": mt5.TIMEFRAME_M1, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15,
+            "M30": mt5.TIMEFRAME_M30, "H1": mt5.TIMEFRAME_H1, "H4": mt5.TIMEFRAME_H4,
+            "D1": mt5.TIMEFRAME_D1
+        }
+        mt5_timeframe = timeframe_map.get(self.timeframe)
+        if mt5_timeframe is None:
+            self._log(f"[SIM-ERROR] Timeframe '{self.timeframe}' no es válido para la carga de historial.", 'error')
+            return
+
+        try:
+            # Cargar las últimas 200 velas para tener datos suficientes para los indicadores
+            rates = mt5.copy_rates_from_pos(self.symbol, mt5_timeframe, 0, 200)
+            if rates is None or len(rates) == 0:
+                self._log(f"[SIM-WARN] No se pudieron obtener velas históricas para {self.symbol}: {mt5.last_error()}", 'warn')
+                return
+
+            df = pd.DataFrame(rates)
+            df['time'] = pd.to_datetime(df['time'], unit='s')
+            df = df[['time', 'open', 'high', 'low', 'close']]
+            
+            self.candles_df = df
+            self._log(f"[SIM] Cargadas {len(df)} velas históricas para {self.symbol} en {self.timeframe}.")
+
+            # Calcular indicadores iniciales
+            self._calculate_indicators()
+
+        except Exception as e:
+            self._log(f"[SIM-ERROR] Error al cargar las velas iniciales: {e}", 'error')
+
     def _load_general_config(self):
         """Carga la configuración general desde config.json."""
         if not os.path.exists(CONFIG_PATH):
@@ -113,7 +177,7 @@ class Simulation:
             return
 
         # Align timestamp to the start of the candle's timeframe interval
-        candle_start_time = timestamp.floor(self.timeframe_delta)
+        candle_start_time = pd.Timestamp(timestamp).floor(self.timeframe_delta)
 
         # --- New Candle Detection ---
         if self.current_candle is None or candle_start_time > self.current_candle['time']:
@@ -129,6 +193,7 @@ class Simulation:
                 else:
                     self.candles_df = pd.concat([self.candles_df, new_row], ignore_index=True)
                 # A new candle has been confirmed, run analysis
+                self._calculate_indicators()
                 self._analyze_market_and_execute_strategy()
 
             # Start a new candle
@@ -151,6 +216,28 @@ class Simulation:
 
         # Update floating P/L for open trades based on the latest price
         self.update_trades({self.symbol: price})
+
+    def _calculate_indicators(self):
+        """Calcula los indicadores técnicos necesarios para las estrategias."""
+        if self.candles_df.empty:
+            return
+
+        # --- ATR (Average True Range) ---
+        # Se necesita para el cálculo dinámico de SL/TP en estrategias de velas
+        try:
+            high_low = self.candles_df['high'] - self.candles_df['low']
+            high_close = (self.candles_df['high'] - self.candles_df['close'].shift()).abs()
+            low_close = (self.candles_df['low'] - self.candles_df['close'].shift()).abs()
+            tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+            # Usamos una media móvil simple para el ATR para simplicidad en tiempo real
+            atr_value = tr.rolling(window=14).mean().iloc[-1]
+            self.atr = atr_value if pd.notna(atr_value) else None
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] ATR calculado: {self.atr}") # <-- Línea corregida
+        except Exception as e:
+            self.atr = None # Resetear si hay un error
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] No se pudo calcular el ATR: {e}", 'warn')
 
     def _analyze_market_and_execute_strategy(self):
         """
@@ -179,50 +266,139 @@ class Simulation:
 
         # --- 2. Obtener señales de mercado ---
         ma_signal = self._get_ma_signal(analysis_df)
-        candle_signal = self._get_candle_signal(analysis_df)
+        candle_signal, pattern_name = self._get_candle_signal(analysis_df)
 
         # --- 3. Lógica de Cierre de Operaciones ---
         self._check_for_closing_signals(ma_signal, candle_signal)
 
-        # --- 4. Lógica de Apertura de Operaciones ---
+        # --- 4. Lógica de Apertura de Operaciones (Forex/Candle) ---
+        self._execute_forex_strategies(ma_signal, candle_signal)
+
+        # --- 5. Lógica de Apertura de Estrategias Personalizadas ---
+        self._execute_custom_strategies()
+
+    def _execute_forex_strategies(self, ma_signal, candle_signal):
+        """Maneja la lógica de apertura para estrategias Forex y de Velas estándar."""
         open_positions = mt5.positions_get(symbol=self.symbol)
         if open_positions is None:
             open_positions = []
+
+        # --- 1. Calcular Slots Disponibles --- 
+        # Usamos una lógica unificada de slots, ya que MT5 no distingue la fuente de la operación
+        active_slots = len(open_positions)
+        max_forex_slots = self.strategies_config.get('slots', {}).get('forex', 1)
+        max_candle_slots = self.strategies_config.get('slots', {}).get('candle', 1)
+        total_max_slots = max_forex_slots + max_candle_slots
+
+        if active_slots >= total_max_slots:
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] Slots ocupados ({active_slots}/{total_max_slots}). No se abrirán nuevas operaciones.")
+            return
+
+        # --- 2. Analizar Estrategias de Velas (Tienen Prioridad) ---
+        candle_strategies = self.strategies_config.get('candle_strategies', {})
+        selected_candle_patterns = {name: cfg for name, cfg in candle_strategies.items() if cfg.get('selected')}
+
+        if selected_candle_patterns:
+            candle_signal, pattern_name = self._get_candle_signal(self.candles_df)
+            if candle_signal in ['long', 'short']:
+                self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Intentando abrir operación.")
+                
+                # Cargar configuración específica para este patrón
+                pattern_config = self._load_candle_pattern_config(pattern_name)
+                sl_pips, tp_pips = self._get_sl_tp_for_candle_pattern(pattern_config)
+
+                if sl_pips > 0:
+                    volume = self._calculate_volume(sl_pips=sl_pips)
+                    if volume > 0:
+                        self.open_trade(
+                            trade_type=candle_signal,
+                            symbol=self.symbol,
+                            volume=volume,
+                            sl_pips=sl_pips,
+                            tp_pips=tp_pips,
+                            strategy_name=f"candle_{pattern_name}"
+                        )
+                        return # Salir después de abrir la operación
+                else:
+                    self._log(f"[SIM-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
+
+        # --- 3. Analizar Estrategias de Forex (Si no hubo señal de vela) ---
+        if len(open_positions) > 0:
+            if self.debug_mode:
+                self._log("[SIM-DEBUG] Ya hay una operación abierta. Omitiendo análisis de estrategias Forex.")
+            return
+
+        forex_strategies = self.strategies_config.get('forex_strategies', {})
+        selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
+        
+        if not selected_forex_strategies:
+            return
+
+        # Iterar sobre cada estrategia de Forex seleccionada y evaluarla
+        df_copy = self.candles_df.copy()
+
+        for strategy_name, params in selected_forex_strategies.items():
+            strategy_func = getattr(ForexStrategies, strategy_name, None)
+            if not strategy_func:
+                continue
+
+            # Llamar a la función de la estrategia directamente
+            trade_type = strategy_func(df_copy)
+
+            if trade_type in ['long', 'short']:
+                sl_pips = params.get('stop_loss_pips', 20.0)
+                rr_ratio = params.get('rr_ratio', 2.0)
+                risk_multiplier = params.get('percent_ratio', 1.0)
+
+                volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
+
+                if self.debug_mode:
+                    self._log(f"[SIM-DEBUG] Parámetros para Forex: SL Pips={sl_pips}, RR Ratio={rr_ratio}, Volumen Calculado={volume}")
+
+                if volume > 0:
+                    self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Abriendo operación.")
+                    self.open_trade(
+                        trade_type=trade_type,
+                        symbol=self.symbol,
+                        volume=volume,
+                        sl_pips=sl_pips,
+                        tp_pips=sl_pips * rr_ratio,
+                        strategy_name=f"forex_{strategy_name}"
+                    )
+                    return # Salir después de la primera operación exitosa
+
+    def _execute_custom_strategies(self):
+        """Maneja la lógica de ejecución para estrategias personalizadas."""
+        custom_strategies_config = self.strategies_config.get('custom_strategies', {})
+        if not custom_strategies_config:
+            return
+
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        if open_positions is None: open_positions = []
         
         active_slots = len(open_positions)
-        max_slots = self.strategies_config.get('slots', {}).get('forex', 1)
+        max_custom_slots = self.strategies_config.get('slots', {}).get('custom', 0)
 
-        if active_slots >= max_slots:
+        if active_slots >= max_custom_slots:
             return
 
-        forex_params = self._get_active_forex_params()
-        current_price = self.candles_df.iloc[-1]['close']
-
-        sl_pips = forex_params.get('stop_loss_pips', 20.0)
-        volume = self._calculate_volume(sl_pips)
-
-        if volume <= 0:
-            return
-
-        if ma_signal == 'long' and candle_signal == 'long':
-            self._log(f"[SIM] Open LONG signal confirmed at {current_price}")
-            self.open_trade(
-                trade_type='long', 
-                symbol=self.symbol, 
-                volume=volume,
-                sl_pips=sl_pips,
-                tp_pips=sl_pips * forex_params.get('rr_ratio', 2.0)
-            )
-        
-        elif ma_signal == 'short' and candle_signal == 'short':
-            self._log(f"[SIM] Open SHORT signal confirmed at {current_price}")
-            self.open_trade(
-                trade_type='short', 
-                symbol=self.symbol, 
-                volume=volume,
-                sl_pips=sl_pips,
-                tp_pips=sl_pips * forex_params.get('rr_ratio', 2.0)
-            )
+        for strategy_name, config in custom_strategies_config.items():
+            if config.get('selected'):
+                if strategy_name == 'run_pico_y_pala':
+                    # Para Pico y Pala, el volumen se calcula con un SL nocional para el riesgo
+                    # La estrategia en sí no usa SL para el cierre, pero lo necesitamos para el cálculo de riesgo.
+                    volume = self._calculate_volume(sl_pips=50.0) 
+                    self._log(f"[SIM-DEBUG] Volumen calculado para Pico y Pala: {volume:.4f} lots")
+                    if volume > 0:
+                        self._log(f"[SIM] Lanzando estrategia personalizada '{strategy_name}' en un nuevo hilo.")
+                        # Ejecutar en un hilo para no bloquear la simulación
+                        thread = threading.Thread(
+                            target=CustomStrategies.run_pico_y_pala, 
+                            args=(self, self.symbol, volume, self.logger)
+                        )
+                        thread.daemon = True # El hilo se cerrará si el programa principal termina
+                        thread.start()
 
     def _get_ma_signal(self, df):
         """Calculates moving averages and returns a 'long', 'short', or 'neutral' signal."""
@@ -232,18 +408,20 @@ class Simulation:
         fast_ma = df['close'].rolling(window=10).mean().iloc[-1]
         slow_ma = df['close'].rolling(window=50).mean().iloc[-1]
         
+        signal = 'neutral'
         if fast_ma > slow_ma:
-            return 'long'
+            signal = 'long'
         elif fast_ma < slow_ma:
-            return 'short'
-        return 'neutral'
+            signal = 'short'
+
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: {signal}")
+
+        return signal
 
     def _get_candle_signal(self, df):
         """Analyzes the last candle for patterns selected in the strategy config."""
         candle_strategies = self.strategies_config.get('candle_strategies', {})
-        if not candle_strategies:
-            return 'neutral'
-
         selected_patterns = [
             name.replace('is_', '') 
             for name, config in candle_strategies.items() 
@@ -251,7 +429,7 @@ class Simulation:
         ]
 
         if not selected_patterns:
-            return 'neutral'
+            return 'neutral', None
 
         detector = CandleDetector(df)
         last_candle_index = len(df) - 1
@@ -261,9 +439,10 @@ class Simulation:
             if detection_func:
                 signal = detection_func(df.to_dict('records'), last_candle_index)
                 if signal in ['long', 'short']:
-                    self._log(f"[SIM] Candle signal detected: {pattern_name} -> {signal}")
-                    return signal # Return the first signal found
-        return 'neutral'
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Señal de Patrón de Vela detectada: {pattern_name} -> {signal}")
+                    return signal, pattern_name # Devolver también el nombre del patrón
+        return 'neutral', None
 
     def _get_active_forex_params(self):
         """Encuentra la primera estrategia de forex activa y devuelve sus parámetros."""
@@ -277,7 +456,42 @@ class Simulation:
                 }
         return {'percent_ratio': 1.0, 'rr_ratio': 2.0, 'stop_loss_pips': 20.0}
 
-    def _calculate_volume(self, sl_pips: float):
+    def _load_candle_pattern_config(self, pattern_name):
+        """Carga la configuración JSON para un patrón de vela específico."""
+        config_filename = f"{pattern_name.replace('is_', '')}.json"
+        config_path = os.path.join(PROJECT_ROOT, "strategies", config_filename)
+        
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                self._log(f"[SIM-WARN] Error al cargar config para '{pattern_name}': {e}. Usando valores por defecto.", 'warn')
+        return {}
+
+    def _get_sl_tp_for_candle_pattern(self, config):
+        """Calcula SL y TP en pips para una estrategia de vela, usando ATR si está disponible."""
+        use_atr = config.get('use_atr_for_sl_tp', False)
+        point = mt5.symbol_info(self.symbol).point
+
+        if use_atr and self.atr is not None and self.atr > 0:
+            # --- Lógica basada en ATR ---
+            atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
+            atr_tp_multiplier = config.get('atr_tp_multiplier', 2.0)
+            
+            sl_pips = (self.atr * atr_sl_multiplier) / point
+            tp_pips = (self.atr * atr_tp_multiplier) / point
+            self._log(f"[SIM-DEBUG] SL/TP calculado con ATR: SL={sl_pips:.1f} pips, TP={tp_pips:.1f} pips")
+            return sl_pips, tp_pips
+        else:
+            # --- Lógica basada en Pips Fijos (Fallback) ---
+            sl_pips = config.get('fixed_sl_pips', 30.0)
+            tp_pips = config.get('fixed_tp_pips', 60.0)
+            if use_atr: # Si se quería usar ATR pero no se pudo
+                self._log("[SIM-WARN] No se pudo usar ATR para SL/TP. Usando pips fijos como fallback.", 'warn')
+            return sl_pips, tp_pips
+
+    def _calculate_volume(self, sl_pips: float, risk_multiplier: float = 1.0):
         """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
         if not mt5 or not mt5.terminal_info():
             return 0.0
@@ -291,15 +505,15 @@ class Simulation:
                 return 0.0
 
             equity = account_info.equity
-            risk_percent = self.general_config.get('risk_per_trade_percent', 1.0)
+            risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
+            risk_percent = float(risk_percent_str)
             
-            money_to_risk = equity * (risk_percent / 100.0)
+            final_risk_percent = risk_percent * risk_multiplier
 
-            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
+            money_to_risk = equity * (final_risk_percent / 100.0)
+
+            sl_in_points = sl_pips  # <-- LÍNEA CORREGIDA
             loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-
-            if loss_per_lot <= 0:
-                return 0.0
 
             volume = money_to_risk / loss_per_lot
 
@@ -316,7 +530,7 @@ class Simulation:
             return volume
 
         except Exception as e:
-            self._log(f"[SIM-ERROR] Error al calcular el volumen: {e}", 'error')
+            self._log(f"[SIM-ERROR] Error al calcular el volumen: {str(e)}", 'error')
             return 0.0
 
     def _check_for_closing_signals(self, ma_signal, candle_signal):
@@ -337,53 +551,91 @@ class Simulation:
                 self._log(f"[SIM] Señal contraria detectada. Cerrando posición SHORT #{position.ticket}.", 'warn')
                 self.close_trade(position.ticket, position.volume, 'short')
 
-    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0):
+    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
         """
-        Opens a new trade by sending an order to MetaTrader 5.
+        Abre una operación en MT5 asegurando la conexión antes de enviar la orden.
         """
-        if not mt5 or not mt5.terminal_info():
-            self._log("[SIM-ERROR] MT5 no está conectado. No se puede abrir la operación.", 'error')
+        if not self._init_mt5():
             return None
 
         order_type = mt5.ORDER_TYPE_BUY if trade_type == 'long' else mt5.ORDER_TYPE_SELL
         price = mt5.symbol_info_tick(symbol).ask if trade_type == 'long' else mt5.symbol_info_tick(symbol).bid
         point = mt5.symbol_info(symbol).point
+        digits = mt5.symbol_info(symbol).digits
 
-        sl = 0.0
-        tp = 0.0
-
+        # SL/TP
+        sl, tp = 0.0, 0.0
         if trade_type == 'long':
-            if sl_pips > 0: sl = price - sl_pips * point
-            if tp_pips > 0: tp = price + tp_pips * point
-        else: # short
-            if sl_pips > 0: sl = price + sl_pips * point
-            if tp_pips > 0: tp = price - tp_pips * point
+            if sl_pips > 0: sl = round(price - sl_pips * point, digits)
+            if tp_pips > 0: tp = round(price + tp_pips * point, digits)
+        else:
+            if sl_pips > 0: sl = round(price + sl_pips * point, digits)
+            if tp_pips > 0: tp = round(price - tp_pips * point, digits)
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
-            "volume": volume,
+            "volume": float(volume),
             "type": order_type,
             "price": price,
             "sl": sl,
             "tp": tp,
             "deviation": 20,
             "magic": 234000,
-            "comment": "Sent by Bot-Trader-MT5",
+            "comment": (strategy_name or "Bot-Simulation")[:20],
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Enviando request: {request}")
+
+        if result is None:
+            self._log(f"[SIM-ERROR] mt5.order_send devolvió None. last_error={mt5.last_error()}", 'error')
+            return None
+
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}", 'error')
+            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
         else:
-            money_risked = self._calculate_money_risk(volume, sl_pips)
-            self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots). Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
+            # --- Formateo del mensaje de log personalizado ---
+            strategy_type = "DESCONOCIDO"
+            strat_name_clean = strategy_name or ""
+            if strat_name_clean.startswith("forex_"):
+                strategy_type = "FOREX"
+                strat_name_clean = strat_name_clean.replace("forex_", "")
+            elif strat_name_clean.startswith("candle_"):
+                strategy_type = "CANDLE"
+                strat_name_clean = strat_name_clean.replace("candle_", "")
+            elif strat_name_clean.startswith("custom "):
+                strategy_type = "CUSTOM"
+                strat_name_clean = strat_name_clean.replace("custom ", "")
+            else:
+                strategy_type = "DESCONOCIDO"
+                strat_name_clean = "DESCONOCIDO"
+
+            log_message = (
+                f"[SIM] Señal de {strategy_type} '{strat_name_clean}' -> '{trade_type.upper()}': "
+                f"{price:.{digits}f} | {volume} | {sl} | {tp}"
+            )
+            self._log(log_message, 'success')
             self.trades_in_current_candle += 1
 
         return result
+
+    def _calculate_money_risk(self, volume, sl_pips):
+        """Calcula el riesgo monetario aproximado de una operación."""
+        try:
+            symbol_info = mt5.symbol_info(self.symbol)
+            if not symbol_info:
+                return 0.0
+            
+            sl_in_points = sl_pips
+            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            return loss_per_lot * volume
+        except Exception:
+            return 0.0
 
     def update_trades(self, current_prices: dict):
         """
@@ -403,63 +655,87 @@ class Simulation:
         self.equity = self.balance + total_floating_pl
         self.free_margin = self.equity - self.margin
 
-    def close_trade(self, position_ticket: int, volume: float, trade_type: str):
+    def close_trade(self, position_ticket: int, volume: float, trade_type: str, strategy_context: str = None):
         """
-        Closes an open position in MetaTrader 5.
+        Cierra una operación abierta en MT5 asegurando la conexión antes de enviar la orden.
         """
-        if not mt5 or not mt5.terminal_info():
-            self._log("[SIM-ERROR] MT5 no está conectado. No se puede cerrar la operación.", 'error')
+        if not self._init_mt5():
             return None
 
         position_info = mt5.positions_get(ticket=position_ticket)
         if not position_info:
-            self._log(f"[SIM-ERROR] No se encontró la posición con ticket {position_ticket}.", 'error')
+            self._log(f"[SIM] La posición con ticket {position_ticket} ya estaba cerrada o no existe.", 'info')
             return None
         position_info = position_info[0]
 
         symbol = position_info.symbol
         order_type = mt5.ORDER_TYPE_SELL if trade_type == 'long' else mt5.ORDER_TYPE_BUY
         price = mt5.symbol_info_tick(symbol).bid if trade_type == 'long' else mt5.symbol_info_tick(symbol).ask
+        comment = position_info.comment # Recuperar el comentario original
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
-            "volume": volume,
+            "volume": float(volume),
             "type": order_type,
             "position": position_ticket,
             "price": price,
             "deviation": 20,
             "magic": 234000,
-            "comment": "Closed by Bot-Trader-MT5",
+            "comment": (strategy_name or "Bot-Simulation")[:20],
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}", 'error')
-        else:
-            profit = result.profit
-            if profit >= 0:
-                self._log(f"[SIM] Posición {position_ticket} cerrada. Beneficio: {profit:.2f} $", 'success')
+        if result is None:
+            self._log(f"[SIM-ERROR] mt5.order_send devolvió None al cerrar. last_error={mt5.last_error()}", 'error')
+            return None
+
+        # Determinar el tipo de estrategia y nombre desde el comentario
+        strategy_type_name = "DESCONOCIDO"
+        comment = position_info.comment
+        if comment:
+            if "forex_" in comment:
+                parts = comment.split('_')
+                strategy_type = parts[0].upper()
+                strategy_name = '_'.join(parts[1:])
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+            elif "candle_" in comment:
+                parts = comment.split('_')
+                strategy_type = parts[0].upper()
+                strategy_name = '_'.join(parts[1:])
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+            elif "custom " in comment:
+                parts = comment.split(' ', 1)
+                strategy_type = parts[0].upper()
+                strategy_name = parts[1]
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
             else:
-                self._log(f"[SIM] Posición {position_ticket} cerrada. Pérdida: {profit:.2f} $", 'error')
+                strategy_type_name = "Señal de STRATEGY 'DESCONOCIDO'"
+
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            log_message = f"[SIM] {strategy_type_name} -> {trade_type.upper()}: Fallo al cerrar la operación (retcode={result.retcode})"
+            self._log(log_message, 'error')
+        else:
+            # Para obtener el beneficio, necesitaríamos consultar el historial de trades (deals).
+            # Por simplicidad, aquí solo confirmamos el cierre exitoso.
+            # El beneficio real se podría obtener buscando el 'deal' correspondiente al 'result.order'.
+            deal = mt5.history_deals_get(position=position_ticket)
+            profit = 0.0
+            if deal and len(deal) > 0:
+                # El último 'deal' de una posición cerrada suele ser el que tiene el beneficio.
+                profit = deal[-1].profit
+
+            log_message = f"[SIM] {strategy_type_name} -> '{trade_type.upper()}': {profit:+.2f}"
+            
+            if profit >= 0:
+                self._log(log_message, 'success') # Verde para ganancia o sin pérdida
+            else:
+                self._log(log_message, 'error') # Rojo para pérdida
 
         return result
-
-    def _calculate_money_risk(self, volume, sl_pips):
-        """Calcula el riesgo monetario aproximado de una operación."""
-        try:
-            symbol_info = mt5.symbol_info(self.symbol)
-            if not symbol_info:
-                return 0.0
-            
-            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-            return loss_per_lot * volume
-        except Exception:
-            return 0.0
 
     def get_account_summary(self):
         """

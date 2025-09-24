@@ -1,5 +1,4 @@
 
-def _live_update_once(self):
     if mt5 is None:
         return
     try:

@@ -158,6 +158,13 @@ class BodyGraphic(ttk.Frame):
             tight_layout=True
         )
 
+        # Añadir margen a la derecha del gráfico
+        current_xlim = self.ax.get_xlim()
+        range_width = current_xlim[1] - current_xlim[0]
+        # Añadimos un 15% de margen a la derecha, que es un buen compromiso visual
+        new_xlim_right = current_xlim[1] + (range_width * 0.15)
+        self.ax.set_xlim(current_xlim[0], new_xlim_right)
+
         period = 20
         if len(df) >= period:
             self.ma = df['Close'].rolling(window=period).mean()
@@ -204,7 +211,10 @@ class BodyGraphic(ttk.Frame):
             if not self.is_zoomed:
                 self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
 
-        # self._schedule_live_update() # Desactivamos la actualización en vivo por defecto
+    def start_live_updates(self, interval_ms: int = 50):
+        """Inicia el bucle de actualización en vivo con un intervalo específico."""
+        self._stop_live_updates() # Asegurarse de que no hay bucles duplicados
+        self._schedule_live_update(delay_ms=interval_ms)
 
     def update_simulation_chart(self, candle_data):
         """Procesa y dibuja los datos de una vela de la simulación."""
@@ -336,7 +346,7 @@ class BodyGraphic(ttk.Frame):
             except Exception:
                 pass
             self._after_job = None
-        self._after_job = self.after(delay_ms, self._live_update_once)
+        self._after_job = self.after(delay_ms, lambda: self._live_update_once(reschedule_delay=delay_ms))
 
     def _stop_live_updates(self):
         if self._after_job is not None:
@@ -346,13 +356,13 @@ class BodyGraphic(ttk.Frame):
                 pass
             self._after_job = None
 
-    def _live_update_once(self):
+    def _live_update_once(self, reschedule_delay: int = 1000):
         if mt5 is None:
             return
         try:
             tick = mt5.symbol_info_tick(self.symbol)
             if tick is None:
-                self._schedule_live_update()
+                self._schedule_live_update(reschedule_delay)
                 return
 
             # --- Lógica de detección de nueva vela ---
@@ -372,7 +382,7 @@ class BodyGraphic(ttk.Frame):
             if price is None or price == 0:
                 price = getattr(tick, 'bid', None)
             if price is None:
-                self._schedule_live_update()
+                self._schedule_live_update(reschedule_delay)
                 return
 
             # --- Feed the simulation instance ---
@@ -396,4 +406,4 @@ class BodyGraphic(ttk.Frame):
         except Exception:
             pass
         finally:
-            self._schedule_live_update()
+            self._schedule_live_update(reschedule_delay)

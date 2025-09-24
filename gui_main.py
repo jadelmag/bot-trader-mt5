@@ -18,11 +18,7 @@ if _project_root not in sys.path:
 
 try:
     from modals.loggin_modal import LoginModal
-    from modals.detect_all_candles_modal import DetectAllCandlesModal
-    from modals.detect_all_forex_modal import DetectAllForexModal
-    from modals.strategy_simulator_modal import StrategySimulatorModal
     from modals.simulation_strategies_modal import SimulationStrategiesModal
-    from modals.config_app_modal import ConfigAppModal
     from loggin.loggin import LoginMT5
     from loggin.audit_log import AuditLogger # Importar la clase
     from gui.body_graphic import BodyGraphic
@@ -33,6 +29,12 @@ try:
     from backtesting.report_generator import ReportGenerator
     from backtesting.indicators import add_all_indicators
     from simulation.simulation import Simulation
+    from main.header_builder import create_header
+    from main.body_builder import create_body
+    from main.preferences_manager import PreferencesManager
+    from main.login_handler import LoginHandler
+    from main.action_handler import ActionHandler
+    from main.analysis_handler import AnalysisHandler
 except Exception as e:
     # Imprimir el error de importación para facilitar la depuración
     print(f"Error al importar módulos: {e}")
@@ -75,14 +77,14 @@ class App:
         self.queue = queue.Queue()
         self.thread = None
 
-        # Create required directories
-        self._create_required_dirs()
-
         # State for status label
         self.status_var = tk.StringVar(value="Estado: -----")
 
         # State for debug mode
         self.debug_mode_var = tk.BooleanVar(value=False)
+
+        # State for aggressive mode
+        self.modo_agresivo_activo = tk.BooleanVar(value=False)
 
         # State for chart selectors (defaults)
         self.symbol_var = tk.StringVar(value="EURUSD")
@@ -96,8 +98,22 @@ class App:
         self.profit_var = tk.StringVar(value="----")
         self.loss_var = tk.StringVar(value="----")
 
-        # Load persisted preferences (overrides defaults)
-        self._load_prefs()
+        # --- Acumuladores para P/L realizado ---
+        self.total_profit_realized = 0.0
+        self.total_loss_realized = 0.0
+
+        # Preferences Manager
+        self.prefs_manager = PreferencesManager(self)
+        self.prefs_manager.load()
+
+        # Login Handler
+        self.login_handler = LoginHandler(self)
+
+        # Action Handler
+        self.action_handler = ActionHandler(self)
+
+        # Analysis Handler
+        self.analysis_handler = AnalysisHandler(self)
 
         # Track whether chart has been started/shown
         self.chart_started = False
@@ -105,6 +121,7 @@ class App:
         # Instance for the simulation
         self.simulation_instance = None
         self.simulation_running = False
+        self.updates_paused = False # Estado para el toggle de actualizaciones
 
         # Configure a simple layout: header on top, main body below
         self.root.columnconfigure(0, weight=1)
@@ -128,145 +145,10 @@ class App:
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
     def _build_header(self):
-        header = ttk.Frame(self.root, padding=(16, 10))
-        header.grid(row=0, column=0, sticky="ew")
-
-        # --- Botón de Herramientas de Análisis (Columna 0) ---
-        self.analysis_tools_btn = ttk.Menubutton(header, text="Herramientas")
-        self.analysis_tools_btn.grid(row=0, column=0, padx=(6, 12))
-        tools_menu = tk.Menu(self.analysis_tools_btn, tearoff=False)
-        self.analysis_tools_btn["menu"] = tools_menu
-        tools_menu.add_command(label="Aplicar estrategias", command=self._apply_strategies_action)
-        tools_menu.add_command(label="Detectar patrones de velas", command=self._open_detect_candle_modal)
-        tools_menu.add_command(label="Detectar Estrategias forex", command=self._open_detect_forex_modal)
-        tools_menu.add_separator()
-        tools_menu.add_command(label="Iniciar Backtesting", command=self._run_perfect_backtesting)
-        tools_menu.add_command(label="Finalizar backtesting", command=self._finalize_backtesting_action)
-        tools_menu.add_command(label="Limpiar log", command=self._clear_log_action)
-        self.analysis_tools_btn.state(["disabled"])
-
-        # --- Menú de Opciones (Columna 1) ---
-        self.options_btn = ttk.Menubutton(header, text="Opciones")
-        self.options_btn.grid(row=0, column=1, padx=(10, 0))
-        options_menu = tk.Menu(self.options_btn, tearoff=False)
-        self.options_btn["menu"] = options_menu
-        options_menu.add_checkbutton(label="Modo Debug", variable=self.debug_mode_var)
-        options_menu.add_separator()
-        options_menu.add_command(label="Configuración", command=self._open_config_modal)
-        tools_menu.add_separator()
-        options_menu.add_command(label="Guardar Gráfica", command=self._save_chart_to_csv)
-
-        # --- Botón de Simulación (Columna 2) ---
-        self.simulation_btn = ttk.Menubutton(header, text="Simulación")
-        self.simulation_btn.grid(row=0, column=2, padx=(10, 0)) # 10px de separación a la izquierda
-        simulation_menu = tk.Menu(self.simulation_btn, tearoff=False)
-        self.simulation_btn["menu"] = simulation_menu
-        simulation_menu.add_command(label="Iniciar simulación", command=self._iniciar_simulacion_action)
-        simulation_menu.add_separator()
-        simulation_menu.add_command(label="Detener simulación", command=self._detener_simulacion_action)
-        self.simulation_btn.state(["disabled"])
-
-        # --- Labels for Simulation Results (Columna 3) ---
-        results_frame = ttk.Frame(header, padding=(10, 0))
-        results_frame.grid(row=0, column=3, sticky="ew", padx=(10, 0))
-
-        # Use a grid layout within the frame for better alignment
-        results_frame.columnconfigure(1, minsize=80) # Space for values
-        results_frame.columnconfigure(3, minsize=80)
-        results_frame.columnconfigure(5, minsize=80)
-
-        ttk.Label(results_frame, text="Dinero inicial:").grid(row=0, column=0, sticky="w", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.initial_balance_var, foreground="black").grid(row=0, column=1, sticky="w")
-
-        ttk.Label(results_frame, text="Equity:").grid(row=0, column=2, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.equity_var, foreground="#007ACC").grid(row=0, column=3, sticky="w")
-
-        ttk.Label(results_frame, text="Beneficios:").grid(row=0, column=4, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.profit_var, foreground="green").grid(row=0, column=5, sticky="w")
-
-        ttk.Label(results_frame, text="Margen:").grid(row=1, column=0, sticky="w", padx=(0, 5))
-        ttk.Label(results_frame, textvariable=self.margin_var, foreground="#E59400").grid(row=1, column=1, sticky="w")
-
-        ttk.Label(results_frame, text="Margen Libre:").grid(row=1, column=2, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.free_margin_var, foreground="#33A133").grid(row=1, column=3, sticky="w")
-
-        ttk.Label(results_frame, text="Pérdidas:").grid(row=1, column=4, sticky="w", padx=(10, 5))
-        ttk.Label(results_frame, textvariable=self.loss_var, foreground="red").grid(row=1, column=5, sticky="w")
-
-        # Spacer para empujar los controles a la derecha (Columna 4)
-        spacer = ttk.Frame(header)
-        spacer.grid(row=0, column=4, sticky="ew")
-
-        # El resto de los controles (desde la Columna 5 en adelante)
-        ttk.Label(header, text="Símbolo:").grid(row=0, column=5, padx=(0, 6))
-        self.symbol_cb = ttk.Combobox(header, textvariable=self.symbol_var, width=12, state="disabled")
-        self.symbol_cb["values"] = ("EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "BTCUSD")
-        self.symbol_cb.grid(row=0, column=6)
-        self.symbol_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
-
-        ttk.Label(header, text="Timeframe:").grid(row=0, column=7, padx=(12, 6))
-        self.timeframe_cb = ttk.Combobox(header, textvariable=self.timeframe_var, width=8, state="disabled")
-        self.timeframe_cb["values"] = ("M1", "M5", "M15", "M30", "H1", "H4", "D1")
-        self.timeframe_cb.grid(row=0, column=8)
-        self.timeframe_cb.bind("<<ComboboxSelected>>", self._apply_chart_selection)
-
-        self.start_btn = ttk.Button(header, text="Iniciar MT5", command=self._start_mt5_chart)
-        self.start_btn.grid(row=0, column=9, padx=(12, 12))
-        self.start_btn.state(["disabled"])
-
-        self.status_label = ttk.Label(header, textvariable=self.status_var, foreground="black")
-        self.status_label.grid(row=0, column=10, padx=(12, 12))
-
-        conectar_btn = ttk.Button(header, text="Conectar", command=self._open_login_modal)
-        conectar_btn.grid(row=0, column=11, padx=(6, 12))
-
-        # Configuración de las columnas del header
-        header.columnconfigure(4, weight=1)  # El spacer (col 4) se expande
+        self.header = create_header(self)
 
     def _build_body(self):
-        container = ttk.Frame(self.root, padding=(12, 10))
-        container.grid(row=1, column=0, sticky="nsew")
-        container.columnconfigure(0, weight=1)
-        # Split rows: top chart (3x), bottom logger (1x)
-        container.rowconfigure(0, weight=3)
-        container.rowconfigure(1, weight=1)
-
-        # Bottom: Logger (create it first)
-        if BodyLogger is None:
-            self.logger = ttk.Frame(container)
-            ttk.Label(self.logger, text="Logger no disponible").pack(expand=True, fill="both")
-        else:
-            self.logger = BodyLogger(container)
-        self.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
-
-        # Top: Graphic placeholder (shown until Start MT5 is pressed)
-        self.graphic_placeholder = ttk.Frame(container)
-        self.graphic_placeholder.grid(row=0, column=0, sticky="nsew")
-        placeholder_lbl = ttk.Label(
-            self.graphic_placeholder,
-            text="Pulsa 'Iniciar MT5' para cargar el gráfico",
-            anchor="center",
-            font=("Segoe UI", 12),
-            foreground="#555",
-        )
-        placeholder_lbl.pack(expand=True, fill="both")
-
-        # Prepare the graphic but do not show it yet
-        if BodyGraphic is None:
-            self.graphic = ttk.Frame(container)
-            ttk.Label(self.graphic, text="Gráfico no disponible").pack(expand=True, fill="both")
-        else:
-            # Pass the logger and app instance to the graphic
-            self.graphic = BodyGraphic(
-                container, 
-                app=self, # Pass the whole app instance
-                symbol=self.symbol_var.get(), 
-                timeframe=self.timeframe_var.get(), 
-                bars=300,
-                logger=self.logger,  # Pass logger instance
-                debug_mode_var=self.debug_mode_var # Pass debug mode variable
-            )
-        # Do not grid the graphic now; it will be gridded when started
+        self.body = create_body(self)
 
     def process_queue(self):
         """Procesa mensajes de la cola de hilos en el hilo principal de la GUI."""
@@ -285,15 +167,17 @@ class App:
                     self._set_status(data['text'], data['color'])
                 elif message_type == "login_success":
                     self._handle_login_success()
+                elif message_type == "login_failure":
+                    self._handle_login_failure(data)
                 elif message_type == "chart_data_ready":
                     self.graphic.render_chart_data(data)
-                    # Habilitar botones una vez que el gráfico está listo
+                    # Habilitar solo el botón de simulación una vez que el gráfico está listo
                     try:
-                        self.analysis_tools_btn.state(["!disabled"])
                         self.simulation_btn.state(["!disabled"])
                     except tk.TclError:
-                        self.analysis_tools_btn.configure(state="normal")
                         self.simulation_btn.configure(state="normal")
+                    # Iniciar actualizaciones en vivo después de renderizar el gráfico
+                    self.graphic.start_live_updates()
                 elif message_type == "analysis_results":
                     self._display_analysis_summary(data['lines'], data['profit'], data['loss'])
                 elif message_type == "strategy_results":
@@ -301,6 +185,8 @@ class App:
                 elif message_type == "realtime_candle_update":
                     if hasattr(self, 'graphic') and self.simulation_running:
                         self.graphic.update_simulation_chart(data)
+                elif message_type == "trade_closed":
+                    self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
 
         except queue.Empty:
@@ -355,79 +241,67 @@ class App:
             self._log_error(f"No se pudo iniciar el gráfico: {e})")
 
     def _open_login_modal(self):
-        global LoginModal, LoginMT5
-        if LoginModal is None:
-            try:
-                from modals.loggin_modal import LoginModal as LM
-                LoginModal = LM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal: {e}")
-                return
-
-        # Open modal and wait for result
-        modal = LoginModal(self.root)
-        self.root.wait_window(modal)
-        result = getattr(modal, "result", None)
-
-        if result:
-            self._attempt_login(result)
+        self.login_handler.open_login_modal()
 
     def _attempt_login(self, creds: dict):
+        """Inicia el proceso de login en un hilo secundario para no bloquear la GUI."""
+        self._set_status("Conectando...", "orange")
+        self._log_info(f"Intentando conexión a MT5 con cuenta {creds.get('cuenta')}...")
+
+        # Crear y empezar el hilo para la tarea de login
+        self.thread = threading.Thread(target=self._login_worker, args=(creds,), daemon=True)
+        self.thread.start()
+
+    def _login_worker(self, creds: dict):
+        """Esta función se ejecuta en un hilo separado para manejar la conexión bloqueante."""
         global LoginMT5
         if LoginMT5 is None:
             try:
                 from loggin.loggin import LoginMT5 as LM5
                 LoginMT5 = LM5
             except Exception as e:
-                messagebox.showerror("Error", f"No se pudo importar LoginMT5: {e}")
-                self._set_status("Error", "red")
+                self.queue.put(("login_failure", {"error": f"No se pudo importar LoginMT5: {e}"}))
                 return
 
         try:
-            # Pasar credenciales directamente al constructor
             client = LoginMT5(
                 account=creds.get("cuenta"),
                 password=creds.get("contraseña"),
                 server=creds.get("servidor")
             )
 
-            self._log_info(f"Intentando conexión a MT5 con cuenta {client.account} en {client.server}…")
             connected = client.login()
             if connected:
-                self._set_status("Conectado", "green")
-                self._log_success("Conexión establecida correctamente.")
-                # Try to populate symbol list from MT5
-                self._populate_symbols()
-                # Enable Start MT5 button and symbol/timeframe selectors
-                try:
-                    self.start_btn.state(["!disabled"])  
-                except Exception:
-                    self.start_btn.configure(state="normal")
-                try:
-                    self.symbol_cb.state(["!disabled"])  
-                except Exception:
-                    self.symbol_cb.configure(state="normal")
-                try:
-                    self.timeframe_cb.state(["!disabled"])  
-                except Exception:
-                    self.timeframe_cb.configure(state="normal")
-                # If chart already started, refresh it
-                try:
-                    if self.chart_started and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
-                        self.graphic.load_symbol(
-                            symbol=self.symbol_var.get(), 
-                            timeframe=self.timeframe_var.get(),
-                            queue=self.queue
-                        )
-                except Exception:
-                    pass
+                self.queue.put(("login_success", None))
             else:
-                self._set_status("Error", "red")
-                self._log_error("No se pudo establecer conexión (login() devolvió False).")
+                self.queue.put(("login_failure", {"error": "Credenciales incorrectas o terminal no disponible."}))
+
         except Exception as e:
-            messagebox.showerror("Error de conexión", f"No se pudo conectar a MT5: {e}")
-            self._set_status("Error", "red")
-            self._log_error(f"Excepción durante la conexión: {e}")
+            self.queue.put(("login_failure", {"error": f"Excepción durante la conexión: {e}"}))
+
+    def _handle_login_success(self):
+        """Maneja las actualizaciones de la GUI después de un login exitoso."""
+        self._set_status("Conectado", "green")
+        self._log_success("Conexión establecida correctamente.")
+        self._populate_symbols()
+        try:
+            self.start_btn.state(["!disabled"])
+            self.symbol_cb.state(["!disabled"])
+            self.timeframe_cb.state(["!disabled"])
+        except tk.TclError:
+            self.start_btn.configure(state="normal")
+            self.symbol_cb.configure(state="normal")
+            self.timeframe_cb.configure(state="normal")
+
+        if self.chart_started:
+            self._apply_chart_selection()
+
+    def _handle_login_failure(self, data):
+        """Maneja las actualizaciones de la GUI después de un login fallido."""
+        error_msg = data.get('error', 'Error desconocido')
+        messagebox.showerror("Error de conexión", f"No se pudo conectar a MT5: {error_msg}")
+        self._set_status("Error de conexión", "red")
+        self._log_error(f"Fallo en la conexión: {error_msg}")
 
     def _populate_symbols(self):
         if mt5 is None:
@@ -484,7 +358,7 @@ class App:
         symbol = self.symbol_var.get().strip()
         timeframe = self.timeframe_var.get().strip()
         # Save selection to preferences
-        self._save_prefs(symbol=symbol, timeframe=timeframe)
+        self.prefs_manager.save(symbol=symbol, timeframe=timeframe)
         # Only update the chart if it has been started
         if self.chart_started and symbol and hasattr(self, "graphic") and hasattr(self.graphic, "load_symbol"):
             self._log_info(f"Cambiando gráfico a {symbol} ({timeframe})")
@@ -558,154 +432,21 @@ class App:
             self.logger.error(msg)
 
     def _open_detect_candle_modal(self):
-        global DetectAllCandlesModal
-        if DetectAllCandlesModal is None:
-            try:
-                from modals.detect_all_candles_modal import DetectAllCandlesModal as DACM
-                DetectAllCandlesModal = DACM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de detección de velas: {e}")
-                return
-        
-        modal = DetectAllCandlesModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Iniciando detección para los siguientes patrones: {', '.join(modal.result)}")
-            self._run_pattern_analysis(modal.result)
-        else:
-            self._log_info("Detección de patrones cancelada.")
+        self.action_handler.open_detect_candle_modal()
 
     def _open_detect_forex_modal(self):
-        """Abre el modal para seleccionar y analizar estrategias de Forex."""
-        global DetectAllForexModal
-        if DetectAllForexModal is None:
-            try:
-                from modals.detect_all_forex_modal import DetectAllForexModal as DAFM
-                DetectAllForexModal = DAFM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de estrategias: {e}")
-                return
-        
-        modal = DetectAllForexModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Iniciando análisis para las siguientes estrategias: {', '.join(modal.result)}")
-            self._run_strategy_analysis(modal.result)
-        else:
-            self._log_info("Análisis de estrategias cancelado.")
+        self.action_handler.open_detect_forex_modal()
 
     def _apply_strategies_action(self):
-        """Abre el modal para configurar y aplicar estrategias."""
-        # Primero, verificar si el gráfico tiene datos válidos
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
-            messagebox.showerror("Error de Simulación", "No hay datos de gráfico cargados. Por favor, inicie el gráfico con 'Iniciar MT5' antes de configurar una simulación.")
-            return
-
-        global StrategySimulatorModal
-        if StrategySimulatorModal is None:
-            try:
-                from modals.strategy_simulator_modal import StrategySimulatorModal as SSM
-                StrategySimulatorModal = SSM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el simulador de estrategias: {e}")
-                return
-        
-        # Pasar el DataFrame de velas y el logger al modal
-        modal = StrategySimulatorModal(self.root, candles_df=self.graphic.candles_df, logger=self.logger)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info(f"Configuración de simulación guardada y simulación ejecutada.")
-            # La lógica de ejecución ya está dentro del modal y el simulador
-        else:
-            self._log_info("Simulación de estrategias cancelada.")
+        self.action_handler.apply_strategies_action()
 
     def _run_pattern_analysis(self, selected_patterns):
         """Ejecuta el análisis de patrones y muestra los resultados."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
-            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
-            return
-        
-        if CandleDetector is None:
-            self._log_error("El detector de velas no está disponible.")
-            return
-
-        try:
-            # Crear una copia del DataFrame para el análisis para no afectar al original
-            candles_df_copy = self.graphic.candles_df.copy()
-            # Asegurar que las columnas estén en minúsculas para el detector
-            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
-            detector = CandleDetector(candles_df_copy)
-            stats = detector.analyze_patterns(selected_patterns)
-
-            # Formatear los resultados usando el método de la clase
-            summary_lines, total_profit, total_loss = CandleDetector.format_analysis_summary(stats)
-            self._display_analysis_summary(summary_lines, total_profit, total_loss)
-
-        except Exception as e:
-            self._log_error(f"Ocurrió un error durante el análisis de patrones: {e}")
+        self.analysis_handler.run_pattern_analysis(selected_patterns)
 
     def _run_strategy_analysis(self, selected_strategies):
         """Ejecuta el análisis de estrategias y muestra los resultados."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None:
-            self._log_error("El gráfico no está iniciado o no hay datos de velas disponibles.")
-            return
-        
-        if StrategyAnalyzer is None:
-            self._log_error("El analizador de estrategias no está disponible.")
-            return
-
-        try:
-            # Crear una copia para no modificar el DataFrame original
-            candles_df_copy = self.graphic.candles_df.copy()
-            candles_df_copy.columns = [col.lower() for col in candles_df_copy.columns]
-            
-            # Añadir todos los indicadores necesarios
-            candles_df_copy = add_all_indicators(candles_df_copy)
-
-            analyzer = StrategyAnalyzer(candles_df_copy)
-            stats = analyzer.analyze_strategies(selected_strategies)
-
-            self._display_strategy_summary(stats)
-
-        except Exception as e:
-            self._log_error(f"Ocurrió un error durante el análisis de estrategias: {e}")
-
-    def _display_analysis_summary(self, lines, total_profit, total_loss):
-        """Muestra el resumen del análisis de patrones en el logger."""
-        for line in lines:
-            # El primer título y los totales tienen colores, el resto es info normal
-            if "RESUMEN" in line or "="*15 in line:
-                self._log_success(line)
-            else:
-                self._log_info(line)
-        
-        self.logger.log_summary(
-            f"GANANCIA TOTAL (TODOS LOS PATRONES): {total_profit:.2f} $",
-            f"PÉRDIDA TOTAL (TODOS LOS PATRONES): {total_loss:.2f} $"
-        )
-        self._log_success("="*75 + "\n")
-
-    def _display_strategy_summary(self, stats):
-        """Formatea y muestra el resumen del análisis de estrategias en el logger."""
-        if StrategyAnalyzer is None:
-            return
-
-        summary_lines, total_profit, total_loss = StrategyAnalyzer.format_strategy_summary(stats)
-
-        for line in summary_lines:
-            if "RESUMEN" in line or "="*15 in line:
-                self._log_success(line)
-            else:
-                self._log_info(line)
-
-        self.logger.log_summary(
-            f"BENEFICIO TOTAL (TODAS LAS ESTRATEGIAS): {total_profit:.2f} $",
-            f"PÉRDIDA TOTAL (TODAS LAS ESTRATEGIAS): {total_loss:.2f} $"
-        )
-        self._log_success("="*75 + "\n")
+        self.analysis_handler.run_strategy_analysis(selected_strategies)
 
     def _add_technical_indicators(self, df):
         """Añade una serie de indicadores técnicos al DataFrame."""
@@ -847,6 +588,40 @@ class App:
             self._log_info("Dibujos del gráfico eliminados.")
         self._clear_log_action()
 
+    def _modo_agresivo_action(self):
+        """Activa/desactiva el modo agresivo."""
+        # El estado se gestiona a través del Checkbutton y self.modo_agresivo_activo.
+        # Esta función se llama cuando el usuario hace clic, así que solo registramos el estado.
+        is_active = self.modo_agresivo_activo.get()
+        if is_active:
+            self._log_custom("Modo Agresivo ACTIVADO. Las próximas simulaciones usarán parámetros de mayor riesgo.", "#FF8C00")
+        else:
+            self._log_info("Modo Agresivo DESACTIVADO. Las próximas simulaciones usarán la configuración estándar.")
+
+    def _aplicar_config_agresiva(self, config):
+        """Modifica la configuración de estrategias para hacerla más agresiva."""
+        self._log_info("Aplicando transformación de configuración a MODO AGRESIVO.")
+        new_config = config.copy() # Trabajar sobre una copia
+
+        # --- Modificar Riesgo Global ---
+        # Aumentar el riesgo por operación a un 0.5% del equity
+        if 'general' not in new_config:
+            new_config['general'] = {}
+        new_config['general']['risk_per_trade_percent'] = "0.5"
+        self._log_custom("  - Riesgo por operación aumentado a 0.5%", "#FF8C00")
+
+        # --- Modificar Estrategias Forex ---
+        if 'forex_strategies' in new_config:
+            for strategy_name, params in new_config['forex_strategies'].items():
+                if params.get('selected'):
+                    # Aumentar la relación riesgo/beneficio (más Take Profit)
+                    params['rr_ratio'] = 3.0
+                    # Reducir el Stop Loss para mejorar la relación R/R
+                    params['stop_loss_pips'] = 15.0
+                    self._log_custom(f"  - Estrategia Forex '{strategy_name}': RR Ratio -> 3.0, SL Pips -> 15.0", "#FF8C00")
+
+        return new_config
+
     def _iniciar_simulacion_action(self):
         """Abre el modal de configuración y, si se acepta, inicia la simulación."""
         if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df.empty:
@@ -864,6 +639,12 @@ class App:
         # Solo iniciar la simulación si el usuario guardó la configuración en el modal
         if hasattr(modal, 'result') and modal.result:
             strategies_config = modal.result
+
+            # --- APLICAR MODO AGRESIVO SI ESTÁ ACTIVO ---
+            if self.modo_agresivo_activo.get():
+                strategies_config = self._aplicar_config_agresiva(strategies_config)
+            # --------------------------------------------
+
             self._log_success("Configuración de estrategias aceptada. Iniciando simulación...")
 
             try:
@@ -883,6 +664,9 @@ class App:
                 self.simulation_running = True
                 self._start_simulation_loop()
                 self._log_success(f"Simulación iniciada para {self.symbol_var.get()} con un balance de {initial_balance:.2f} $.")
+
+                # Habilitar el control del modo agresivo, sin activarlo por defecto
+                self.simulation_menu.entryconfig("Modo agresivo", state="normal")
 
             except Exception as e:
                 self._log_error(f"Error al iniciar la simulación: {e}")
@@ -906,6 +690,12 @@ class App:
             # Indicar a la simulación que se detenga
             self.simulation_running = False
 
+            # Deshabilitar y resetear el modo agresivo
+            self.simulation_menu.entryconfig("Modo agresivo", state="disabled")
+            if self.modo_agresivo_activo.get():
+                self.modo_agresivo_activo.set(False)
+                self._log_info("Modo Agresivo DESACTIVADO al detener la simulación.")
+
             # Reactivar las actualizaciones en vivo del gráfico
             if hasattr(self, 'graphic'):
                 self.graphic.refresh() # Recargamos el gráfico para mostrar el estado final real
@@ -914,7 +704,7 @@ class App:
             try:
                 open_positions = mt5.positions_get(symbol=self.simulation_instance.symbol)
                 if open_positions and len(open_positions) > 0:
-                    self._log(f"Cerrando {len(open_positions)} posiciones abiertas para {self.simulation_instance.symbol}...")
+                    self._log_info(f"Cerrando {len(open_positions)} posiciones abiertas para {self.simulation_instance.symbol}...")
                     for pos in open_positions:
                         trade_type = 'long' if pos.type == mt5.POSITION_TYPE_BUY else 'short'
                         self.simulation_instance.close_trade(pos.ticket, pos.volume, trade_type)
@@ -924,16 +714,64 @@ class App:
                 self._log_error(f"Error al intentar cerrar posiciones abiertas: {e}")
 
             # Guardar el log de la sesión
-            self._save_session_log()
+            self.action_handler.save_session_log()
 
             self.simulation_instance = None
             self._log_success("Simulación detenida y operaciones cerradas.")
 
             # Actualizar y limpiar las etiquetas de la UI
-            self._update_final_labels()
+            try:
+                account_info = mt5.account_info()
+                if account_info:
+                    self.initial_balance_var.set(f"{account_info.balance:.2f} $")
+                    self.equity_var.set(f"{account_info.equity:.2f} $")
+                    self.margin_var.set("0.00 $")
+                    self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
+            finally:
+                # Limpiar labels de profit/loss ya que no hay simulación activa
+                self.profit_var.set("----")
+                self.loss_var.set("----")
 
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
+
+    def _detener_actualizacion_action(self):
+        """Pausa o reanuda las actualizaciones del gráfico y del balance."""
+        if not self.updates_paused:
+            # --- PAUSAR ACTUALIZACIONES ---
+            self.updates_paused = True
+            self._log_info("Pausando actualizaciones en tiempo real...")
+
+            # Detener bucles de actualización
+            self.simulation_running = False
+            if hasattr(self, 'graphic'):
+                self.graphic._stop_live_updates()
+
+            # Cambiar texto del menú y habilitar herramientas
+            self.simulation_menu.entryconfig("Pausar", label="Reanudar")
+            self.analysis_tools_btn.state(["!disabled"])
+            self.analysis_tools_btn.update_idletasks()
+            self._log_success("Actualizaciones pausadas. Herramientas de análisis habilitadas.")
+
+            # Si hay una simulación, detenerla
+            if self.simulation_instance:
+                self._detener_simulacion_action()
+        else:
+            # --- REANUDAR ACTUALIZACIONES ---
+            self.updates_paused = False
+            self._log_info("Reanudando actualizaciones en tiempo real...")
+
+            # Cambiar texto del menú y deshabilitar herramientas
+            self.simulation_menu.entryconfig("Reanudar", label="Pausar")
+            self.analysis_tools_btn.state(["disabled"])
+            self.analysis_tools_btn.update_idletasks()
+
+            # Refrescar el gráfico para obtener los datos perdidos
+            if hasattr(self, 'graphic'):
+                self.graphic.refresh()
+                # Las actualizaciones en vivo se reinician automáticamente después de 'refresh' a través de la cola
+
+            self._log_success("Actualizaciones reanudadas. Herramientas de análisis deshabilitadas.")
 
     def _start_simulation_loop(self):
         """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""
@@ -978,178 +816,28 @@ class App:
         if self.simulation_running:
             self.root.after(1000, self._start_simulation_loop)
 
-    def _save_session_log(self):
-        """Guarda el contenido actual del logger en un archivo."""
-        if not hasattr(self.logger, 'get_content'):
-            self._log_error("El logger no soporta la exportación de contenido.")
-            return
-
-        try:
-            log_content = self.logger.get_content()
-            if not log_content.strip():
-                return # No guardar si el log está vacío
-
-            log_dir = os.path.join(_project_root, 'simulation_logs')
-            os.makedirs(log_dir, exist_ok=True)
-
-            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            filename = f"simulacion_{timestamp}.log"
-            
-            save_path = os.path.join(log_dir, filename)
-
-            with open(save_path, 'w', encoding='utf-8') as f:
-                f.write(log_content)
-            
-            self._log_success(f"Log de la sesión guardado en: {save_path}")
-
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
-
-    def _update_final_labels(self):
-        """Actualiza los labels una última vez y luego los limpia."""
-        try:
-            account_info = mt5.account_info()
-            if account_info:
-                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
-                self.equity_var.set(f"{account_info.equity:.2f} $")
-                self.margin_var.set("0.00 $")
-                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
-        finally:
-            # Limpiar labels de profit/loss ya que no hay simulación activa
-            self.profit_var.set("----")
-            self.loss_var.set("----")
-
     def _clear_log_action(self):
         """Limpia el contenido del logger.""" 
-        if hasattr(self, 'logger') and hasattr(self.logger, 'clear'):
-            self.logger.clear()
-
-    def _save_session_log(self):
-        """Guarda el contenido actual del logger en un archivo."""
-        if not hasattr(self.logger, 'get_content'):
-            self._log_error("El logger no soporta la exportación de contenido.")
-            return
-
-        try:
-            log_content = self.logger.get_content()
-            if not log_content.strip():
-                return # No guardar si el log está vacío
-
-            log_dir = os.path.join(_project_root, 'simulation_logs')
-            os.makedirs(log_dir, exist_ok=True)
-
-            timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            filename = f"simulacion_{timestamp}.log"
-            
-            save_path = os.path.join(log_dir, filename)
-
-            with open(save_path, 'w', encoding='utf-8') as f:
-                f.write(log_content)
-            
-            self._log_success(f"Log de la sesión guardado en: {save_path}")
-
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el log de la sesión: {e}")
-
-    def _update_final_labels(self):
-        """Actualiza los labels una última vez y luego los limpia."""
-        try:
-            account_info = mt5.account_info()
-            if account_info:
-                self.initial_balance_var.set(f"{account_info.balance:.2f} $")
-                self.equity_var.set(f"{account_info.equity:.2f} $")
-                self.margin_var.set("0.00 $")
-                self.free_margin_var.set(f"{account_info.margin_free:.2f} $")
-        finally:
-            # Limpiar labels de profit/loss ya que no hay simulación activa
-            self.profit_var.set("----")
-            self.loss_var.set("----")
-
-    def _create_required_dirs(self):
-        """Crea los directorios necesarios para la aplicación si no existen."""
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        dirs_to_create = ["email", "audit"]
-        for dir_name in dirs_to_create:
-            try:
-                os.makedirs(os.path.join(base_path, dir_name), exist_ok=True)
-            except OSError as e:
-                # Log a warning but don't crash the app
-                self._log_error(f"No se pudo crear el directorio '{dir_name}': {e}")
-
-    def _open_config_modal(self):
-        """Abre el modal de configuración de la aplicación."""
-        global ConfigAppModal
-        if ConfigAppModal is None:
-            try:
-                from modals.config_app_modal import ConfigAppModal as CAM
-                ConfigAppModal = CAM
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo abrir el modal de configuración: {e}")
-                return
-        
-        modal = ConfigAppModal(self.root)
-        self.root.wait_window(modal)
-
-        if hasattr(modal, 'result') and modal.result:
-            self._log_info("Configuración guardada correctamente.")
-            # Recargar la configuración del logger de auditoría
-            AuditLogger()._load_config()
-            AuditLogger()._setup_log_file()
-        else:
-            self._log_info("La configuración no fue modificada.")
+        self.action_handler.clear_log()
 
     def _on_exit(self):
-        """Handle application closing.""" 
-        # Si la simulación está corriendo, detenerla antes de salir
-        if self.simulation_running:
-            self._detener_simulacion_action()
-
-        self._save_prefs(symbol=self.symbol_var.get(), timeframe=self.timeframe_var.get())
-        self.root.destroy()
-        print("Saliendo del programa...")
-        os._exit(0)
+        """Maneja el cierre de la aplicación de forma segura."""
+        self.action_handler.on_exit()
 
     def _save_chart_to_csv(self):
         """Guarda los datos actuales del gráfico en un archivo CSV."""
-        if not self.chart_started or not hasattr(self.graphic, 'candles_df') or self.graphic.candles_df is None or self.graphic.candles_df.empty:
-            messagebox.showerror("Error al Guardar", "No hay datos de gráfico para guardar. Por favor, inicie el gráfico primero.")
-            self._log_error("Intento de guardar gráfico sin datos disponibles.")
-            return
-        
-        try:
-            # Crear una copia para trabajar
-            df_to_save = self.graphic.candles_df.copy()
-            
-            # El índice es 'time', lo convertimos en una columna 'Date'
-            df_to_save.reset_index(inplace=True)
-            df_to_save.rename(columns={'time': 'Date', 'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'}, inplace=True)
-            
-            # Asegurarse de que solo tenemos las columnas deseadas en el orden correcto
-            required_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
-            df_to_save = df_to_save[required_columns]
-            
-            # Crear el nombre del archivo
-            symbol = self.symbol_var.get()
-            timeframe = self.timeframe_var.get()
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"chart_{symbol}_{timeframe}_{timestamp}.csv"
-            
-            # Asegurarse de que la carpeta 'audit' existe
-            audit_dir = os.path.join(_project_root, 'audit')
-            if not os.path.exists(audit_dir):
-                os.makedirs(audit_dir)
-            
-            save_path = os.path.join(audit_dir, filename)
-            
-            # Guardar en CSV
-            df_to_save.to_csv(save_path, index=False, date_format='%Y-%m-%d %H:%M:%S')
-            
-            self._log_success(f"Gráfico guardado correctamente en: {save_path}")
-            messagebox.showinfo("Éxito", f"El gráfico se ha guardado como '{filename}' en la carpeta 'audit'.")
+        self.action_handler.save_chart_to_csv()
 
-        except Exception as e:
-            self._log_error(f"No se pudo guardar el gráfico en CSV: {e}")
-            messagebox.showerror("Error al Guardar", f"Ocurrió un error al guardar el archivo: {e}")
+    def _handle_trade_closed(self, data):
+        """Actualiza los contadores de P/L acumulado cuando se cierra una operación."""
+        profit = data.get('profit', 0.0)
+        if profit >= 0:
+            self.total_profit_realized += profit
+            self.profit_var.set(f"{self.total_profit_realized:.2f} $")
+        else:
+            # Las pérdidas se suman como valores positivos
+            self.total_loss_realized += abs(profit)
+            self.loss_var.set(f"{self.total_loss_realized:.2f} $")
 
 
 if __name__ == "__main__":

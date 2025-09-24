@@ -15,6 +15,7 @@ from modals.candle_config_modal import CandleConfigModal
 from forex.forex_list import ForexStrategies
 from backtesting.strategy_simulator import StrategySimulator
 from candles.candle_list import CandlePatterns
+from custom.custom_strategies import CustomStrategies
 
 class SimulationStrategiesModal(tk.Toplevel):
     """Modal para seleccionar y configurar estrategias de Forex y Velas."""
@@ -38,6 +39,10 @@ class SimulationStrategiesModal(tk.Toplevel):
         # --- Forex Strategies ---
         self.forex_strategies = self._get_forex_strategies()
         self.forex_widgets = {}
+
+        # --- Custom Strategies ---
+        self.custom_strategies = self._get_custom_strategies()
+        self.custom_widgets = {}
 
         # --- Valores por defecto para estrategias Forex ---
         self.strategy_defaults = {
@@ -82,6 +87,13 @@ class SimulationStrategiesModal(tk.Toplevel):
         strategy_names = [name for name, func in strategy_methods if name.startswith('strategy_')]
         return sorted(strategy_names)
 
+    def _get_custom_strategies(self):
+        """Obtiene una lista de todas las estrategias de la clase CustomStrategies."""
+        strategy_methods = inspect.getmembers(CustomStrategies, predicate=inspect.isfunction)
+        # Filtra solo los métodos que comienzan con 'run_'
+        strategy_names = [name for name, func in strategy_methods if name.startswith('run_')]
+        return sorted(strategy_names)
+
     def _build_ui(self):
         """Construye la interfaz de usuario del modal con pestañas."""
         main_frame = ttk.Frame(self, padding=10)
@@ -93,13 +105,16 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         forex_tab = ttk.Frame(self.notebook, padding=10)
         candle_tab = ttk.Frame(self.notebook, padding=10)
+        custom_tab = ttk.Frame(self.notebook, padding=10)
 
         self.notebook.add(forex_tab, text="Forex")
         self.notebook.add(candle_tab, text="Candle")
+        self.notebook.add(custom_tab, text="Custom")
 
         # Construir el contenido de cada pestaña
         self._build_forex_tab(forex_tab)
         self._build_candle_tab(candle_tab)
+        self._build_custom_tab(custom_tab)
 
         # Vincular el evento de la rueda del ratón después de crear los canvas
         self.bind_all("<MouseWheel>", self._on_mousewheel)
@@ -107,7 +122,7 @@ class SimulationStrategiesModal(tk.Toplevel):
         # --- Frame para los Slots y Capital Inicial ---
         config_frame = ttk.Frame(main_frame)
         config_frame.pack(fill=tk.X, pady=(10, 5))
-        config_frame.columnconfigure((0, 4), weight=1) # Columnas para centrar
+        config_frame.columnconfigure((0, 6), weight=1) # Columnas para centrar
 
         # Fila para Slots
         ttk.Label(config_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5), pady=(5,0))
@@ -115,10 +130,15 @@ class SimulationStrategiesModal(tk.Toplevel):
         forex_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_forex_var, width=5)
         forex_slots_entry.grid(row=0, column=2, sticky='w', pady=(5,0))
 
-        ttk.Label(config_frame, text="Slots Candles:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
+        ttk.Label(config_frame, text="Slots Candle:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
         self.slots_candles_var = tk.IntVar(value=1)
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
         candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
+
+        ttk.Label(config_frame, text="Slots Custom:").grid(row=0, column=5, sticky='e', padx=(10, 5), pady=(5,0))
+        self.slots_custom_var = tk.IntVar(value=0)
+        custom_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_custom_var, width=5)
+        custom_slots_entry.grid(row=0, column=6, sticky='w', pady=(5,0))
 
         # --- Frame Inferior para botones de acción (siempre visible) ---
         bottom_frame = ttk.Frame(main_frame)
@@ -135,10 +155,7 @@ class SimulationStrategiesModal(tk.Toplevel):
     def _build_forex_tab(self, tab):
         """Construye el contenido de la pestaña de estrategias Forex."""
         # --- Estrategias a excluir de la selección por defecto ---
-        excluded_strategies = [
-            "strategy_candle_pattern_reversal",
-            "strategy_chart_pattern_breakout"
-        ]
+        excluded_strategies = []
 
         # --- Frame Superior para botones de selección ---
         top_frame = ttk.Frame(tab)
@@ -296,6 +313,28 @@ class SimulationStrategiesModal(tk.Toplevel):
         self.candle_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+    def _build_custom_tab(self, tab):
+        """Construye el contenido de la pestaña de estrategias personalizadas."""
+        list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
+        list_container.pack(fill="both", expand=True, pady=5)
+
+        for i, strategy_name in enumerate(self.custom_strategies):
+            row_frame = ttk.Frame(list_container, padding=(5, 5))
+            row_frame.pack(fill=tk.X, anchor='n')
+
+            var = tk.BooleanVar(value=False) # Por defecto no seleccionada
+            
+            chk = ttk.Checkbutton(row_frame, variable=var)
+            chk.pack(side=tk.LEFT, padx=(5, 10))
+
+            display_name = strategy_name.replace('run_', '').replace('_', ' ').title()
+            lbl = ttk.Label(row_frame, text=display_name, width=25)
+            lbl.pack(side=tk.LEFT, padx=5)
+
+            self.custom_widgets[strategy_name] = {
+                'checkbox_var': var
+            }
+
     def _center_window(self):
         """Centra el modal en la ventana principal."""
         self.update_idletasks()
@@ -316,6 +355,9 @@ class SimulationStrategiesModal(tk.Toplevel):
             canvas_to_scroll = self.forex_canvas
         elif selected_tab_text == "Candle" and self.candle_canvas and self.candle_canvas.winfo_exists():
             canvas_to_scroll = self.candle_canvas
+        elif selected_tab_text == "Custom":
+            # No hay scroll en la pestaña custom por ahora, pero se podría añadir
+            pass
 
         if canvas_to_scroll:
             canvas_to_scroll.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -349,7 +391,7 @@ class SimulationStrategiesModal(tk.Toplevel):
         config_modal = CandleConfigModal(self, pattern_name)
         self.wait_window(config_modal)
 
-        # Si se guardó la configuración, actualizar el estado del botón Cargar
+        # Si se guardó la configuración, actualizar el estado del botón
         if config_modal.result is True:
             self._update_load_button_state(pattern_name)
 
@@ -375,10 +417,12 @@ class SimulationStrategiesModal(tk.Toplevel):
         config_to_save = {
             'slots': {
                 'forex': self.slots_forex_var.get(),
-                'candle': self.slots_candles_var.get()
+                'candle': self.slots_candles_var.get(),
+                'custom': self.slots_custom_var.get()
             },
             'candle_strategies': {},
-            'forex_strategies': {}
+            'forex_strategies': {},
+            'custom_strategies': {}
         }
 
         # Recopilar datos de la pestaña Candle
@@ -395,6 +439,12 @@ class SimulationStrategiesModal(tk.Toplevel):
                 'percent_ratio': widgets['percent_ratio_var'].get(),
                 'rr_ratio': widgets['rr_ratio_var'].get(),
                 'stop_loss_pips': widgets['sl_var'].get()
+            }
+
+        # Recopilar datos de la pestaña Custom
+        for strategy_name, widgets in self.custom_widgets.items():
+            config_to_save['custom_strategies'][strategy_name] = {
+                'selected': widgets['checkbox_var'].get()
             }
 
         output_path = os.path.join(self.strategies_dir, 'strategies.json')

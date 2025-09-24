@@ -1,23 +1,12 @@
 
-while True:
-    tick = mt5.symbol_info_tick(symbol)
-    
-    if signal['direction'] == 'long':
-        if tick.last >= precio_entrada + tp_pips*0.0001:  # TP alcanzado
-            cerrar_operacion()
-            break
-        elif tick.last <= precio_entrada - sl_pips*0.0001:  # SL alcanzado
-            cerrar_operacion()
-            break
-    elif signal['direction'] == 'short':
-        if tick.last <= precio_entrada - tp_pips*0.0001:  # TP alcanzado
-            cerrar_operacion()
-            break
-        elif tick.last >= precio_entrada + sl_pips*0.0001:  # SL alcanzado
-            cerrar_operacion()
-            break
+TODO
 
-    time.sleep(1)
+1. Añadir limite de dinero al dia
+2. Implementar cierre manual de operaciones
+3. Implementar cierre automatico de operaciones
+4. Al salir si el simulador esta abierto que pregunte si desea cerrar todas las operaciones
+    - Si dice Sí, se cerraran todas las operaciones y se guardara el log
+    - Si dice No, se guardara el log y se mantendran las operaciones abiertas
 
 
-
+Error al intentar cerrar posiciones abiertas
