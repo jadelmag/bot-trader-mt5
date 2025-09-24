@@ -1,1 +1,2 @@
 
+Error al intentar cerrar posiciones abiertas
