@@ -619,7 +619,7 @@ class Simulation:
                 f"[SIM] Señal de {strategy_type} '{strat_name_clean}' -> '{trade_type.upper()}': "
                 f"{price:.{digits}f} | {volume} | {sl} | {tp}"
             )
-            self._log(log_message, 'info') # Usar 'info' para el color azul
+            self._log(log_message, 'success')
             self.trades_in_current_candle += 1
 
         return result
