@@ -76,6 +76,7 @@ class Simulation:
     
         # --- Inicializar MetaTrader 5 ---
         self._init_mt5()
+        self._fetch_initial_candles() # Cargar velas históricas
 
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
@@ -120,6 +121,42 @@ class Simulation:
         else:
             self._log("[SIM-WARN] MT5 inicializado pero no se pudo obtener información de la cuenta.", 'warn')
         return True
+
+    def _fetch_initial_candles(self):
+        """Carga un historial inicial de velas para asegurar que los indicadores se puedan calcular."""
+        if not mt5 or not mt5.terminal_info():
+            self._log("[SIM-WARN] No se pueden cargar velas históricas, MT5 no está conectado.", 'warn')
+            return
+
+        timeframe_map = {
+            "M1": mt5.TIMEFRAME_M1, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15,
+            "M30": mt5.TIMEFRAME_M30, "H1": mt5.TIMEFRAME_H1, "H4": mt5.TIMEFRAME_H4,
+            "D1": mt5.TIMEFRAME_D1
+        }
+        mt5_timeframe = timeframe_map.get(self.timeframe)
+        if mt5_timeframe is None:
+            self._log(f"[SIM-ERROR] Timeframe '{self.timeframe}' no es válido para la carga de historial.", 'error')
+            return
+
+        try:
+            # Cargar las últimas 200 velas para tener datos suficientes para los indicadores
+            rates = mt5.copy_rates_from_pos(self.symbol, mt5_timeframe, 0, 200)
+            if rates is None or len(rates) == 0:
+                self._log(f"[SIM-WARN] No se pudieron obtener velas históricas para {self.symbol}: {mt5.last_error()}", 'warn')
+                return
+
+            df = pd.DataFrame(rates)
+            df['time'] = pd.to_datetime(df['time'], unit='s')
+            df = df[['time', 'open', 'high', 'low', 'close']]
+            
+            self.candles_df = df
+            self._log(f"[SIM] Cargadas {len(df)} velas históricas para {self.symbol} en {self.timeframe}.")
+
+            # Calcular indicadores iniciales
+            self._calculate_indicators()
+
+        except Exception as e:
+            self._log(f"[SIM-ERROR] Error al cargar las velas iniciales: {e}", 'error')
 
     def _load_general_config(self):
         """Carga la configuración general desde config.json."""
@@ -280,7 +317,7 @@ class Simulation:
                             volume=volume,
                             sl_pips=sl_pips,
                             tp_pips=tp_pips,
-                            strategy_name=f"candle {pattern_name}"
+                            strategy_name=f"candle_{pattern_name}"
                         )
                         return # Salir después de abrir la operación
                 else:
@@ -327,7 +364,7 @@ class Simulation:
                         volume=volume,
                         sl_pips=sl_pips,
                         tp_pips=sl_pips * rr_ratio,
-                        strategy_name=f"forex {strategy_name}"
+                        strategy_name=f"forex_{strategy_name}"
                     )
                     return # Salir después de la primera operación exitosa
 
@@ -476,8 +513,7 @@ class Simulation:
             money_to_risk = equity * (final_risk_percent / 100.0)
 
             sl_in_points = sl_pips  # <-- LÍNEA CORREGIDA
-            loss_per_lot = (sl_in_points * symbol_info.trade_tick_value) / symbol_info.trade_tick_size
-            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
 
             volume = money_to_risk / loss_per_lot
 
@@ -576,8 +612,7 @@ class Simulation:
                 return 0.0
             
             sl_in_points = sl_pips
-            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-            loss_per_lot = (sl_in_points * symbol_info.trade_tick_value) / symbol_info.trade_tick_size
+            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
             return loss_per_lot * volume
         except Exception:
             return 0.0
