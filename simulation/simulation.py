@@ -4,6 +4,7 @@ import sys
 import os
 import json
 import threading
+import datetime
 from forex.forex_list import ForexStrategies
 
 # --- MT5 Integration ---
@@ -72,6 +73,9 @@ class Simulation:
         self.atr = None # Añadir para ATR
 
         self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
+    
+        # --- Inicializar MetaTrader 5 ---
+        self._init_mt5()
 
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
@@ -100,6 +104,23 @@ class Simulation:
         }
         log_methods.get(level, self.logger.log)(message)
 
+    def _init_mt5(self):
+        """Inicializa la conexión con MetaTrader 5 si no está activa."""
+        if not mt5:
+            self._log("[SIM-ERROR] La librería MetaTrader5 no está disponible.", 'error')
+            return False
+
+        if not mt5.initialize():
+            self._log(f"[SIM-ERROR] No se pudo inicializar MT5: {mt5.last_error()}", 'error')
+            return False
+
+        info = mt5.account_info()
+        if info:
+            self._log(f"[SIM] Conectado a MetaTrader 5. Cuenta: {info.login}, Balance: {info.balance}", 'success')
+        else:
+            self._log("[SIM-WARN] MT5 inicializado pero no se pudo obtener información de la cuenta.", 'warn')
+        return True
+
     def _load_general_config(self):
         """Carga la configuración general desde config.json."""
         if not os.path.exists(CONFIG_PATH):
@@ -119,7 +140,7 @@ class Simulation:
             return
 
         # Align timestamp to the start of the candle's timeframe interval
-        candle_start_time = timestamp.floor(self.timeframe_delta)
+        candle_start_time = pd.Timestamp(timestamp).floor(self.timeframe_delta)
 
         # --- New Candle Detection ---
         if self.current_candle is None or candle_start_time > self.current_candle['time']:
@@ -172,9 +193,10 @@ class Simulation:
             low_close = (self.candles_df['low'] - self.candles_df['close'].shift()).abs()
             tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
             # Usamos una media móvil simple para el ATR para simplicidad en tiempo real
-            self.atr = tr.rolling(window=14).mean().iloc[-1]
+            atr_value = tr.rolling(window=14).mean().iloc[-1]
+            self.atr = atr_value if pd.notna(atr_value) else None
             if self.debug_mode:
-                self._log(f"[SIM-DEBUG] ATR calculado: {self.atr:.5f}")
+                self._log(f"[SIM-DEBUG] ATR calculado: {self.atr}") # <-- Línea corregida
         except Exception as e:
             self.atr = None # Resetear si hay un error
             if self.debug_mode:
@@ -294,6 +316,9 @@ class Simulation:
 
                 volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
 
+                if self.debug_mode:
+                    self._log(f"[SIM-DEBUG] Parámetros para Forex: SL Pips={sl_pips}, RR Ratio={rr_ratio}, Volumen Calculado={volume}")
+
                 if volume > 0:
                     self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Abriendo operación.")
                     self.open_trade(
@@ -337,7 +362,6 @@ class Simulation:
                         )
                         thread.daemon = True # El hilo se cerrará si el programa principal termina
                         thread.start()
-
 
     def _get_ma_signal(self, df):
         """Calculates moving averages and returns a 'long', 'short', or 'neutral' signal."""
@@ -451,8 +475,9 @@ class Simulation:
 
             money_to_risk = equity * (final_risk_percent / 100.0)
 
-            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            sl_in_points = sl_pips  # <-- LÍNEA CORREGIDA
+            loss_per_lot = (sl_in_points * symbol_info.trade_tick_value) / symbol_info.trade_tick_size
+            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
 
             volume = money_to_risk / loss_per_lot
 
@@ -492,51 +517,53 @@ class Simulation:
 
     def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
         """
-        Opens a new trade by sending an order to MetaTrader 5.
+        Abre una operación en MT5 asegurando la conexión antes de enviar la orden.
         """
-        if not mt5 or not mt5.terminal_info():
-            self._log("[SIM-ERROR] MT5 no está conectado. No se puede abrir la operación.", 'error')
+        if not self._init_mt5():
             return None
 
         order_type = mt5.ORDER_TYPE_BUY if trade_type == 'long' else mt5.ORDER_TYPE_SELL
         price = mt5.symbol_info_tick(symbol).ask if trade_type == 'long' else mt5.symbol_info_tick(symbol).bid
         point = mt5.symbol_info(symbol).point
+        digits = mt5.symbol_info(symbol).digits
 
-        sl = 0.0
-        tp = 0.0
-
+        # SL/TP
+        sl, tp = 0.0, 0.0
         if trade_type == 'long':
-            if sl_pips > 0: sl = price - sl_pips * point
-            if tp_pips > 0: tp = price + tp_pips * point
-        else: # short
-            if sl_pips > 0: sl = price + sl_pips * point
-            if tp_pips > 0: tp = price - tp_pips * point
+            if sl_pips > 0: sl = round(price - sl_pips * point, digits)
+            if tp_pips > 0: tp = round(price + tp_pips * point, digits)
+        else:
+            if sl_pips > 0: sl = round(price + sl_pips * point, digits)
+            if tp_pips > 0: tp = round(price - tp_pips * point, digits)
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
-            "volume": volume,
+            "volume": float(volume),
             "type": order_type,
             "price": price,
             "sl": sl,
             "tp": tp,
             "deviation": 20,
             "magic": 234000,
-            "comment": strategy_name, # Guardar el nombre de la estrategia en el comentario
+            "comment": strategy_name or "Bot-Simulation",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Enviando request: {request}")
+
+        if result is None:
+            self._log(f"[SIM-ERROR] mt5.order_send devolvió None. last_error={mt5.last_error()}", 'error')
+            return None
+
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}", 'error')
+            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
         else:
-            money_risked = self._calculate_money_risk(volume, sl_pips)
-            if strategy_name:
-                self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots) con estrategia '{strategy_name}'. Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
-            else:
-                self._log(f"[SIM] Operación {trade_type.upper()} abierta ({volume:.2f} lots). Riesgo: ~{money_risked:.2f} $. Ticket: {result.order}", 'success')
+            self._log(f"[SIM] Operación {trade_type.upper()} abierta correctamente. Ticket={result.order}", 'success')
             self.trades_in_current_candle += 1
 
         return result
@@ -548,8 +575,9 @@ class Simulation:
             if not symbol_info:
                 return 0.0
             
-            sl_in_points = sl_pips * (10 if symbol_info.digits in [3, 5] else 1)
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            sl_in_points = sl_pips
+            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            loss_per_lot = (sl_in_points * symbol_info.trade_tick_value) / symbol_info.trade_tick_size
             return loss_per_lot * volume
         except Exception:
             return 0.0
@@ -574,21 +602,14 @@ class Simulation:
 
     def close_trade(self, position_ticket: int, volume: float, trade_type: str, strategy_context: str = None):
         """
-        Closes an open position in MetaTrader 5.
-
-        Args:
-            position_ticket (int): The ticket of the position to close.
-            volume (float): The volume to close.
-            trade_type (str): 'long' or 'short'.
-            strategy_context (str, optional): A specific message from the calling strategy.
+        Cierra una operación abierta en MT5 asegurando la conexión antes de enviar la orden.
         """
-        if not mt5 or not mt5.terminal_info():
-            self._log("[SIM-ERROR] MT5 no está conectado. No se puede cerrar la operación.", 'error')
+        if not self._init_mt5():
             return None
 
         position_info = mt5.positions_get(ticket=position_ticket)
         if not position_info:
-            self._log(f"[SIM] La posición con ticket {position_ticket} ya estaba cerrada. No se requiere acción.", 'info')
+            self._log(f"[SIM] La posición con ticket {position_ticket} ya estaba cerrada o no existe.", 'info')
             return None
         position_info = position_info[0]
 
@@ -599,48 +620,27 @@ class Simulation:
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
-            "volume": volume,
+            "volume": float(volume),
             "type": order_type,
             "position": position_ticket,
             "price": price,
             "deviation": 20,
             "magic": 234000,
-            "comment": "Closed by Bot-Trader-MT5",
+            "comment": strategy_context or "Closed by Bot-Simulation",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
 
         result = mt5.order_send(request)
 
+        if result is None:
+            self._log(f"[SIM-ERROR] mt5.order_send devolvió None al cerrar. last_error={mt5.last_error()}", 'error')
+            return None
+
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}", 'error')
+            self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
         else:
-            # --- Lógica de reintento para obtener el P/L del historial ---
-            deal_ticket = result.deal
-            deals = None
-            for i in range(3): # Intentar hasta 3 veces
-                deals = mt5.history_deals_get(ticket=deal_ticket)
-                if deals and len(deals) > 0:
-                    break # Salir del bucle si se encontraron los detalles
-                time.sleep(0.2) # Esperar 200ms antes de reintentar
-
-            # Obtener el comentario de la posición original para el log
-            strategy_name_from_pos = position_info.comment
-
-            if deals and len(deals) > 0:
-                profit = deals[0].profit
-                log_msg_base = f"[SIM] Operación {trade_type.upper()} [{strategy_name_from_pos}] cerrada ({volume:.2f} lots)."
-                
-                # Añadir contexto de la estrategia si está disponible
-                if strategy_context:
-                    log_msg_base += f" {strategy_context}"
-
-                if profit >= 0:
-                    self._log(f"{log_msg_base} Beneficio: {profit:.2f} $", 'success')
-                else:
-                    self._log(f"{log_msg_base} Pérdida: {profit:.2f} $", 'error')
-            else:
-                self._log(f"[SIM] Posición {position_ticket} [{strategy_name_from_pos}] cerrada, pero no se pudo obtener el P/L del historial tras varios intentos.", 'warn')
+            self._log(f"[SIM] Operación {trade_type.upper()} cerrada correctamente. Ticket={result.order}", 'success')
 
         return result
 

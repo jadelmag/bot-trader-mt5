@@ -1,15 +1,13 @@
-mi idea para esta estrategia es:
-1. cuando iniciamos la simulacion esperamos a que se forme una vela nueva y obtenemos el precio al que se ha cerrado.
-mediante un tick y lo guardamos en una constante.
-2. Esperamos 10 ticks y los guardamos en una lista.
-3. calculamos cuantos de esos ticks son mayores al precio actual.
-4. si la cantidad de ticks > precio actual, abrimos una operacion de LONG.
-5. si la cantidad de ticks < precio actual, abrimos una operacion de SHORT.
+he ejecutado el fichero check_operation.py y me ha devuelto esto:
 
-CASO LONG:
-1. intentamos cerrar la operacion con el mayor beneficio posible.
-2. Sino intentamos cerrar la operacion con el menor beneficio posible.
+python test/check_operation.py
+✅ Conectado a MT5
+✅ Orden BUY abierta: ticket=53304755846
+✅ Posición cerrada: ticket=53304756487
 
-CASO SHORT:
-1. intentamos cerrar la operacion con el mayor beneficio posible.
-2. Sino intentamos cerrar la operacion con el menor beneficio posible.
+porque en la simulacion que abre y cierra operaciones me dice esto:
+
+[11:32:00] [SIM] Nueva vela M1 formada a las 2025-09-24 12:32:00. Contador de trades reseteado.
+[11:32:00] [SIM-DEBUG] ATR calculado: nan
+[11:32:00] [SIM] Señal de FOREX 'strategy_scalping_stochrsi_ema' -> 'LONG' detectada. Abriendo operación.
+[11:32:00] [SIM-ERROR] mt5.order_send() devolvió None. La conexión puede haberse perdido.
