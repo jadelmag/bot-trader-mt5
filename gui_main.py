@@ -704,7 +704,7 @@ class App:
             try:
                 open_positions = mt5.positions_get(symbol=self.simulation_instance.symbol)
                 if open_positions and len(open_positions) > 0:
-                    self._log(f"Cerrando {len(open_positions)} posiciones abiertas para {self.simulation_instance.symbol}...")
+                    self._log_info(f"Cerrando {len(open_positions)} posiciones abiertas para {self.simulation_instance.symbol}...")
                     for pos in open_positions:
                         trade_type = 'long' if pos.type == mt5.POSITION_TYPE_BUY else 'short'
                         self.simulation_instance.close_trade(pos.ticket, pos.volume, trade_type)

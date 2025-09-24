@@ -1,12 +1,1 @@
 
-
-1. No modifiques los mensajes que ya se muestran en modo debug.
-2. Quiero que los mensajes de cuando se abre una operacion short o log se muestre de la siguiente manera en color azul:
-
-    [11:32:00] [SIM] Señal de [FOREX o CANDLE] '[nombre de la estrategia o patron de vela]' -> '[LONG o SHORT]': [precio de apertura] | [volume] | [SL] | [TP]
-y que se muestre de color azul.
-
-3. Quiero que los mensajes de cuando se cierra una operacion short o log se muestre de la siguiente manera, en color verde si la operacion es exitosa y de color rojo si la operacion es fallida:
-
-    [11:32:00] [SIM] Señal de [FOREX o CANDLE] '[nombre de la estrategia o patron de vela]' -> '[LONG o SHORT]': [beneficio o pérdida] 
-
