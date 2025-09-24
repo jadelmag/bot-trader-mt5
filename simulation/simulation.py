@@ -599,7 +599,27 @@ class Simulation:
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
         else:
-            self._log(f"[SIM] Operación {trade_type.upper()} abierta correctamente. Ticket={result.order}", 'success')
+            # --- Formateo del mensaje de log personalizado ---
+            strategy_type = "DESCONOCIDO"
+            strat_name_clean = strategy_name or ""
+            if strat_name_clean.startswith("forex_"):
+                strategy_type = "FOREX"
+                strat_name_clean = strat_name_clean.replace("forex_", "")
+            elif strat_name_clean.startswith("candle_"):
+                strategy_type = "CANDLE"
+                strat_name_clean = strat_name_clean.replace("candle_", "")
+            elif strat_name_clean.startswith("custom "):
+                strategy_type = "CUSTOM"
+                strat_name_clean = strat_name_clean.replace("custom ", "")
+            else:
+                strategy_type = "DESCONOCIDO"
+                strat_name_clean = "DESCONOCIDO"
+
+            log_message = (
+                f"[SIM] Señal de {strategy_type} '{strat_name_clean}' -> '{trade_type.upper()}': "
+                f"{price:.{digits}f} | {volume} | {sl} | {tp}"
+            )
+            self._log(log_message, 'info') # Usar 'info' para el color azul
             self.trades_in_current_candle += 1
 
         return result
@@ -651,6 +671,7 @@ class Simulation:
         symbol = position_info.symbol
         order_type = mt5.ORDER_TYPE_SELL if trade_type == 'long' else mt5.ORDER_TYPE_BUY
         price = mt5.symbol_info_tick(symbol).bid if trade_type == 'long' else mt5.symbol_info_tick(symbol).ask
+        comment = position_info.comment # Recuperar el comentario original
 
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -672,10 +693,47 @@ class Simulation:
             self._log(f"[SIM-ERROR] mt5.order_send devolvió None al cerrar. last_error={mt5.last_error()}", 'error')
             return None
 
+        # Determinar el tipo de estrategia y nombre desde el comentario
+        strategy_type_name = "DESCONOCIDO"
+        comment = position_info.comment
+        if comment:
+            if "forex_" in comment:
+                parts = comment.split('_')
+                strategy_type = parts[0].upper()
+                strategy_name = '_'.join(parts[1:])
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+            elif "candle_" in comment:
+                parts = comment.split('_')
+                strategy_type = parts[0].upper()
+                strategy_name = '_'.join(parts[1:])
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+            elif "custom " in comment:
+                parts = comment.split(' ', 1)
+                strategy_type = parts[0].upper()
+                strategy_name = parts[1]
+                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+            else:
+                strategy_type_name = "Señal de STRATEGY 'DESCONOCIDO'"
+
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] Cierre de orden falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
+            log_message = f"[SIM] {strategy_type_name} -> {trade_type.upper()}: Fallo al cerrar la operación (retcode={result.retcode})"
+            self._log(log_message, 'error')
         else:
-            self._log(f"[SIM] Operación {trade_type.upper()} cerrada correctamente. Ticket={result.order}", 'success')
+            # Para obtener el beneficio, necesitaríamos consultar el historial de trades (deals).
+            # Por simplicidad, aquí solo confirmamos el cierre exitoso.
+            # El beneficio real se podría obtener buscando el 'deal' correspondiente al 'result.order'.
+            deal = mt5.history_deals_get(position=position_ticket)
+            profit = 0.0
+            if deal and len(deal) > 0:
+                # El último 'deal' de una posición cerrada suele ser el que tiene el beneficio.
+                profit = deal[-1].profit
+
+            log_message = f"[SIM] {strategy_type_name} -> '{trade_type.upper()}': {profit:+.2f}"
+            
+            if profit >= 0:
+                self._log(log_message, 'success') # Verde para ganancia o sin pérdida
+            else:
+                self._log(log_message, 'error') # Rojo para pérdida
 
         return result
 
