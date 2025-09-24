@@ -582,7 +582,7 @@ class Simulation:
             "tp": tp,
             "deviation": 20,
             "magic": 234000,
-            "comment": strategy_name or "Bot-Simulation",
+            "comment": (strategy_name or "Bot-Simulation")[:31],
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
@@ -661,7 +661,7 @@ class Simulation:
             "price": price,
             "deviation": 20,
             "magic": 234000,
-            "comment": strategy_context or "Closed by Bot-Simulation",
+            "comment": (strategy_name or "Bot-Simulation")[:31],
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
