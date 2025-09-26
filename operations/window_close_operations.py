@@ -43,6 +43,28 @@ class CerrarOperacionesWindow:
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         self.window.geometry(f"{width}x{height}+{x}+{y}")
     
+    def parse_strategy_info(self, comment):
+        """Extrae información de la estrategia desde el comentario de la operación."""
+        if not comment or comment == "Bot-Simulation":
+            return "MANUAL", "Operación Manual"
+        
+        comment_clean = comment.strip()
+        
+        # Determinar el tipo basado en prefijos conocidos
+        if any(forex_indicator in comment_clean.lower() for forex_indicator in 
+            ['ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma']):
+            strategy_type = "FOREX"
+            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ').title()
+        elif any(candle_pattern in comment_clean.lower() for candle_pattern in 
+                ['doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark']):
+            strategy_type = "CANDLE"
+            strategy_name = comment_clean.replace('candle_', '').replace('_', ' ').title()
+        else:
+            strategy_type = "MANUAL"
+            strategy_name = comment_clean if comment_clean else "Operación Manual"
+        
+        return strategy_type, strategy_name
+
     def create_content(self):
         # Título centrado
         title_label = ttk.Label(self.window, text="Operaciones Abiertas", 
@@ -155,16 +177,22 @@ class CerrarOperacionesWindow:
         
         ttk.Label(row1, text=f"Tipo: {trade_type}", font=("Arial", 9, "bold")).pack(side=tk.LEFT)
         
-        # FILA 2: Precio apertura | Precio actual
+        # FILA 2: Precio apertura | Precio actual | Estrategia
         row2 = ttk.Frame(op_frame)
         row2.pack(fill=tk.X, pady=5)
-        
+
         open_price = operation.price_open
-        ttk.Label(row2, text=f"Precio apertura: {open_price:.5f}", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 40))
-        
+        ttk.Label(row2, text=f"Precio apertura: {open_price:.5f}", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 20))
+
         current_price_label = ttk.Label(row2, text="Precio actual: Cargando...", 
-                                       font=("Arial", 9, "bold"), foreground="blue")
-        current_price_label.pack(side=tk.LEFT)
+                                    font=("Arial", 9, "bold"), foreground="blue")
+        current_price_label.pack(side=tk.LEFT, padx=(0, 20))
+
+        # Agregar información de estrategia
+        strategy_type, strategy_name = self.parse_strategy_info(operation.comment)
+        strategy_color = "purple" if strategy_type == "FOREX" else "orange" if strategy_type == "CANDLE" else "gray"
+        ttk.Label(row2, text=f"Tipo: {strategy_type} | Nombre: {strategy_name}", 
+                font=("Arial", 9, "bold"), foreground=strategy_color).pack(side=tk.LEFT)
         
         # FILA 3: Botones
         row3 = ttk.Frame(op_frame)
