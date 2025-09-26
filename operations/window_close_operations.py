@@ -190,16 +190,15 @@ class CerrarOperacionesWindow:
 
         # Agregar información de estrategia
         # Tercera fila - Información de estrategia
-        strategy_type, strategy_name = self.parse_strategy_info(position.comment)
+        strategy_type, strategy_name = self.parse_strategy_info(operation.comment)
         strategy_color = "purple" if strategy_type == "FOREX" else "orange" if strategy_type == "CANDLE" else "gray"
 
-        ttk.Label(info_frame, text="Tipo:").grid(row=2, column=0, sticky="w", padx=(0, 5))
-        strategy_type_label = ttk.Label(info_frame, text=strategy_type, foreground=strategy_color, font=("Arial", 10, "bold"))
-        strategy_type_label.grid(row=2, column=1, sticky="w", padx=(0, 20))
+        # Crear una nueva fila para la estrategia
+        strategy_row = ttk.Frame(op_frame)
+        strategy_row.pack(fill=tk.X, pady=5)
 
-        ttk.Label(info_frame, text="Nombre:").grid(row=2, column=2, sticky="w", padx=(0, 5))
-        strategy_name_label = ttk.Label(info_frame, text=strategy_name, foreground=strategy_color, font=("Arial", 10, "bold"))
-        strategy_name_label.grid(row=2, column=3, columnspan=3, sticky="w", padx=(0, 20))
+        ttk.Label(strategy_row, text=f"Tipo: {strategy_type}", foreground=strategy_color, font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 20))
+        ttk.Label(strategy_row, text=f"Nombre: {strategy_name}", foreground=strategy_color, font=("Arial", 9, "bold")).pack(side=tk.LEFT)
 
         # FILA 3: Botones
         row3 = ttk.Frame(op_frame)
