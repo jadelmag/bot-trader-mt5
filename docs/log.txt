@@ -37,11 +37,14 @@ titulo centrado "Operaciones abiertas"
 Por cada operación se muestra lo siguiente:
 En una fila Ticket: [numnero] | Volumen: [volumen] | P/L: [P/L] | Tipo: [long/short] | 
 En una segunda fila: precio de apertura: [precio] | precio actual: [precio actual] 
-En una tercera fila: Boton "Cerrar Operación" | Boton "Modificar Operación" | Botón "Cancelar operación"
+En una tercera fila: 
+    - Boton "Cerrar Operación" → cierra la operación inmediatamente al precio actual de mercado.
+    - Boton "Modificar Operación" → te permite cambiar el stop loss (SL), take profit (TP) o incluso convertirla en una orden pendiente con condiciones específicas.
+    - Botón "Cancelar operación" → esta opción aparece solo en órdenes pendientes (no en operaciones activas). Sirve para eliminar una orden que aún no ha sido ejecutada.
 
 - El precio actual se ira actualizando en tiempo real
 - El boton "Cerrar Operación" cerrara la operacion correspondiente y se mostrara en el log 
-    (La implementacion de Cerrar operacion se realizara en el fichero close_operations.py)
+    (La implementacion de Cerrar operacion se realizara en el fichero manage_operations.py)
 - El modal sera scrollable y se mostrara un scroll bonito.
 - El modal debe actualizarse si alguna operación se cierra automaticamente o manualmente. 
 

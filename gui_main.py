@@ -767,7 +767,7 @@ class App:
             messagebox.showerror("Error", f"Error inesperado: {e}")
 
     def _cerrar_operaciones_action(self):
-        """Cierra todas las operaciones abiertas en la simulación."""
+        """Abre ventana modal para gestionar operaciones abiertas."""
         if not self.simulation_instance:
             messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
             return
@@ -776,13 +776,23 @@ class App:
             messagebox.showinfo("Información", "La simulación no está en ejecución.")
             return
 
-        open_positions = mt5.positions_get(symbol=self.simulation_instance.symbol)
-        if open_positions and len(open_positions) > 0:
-            # Muestra un modal como el de metatrader5 para cerrar operaciones
-            pass
+        try:
+            from operations.window_close_operations import CerrarOperacionesWindow
             
-        else:
-            self._log_info("No hay operaciones abiertas para cerrar.")
+            operations_window = CerrarOperacionesWindow(
+                parent=self.root,
+                simulation_instance=self.simulation_instance,
+                logger=self.logger
+            )
+            
+            self._log_info("Ventana de gestión de operaciones abierta")
+            
+        except ImportError as e:
+            self._log_error(f"Error al importar ventana de gestión: {e}")
+            messagebox.showerror("Error", "No se pudo abrir la ventana de gestión de operaciones")
+        except Exception as e:
+            self._log_error(f"Error al abrir ventana de gestión: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
 
     def _detener_actualizacion_action(self):
         """Pausa o reanuda las actualizaciones del gráfico y del balance."""
