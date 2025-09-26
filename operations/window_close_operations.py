@@ -189,11 +189,18 @@ class CerrarOperacionesWindow:
         current_price_label.pack(side=tk.LEFT, padx=(0, 20))
 
         # Agregar información de estrategia
-        strategy_type, strategy_name = self.parse_strategy_info(operation.comment)
+        # Tercera fila - Información de estrategia
+        strategy_type, strategy_name = self.parse_strategy_info(position.comment)
         strategy_color = "purple" if strategy_type == "FOREX" else "orange" if strategy_type == "CANDLE" else "gray"
-        ttk.Label(row2, text=f"Tipo: {strategy_type} | Nombre: {strategy_name}", 
-                font=("Arial", 9, "bold"), foreground=strategy_color).pack(side=tk.LEFT)
-        
+
+        ttk.Label(info_frame, text="Tipo:").grid(row=2, column=0, sticky="w", padx=(0, 5))
+        strategy_type_label = ttk.Label(info_frame, text=strategy_type, foreground=strategy_color, font=("Arial", 10, "bold"))
+        strategy_type_label.grid(row=2, column=1, sticky="w", padx=(0, 20))
+
+        ttk.Label(info_frame, text="Nombre:").grid(row=2, column=2, sticky="w", padx=(0, 5))
+        strategy_name_label = ttk.Label(info_frame, text=strategy_name, foreground=strategy_color, font=("Arial", 10, "bold"))
+        strategy_name_label.grid(row=2, column=3, columnspan=3, sticky="w", padx=(0, 20))
+
         # FILA 3: Botones
         row3 = ttk.Frame(op_frame)
         row3.pack(fill=tk.X, pady=(10, 0))

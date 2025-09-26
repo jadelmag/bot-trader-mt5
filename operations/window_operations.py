@@ -60,6 +60,28 @@ class OperacionesAbiertasWindow:
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         self.window.geometry(f"{width}x{height}+{x}+{y}")
     
+    def parse_strategy_info(self, comment):
+        """Extrae información de la estrategia desde el comentario de la operación."""
+        if not comment or comment == "Bot-Simulation":
+            return "MANUAL", "Operación Manual"
+        
+        comment_clean = comment.strip()
+        
+        # Determinar el tipo basado en prefijos conocidos
+        if any(forex_indicator in comment_clean.lower() for forex_indicator in 
+               ['ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma']):
+            strategy_type = "FOREX"
+            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ').title()
+        elif any(candle_pattern in comment_clean.lower() for candle_pattern in 
+                 ['doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark']):
+            strategy_type = "CANDLE"
+            strategy_name = comment_clean.replace('candle_', '').replace('_', ' ').title()
+        else:
+            strategy_type = "MANUAL"
+            strategy_name = comment_clean if comment_clean else "Operación Manual"
+        
+        return strategy_type, strategy_name
+
     def create_content(self):
         """Crea el contenido de la ventana."""
         # Título centrado
@@ -190,6 +212,18 @@ class OperacionesAbiertasWindow:
                                        font=("Arial", 10, "bold"))
         current_price_label.grid(row=1, column=5, sticky="w")
         
+        # Tercera fila - Información de estrategia
+        strategy_type, strategy_name = self.parse_strategy_info(position.comment)
+        strategy_color = "purple" if strategy_type == "FOREX" else "orange" if strategy_type == "CANDLE" else "gray"
+
+        ttk.Label(info_frame, text="Tipo:").grid(row=2, column=0, sticky="w", padx=(0, 5))
+        strategy_type_label = ttk.Label(info_frame, text=strategy_type, foreground=strategy_color, font=("Arial", 10, "bold"))
+        strategy_type_label.grid(row=2, column=1, sticky="w", padx=(0, 20))
+
+        ttk.Label(info_frame, text="Nombre:").grid(row=2, column=2, sticky="w", padx=(0, 5))
+        strategy_name_label = ttk.Label(info_frame, text=strategy_name, foreground=strategy_color, font=("Arial", 10, "bold"))
+        strategy_name_label.grid(row=2, column=3, columnspan=3, sticky="w", padx=(0, 20))
+
         # Botón cerrar operación
         button_frame = ttk.Frame(op_frame)
         button_frame.pack(fill=tk.X, pady=(10, 0))
