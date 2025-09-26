@@ -12,6 +12,7 @@ TODO
 Error al intentar cerrar posiciones abiertas
 
 
+1- TESTEAR
 quiero que al pulsar en label="Ver operaciones abiertas" se habra una venta modal, 
 que no sea bloqueante y permita realizar otras acciones de la ventana padre, llame a la 
 funcion _ver_operaciones_abiertas_action y muestra todas las operaciones abiertas con el siguiente formato:
@@ -27,7 +28,7 @@ Ticket: [numnero] | Volumen: [volumen] | P/L: [P/L] | Tipo: [long/short] | preci
 - No necesita boton porque al hacer click sobre la X de la ventana se cerrara la ventana. 
 
 
-
+2- TESTEAR
 quiero que al pulsar en label="Cerrar operaciones" se habra una venta modal, 
 que no sea bloqueante y permita realizar otras acciones de la ventana padre, llame a la 
 funcion window_close_operations.py y muestra todas las operaciones abiertas con el siguiente formato:
@@ -49,3 +50,13 @@ En una tercera fila:
 - El modal debe actualizarse si alguna operación se cierra automaticamente o manualmente. 
 
 - No necesita boton porque al hacer click sobre la X de la ventana se cerrara la ventana. 
+
+
+3- TESTEAR
+como puedes ver en header_builder.py, los siguientes botones inicialmente estan disabled:
+simulation_menu.add_command(label="Ver operaciones abiertas", command=app._ver_operaciones_abiertas_action, state="disabled")
+simulation_menu.add_command(label="Cerrar operaciones", command=app._cerrar_operaciones_action, state="disabled")
+simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action, state="disabled")
+
+quiero que cuando se inicie la simulación, tras cerrarse el modal simulation_strategies_modal.py y se apliquen las estrategias,
+se habilite el boton "Ver operaciones abiertas", "Cerrar operaciones" y "Detener simulación" 

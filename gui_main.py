@@ -667,6 +667,10 @@ class App:
 
                 # Habilitar el control del modo agresivo, sin activarlo por defecto
                 self.simulation_menu.entryconfig("Modo agresivo", state="normal")
+                # Habilitar botones de gestión de operaciones
+                self.simulation_menu.entryconfig("Ver operaciones abiertas", state="normal")
+                self.simulation_menu.entryconfig("Cerrar operaciones", state="normal") 
+                self.simulation_menu.entryconfig("Detener simulación", state="normal")
 
             except Exception as e:
                 self._log_error(f"Error al iniciar la simulación: {e}")
@@ -695,6 +699,11 @@ class App:
             if self.modo_agresivo_activo.get():
                 self.modo_agresivo_activo.set(False)
                 self._log_info("Modo Agresivo DESACTIVADO al detener la simulación.")
+
+            # Deshabilitar botones de gestión de operaciones
+            self.simulation_menu.entryconfig("Ver operaciones abiertas", state="disabled")
+            self.simulation_menu.entryconfig("Cerrar operaciones", state="disabled") 
+            self.simulation_menu.entryconfig("Detener simulación", state="disabled")
 
             # Reactivar las actualizaciones en vivo del gráfico
             if hasattr(self, 'graphic'):
