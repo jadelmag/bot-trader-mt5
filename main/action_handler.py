@@ -1,4 +1,5 @@
 import os
+import MetaTrader5 as mt5
 from datetime import datetime
 from tkinter import messagebox
 
@@ -162,13 +163,90 @@ class ActionHandler:
 
     def on_exit(self):
         """Maneja el cierre de la aplicación de forma segura."""
+        # Verificar si hay simulación en curso y operaciones abiertas
+        if self.app.simulation_running and self.app.simulation_instance:
+            try:
+                # Verificar si hay operaciones abiertas
+                open_positions = mt5.positions_get(symbol=self.app.simulation_instance.symbol)
+                pending_orders = mt5.orders_get(symbol=self.app.simulation_instance.symbol)
+                
+                total_operations = 0
+                if open_positions:
+                    total_operations += len(open_positions)
+                if pending_orders:
+                    total_operations += len(pending_orders)
+                
+                if total_operations > 0:
+                    # Hay operaciones abiertas, preguntar al usuario
+                    response = messagebox.askyesnocancel(
+                        "Operaciones Abiertas",
+                        f"Hay {total_operations} operación(es) abierta(s).\n\n"
+                        "¿Desea cerrar todas las operaciones abiertas antes de salir?\n\n"
+                        "• Sí: Cerrar todas las operaciones y salir\n"
+                        "• No: Mantener operaciones abiertas y salir\n"
+                        "• Cancelar: No salir de la aplicación",
+                        icon='warning'
+                    )
+                    
+                    if response is None:  # Usuario presionó Cancelar
+                        self.app._log_info("Cierre de aplicación cancelado por el usuario")
+                        return  # No cerrar la aplicación
+                    
+                    elif response:  # Usuario presionó Sí
+                        self.app._log_info("Cerrando todas las operaciones antes de salir...")
+                        
+                        # Cerrar todas las posiciones
+                        if open_positions:
+                            for pos in open_positions:
+                                try:
+                                    from operations.manage_operations import close_single_operation
+                                    success = close_single_operation(pos.ticket, 'position', self.app.logger)
+                                    if success:
+                                        self.app._log_success(f"Posición {pos.ticket} cerrada antes del cierre")
+                                    else:
+                                        self.app._log_error(f"Error al cerrar posición {pos.ticket}")
+                                except Exception as e:
+                                    self.app._log_error(f"Error al cerrar posición {pos.ticket}: {e}")
+                        
+                        # Cancelar todas las órdenes pendientes
+                        if pending_orders:
+                            for order in pending_orders:
+                                try:
+                                    from operations.manage_operations import cancel_pending_order
+                                    success = cancel_pending_order(order.ticket, self.app.logger)
+                                    if success:
+                                        self.app._log_success(f"Orden {order.ticket} cancelada antes del cierre")
+                                    else:
+                                        self.app._log_error(f"Error al cancelar orden {order.ticket}")
+                                except Exception as e:
+                                    self.app._log_error(f"Error al cancelar orden {order.ticket}: {e}")
+                        
+                        self.app._log_success("Todas las operaciones han sido cerradas")
+                    
+                    else:  # Usuario presionó No
+                        self.app._log_info("Manteniendo operaciones abiertas al salir")
+                    
+                    # Guardar el log en ambos casos
+                    try:
+                        self.save_session_log()
+                        self.app._log_success("Log de sesión guardado correctamente")
+                    except Exception as e:
+                        self.app._log_error(f"Error al guardar log de sesión: {e}")
+                
+            except Exception as e:
+                self.app._log_error(f"Error al verificar operaciones abiertas: {e}")
+        
+        # Si hay simulación corriendo, detenerla normalmente
         if self.app.simulation_running:
-            self.app._detener_simulacion_action()
-
+            self.app.simulation_running = False
+        
+        # Guardar preferencias
         self.app.prefs_manager.save(
             symbol=self.app.symbol_var.get(), 
             timeframe=self.app.timeframe_var.get()
         )
+        
+        # Cerrar la aplicación
         self.app.root.destroy()
         print("Saliendo del programa...")
         os._exit(0)

@@ -1,13 +1,13 @@
 
 TODO
 
-1. Añadir limite de dinero al dia
-2. Implementar cierre manual de operaciones
-3. Implementar cierre automatico de operaciones
-4. Al salir si el simulador esta abierto que pregunte si desea cerrar todas las operaciones
+1. Añadir limite de dinero a ganar por dia [Dinero inicial + beneficios] = [Dinero a ganar por dia] [TODO]
+2. Implementar cierre manual de operaciones [DONE]
+3. Implementar cierre automatico de operaciones [DONE]
+4. Al salir de la aplicacion, si el simulador esta ejecutandose y hay operaciones abiertas, debe preguntar: "¿Desea cerrar todas las operaciones abiertas pendientes?" [DONE]
     - Si dice Sí, se cerraran todas las operaciones y se guardara el log
     - Si dice No, se guardara el log y se mantendran las operaciones abiertas
-
+    - No se podra cerrar la aplicacion mientras haya operaciones abiertas.
 
 Error al intentar cerrar posiciones abiertas
 
