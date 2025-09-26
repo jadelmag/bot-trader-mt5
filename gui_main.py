@@ -735,6 +735,55 @@ class App:
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
 
+    def _ver_operaciones_abiertas_action(self):
+        """Muestra las operaciones abiertas en una ventana modal no bloqueante."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        try:
+            # Importar la ventana de operaciones abiertas
+            from operations.window_operations import OperacionesAbiertasWindow
+            
+            # Crear y mostrar la ventana modal no bloqueante
+            operations_window = OperacionesAbiertasWindow(
+                parent=self.root,
+                simulation_instance=self.simulation_instance,
+                logger=self.logger
+            )
+            
+            self._log_info("Ventana de operaciones abiertas abierta")
+            
+        except ImportError as e:
+            self._log_error(f"Error al importar ventana de operaciones: {e}")
+            messagebox.showerror("Error", "No se pudo abrir la ventana de operaciones abiertas")
+
+        except Exception as e:
+            self._log_error(f"Error al abrir ventana de operaciones: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
+
+    def _cerrar_operaciones_action(self):
+        """Cierra todas las operaciones abiertas en la simulación."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        open_positions = mt5.positions_get(symbol=self.simulation_instance.symbol)
+        if open_positions and len(open_positions) > 0:
+            # Muestra un modal como el de metatrader5 para cerrar operaciones
+            pass
+            
+        else:
+            self._log_info("No hay operaciones abiertas para cerrar.")
+
     def _detener_actualizacion_action(self):
         """Pausa o reanuda las actualizaciones del gráfico y del balance."""
         if not self.updates_paused:

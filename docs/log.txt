@@ -10,3 +10,39 @@ TODO
 
 
 Error al intentar cerrar posiciones abiertas
+
+
+quiero que al pulsar en label="Ver operaciones abiertas" se habra una venta modal, 
+que no sea bloqueante y permita realizar otras acciones de la ventana padre, llame a la 
+funcion _ver_operaciones_abiertas_action y muestra todas las operaciones abiertas con el siguiente formato:
+
+titulo centrado "Operaciones abiertas"
+
+Ticket: [numnero] | Volumen: [volumen] | P/L: [P/L] | Tipo: [long/short] | precio de apertura: [precio] | precio actual: [precio actual] | Boton "Cerrar Operación"
+
+- El precio actual se ira actualizando en tiempo real
+- El boton "Cerrar Operación" cerrara la operacion correspondiente y se mostrara en el log 
+    (La implementacion de Cerrar operacion se realizara en el fichero close_operations.py)
+
+- No necesita boton porque al hacer click sobre la X de la ventana se cerrara la ventana. 
+
+
+
+quiero que al pulsar en label="Cerrar operaciones" se habra una venta modal, 
+que no sea bloqueante y permita realizar otras acciones de la ventana padre, llame a la 
+funcion window_close_operations.py y muestra todas las operaciones abiertas con el siguiente formato:
+
+titulo centrado "Operaciones abiertas"
+
+Por cada operación se muestra lo siguiente:
+En una fila Ticket: [numnero] | Volumen: [volumen] | P/L: [P/L] | Tipo: [long/short] | 
+En una segunda fila: precio de apertura: [precio] | precio actual: [precio actual] 
+En una tercera fila: Boton "Cerrar Operación" | Boton "Modificar Operación" | Botón "Cancelar operación"
+
+- El precio actual se ira actualizando en tiempo real
+- El boton "Cerrar Operación" cerrara la operacion correspondiente y se mostrara en el log 
+    (La implementacion de Cerrar operacion se realizara en el fichero close_operations.py)
+- El modal sera scrollable y se mostrara un scroll bonito.
+- El modal debe actualizarse si alguna operación se cierra automaticamente o manualmente. 
+
+- No necesita boton porque al hacer click sobre la X de la ventana se cerrara la ventana. 
