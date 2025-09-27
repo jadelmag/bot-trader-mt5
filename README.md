@@ -103,6 +103,7 @@ app/
 │   ├── apply_strategies.py               # Aplicación de estrategias
 │   ├── backtesting.py                    # Backtesting
 │   ├── detect_candles.py                 # Detección de velas
+│   ├── indicators.py                     # Indicadores técnicos
 │   ├── report_generator.py               # Generador de informes
 │   └── strategy_simulator.py             # Simulador de estrategias
 |
@@ -134,15 +135,34 @@ app/
 │   ├── audit_log.py                      # Logger de auditoría
 │   └── loggin.py                         # Logger de la aplicación
 |
+|
+├── main/ 
+│   ├── __init__.py                       # Inicialización de módulos
+│   ├── action_handler.py                 # Manejador de acciones
+│   ├── analysis_handler.py               # Manejador de análisis
+│   ├── body_builder.py                   # Construcción del cuerpo de la aplicación
+│   ├── header_builder.py                 # Construcción del encabezado de la aplicación
+│   ├── login_handler.py                  # Manejador de login
+│   └── preferences_manager.py            # Manejador de preferencias
+|
+├── metatrader/ 
+│   └── metatrader.py                     # Manejador de MetaTrader
+|
 ├── modals/                               # Módulos para modales de la aplicación
 │   ├── __init__.py                       # Inicialización de módulos
-│   ├── backtesting_modal.py              # Modal de backtesting
 │   ├── candle_config_modal.py            # Modal de configuración de velas
 │   ├── config_app_modal.py               # Modal de configuración de la aplicación
 │   ├── detect_all_candles_modal.py       # Modal de detección de velas
 │   ├── detect_all_forex_modal.py         # Modal de detección de forex
 │   ├── loggin_modal.py                   # Modal de logging
+│   ├── simulation_strategies_modal.py    # Modal de simulación de estrategias
 │   └── strategy_simulator_modal.py       # Modal de simulador de estrategias
+|
+├── operations/ 
+│   ├── close_operations.py               # Cierre de operaciones
+│   ├── manage_operations.py              # Gestión de operaciones
+│   ├── window_close_operations.py        # Ventana de cierre de operaciones
+│   └── window_operations.py              # Ventana de operaciones
 |
 ├── resumes/                            # Directorio para informes de backtesting
 │   └── backtesting_2025-09-20_12-51-52.txt

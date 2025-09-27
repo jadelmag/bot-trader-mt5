@@ -197,9 +197,30 @@ class Simulation:
         
         if daily_profit >= daily_limit:
             self._log(f"[SIM-LIMIT] Límite de ganancia diaria alcanzado: {daily_profit:.2f}€ >= {daily_limit:.2f}€. No se abrirán nuevas operaciones.", 'warn')
+    
+            # Cerrar operaciones con beneficio positivo
+            self._close_profitable_positions_on_limit()
+    
             return False
         
         return True
+
+    def _close_profitable_positions_on_limit(self):
+        """Cierra operaciones con beneficio positivo al alcanzar límite diario."""
+        if not mt5 or not mt5.terminal_info():
+            return
+        
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        if open_positions is None or len(open_positions) == 0:
+            return
+        
+        for position in open_positions:
+            if position.profit > 0:
+                trade_type = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
+                self._log(f"[SIM-LIMIT] Cerrando operación rentable: #{position.ticket}, P/L: +{position.profit:.2f}€", 'success')
+                self.close_trade(position.ticket, position.volume, trade_type, "daily_limit_reached")
+            else:
+                self._log(f"[SIM-LIMIT] Manteniendo operación con pérdida: #{position.ticket}, P/L: {position.profit:.2f}€", 'info')
 
     def on_tick(self, timestamp, price):
         """
