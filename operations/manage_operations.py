@@ -2,6 +2,12 @@ import MetaTrader5 as mt5
 from datetime import datetime
 from operations.close_operations import close_operation_robust
 
+try:
+    from metatrader.metatrader import obtener_mensaje_error
+except ImportError:
+    def obtener_mensaje_error(codigo_error: int) -> str:
+        return f"Error desconocido (código: {codigo_error})"
+
 def close_single_operation(ticket, op_type, logger=None):
     """
     Cierra una operación específica usando el método robusto.
@@ -32,9 +38,6 @@ def close_single_operation(ticket, op_type, logger=None):
             logger.error(f"Error al cerrar operación {ticket}: {e}")
         return False
 
-
-
-        return False
 
 def cancel_pending_order(ticket, logger=None):
     """
@@ -72,9 +75,14 @@ def cancel_pending_order(ticket, logger=None):
             return True
         else:
             if logger:
-                error_msg = result.comment if result else "Error desconocido"
+                if result:
+                    error_traducido = obtener_mensaje_error(result.retcode)
+                    error_msg = f"{result.comment} (código: {result.retcode} - {error_traducido})"
+                else:
+                    error_msg = "Error desconocido"
                 logger.error(f"❌ Error al cancelar orden {ticket}: {error_msg}")
             return False
+
     except Exception as e:
         if logger:
             logger.error(f"Excepción al cancelar orden {ticket}: {e}")

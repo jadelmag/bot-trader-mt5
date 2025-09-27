@@ -2,6 +2,13 @@ import MetaTrader5 as mt5
 from datetime import datetime
 import time
 
+# Importar la función de traducción de errores
+try:
+    from metatrader.metatrader import obtener_mensaje_error
+except ImportError:
+    def obtener_mensaje_error(codigo_error: int) -> str:
+        return f"Error desconocido (código: {codigo_error})"
+
 def close_single_operation(ticket, logger=None):
     """
     Función de compatibilidad que usa el método robusto.
@@ -162,8 +169,9 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
                     else:
                         # Error en este intento
                         if logger:
+                            error_traducido = obtener_mensaje_error(result.retcode)
                             logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): "
-                                       f"{result.comment} (código: {result.retcode})")
+                                        f"{result.comment} (código: {result.retcode} - {error_traducido})")
                         
                         # Si es el último intento con este filling mode, no esperar
                         if attempt < max_attempts:

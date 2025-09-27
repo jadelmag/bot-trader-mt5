@@ -281,7 +281,7 @@ class CerrarOperacionesWindow:
                 self.logger.success(f"{'Posición' if op_type == 'position' else 'Orden'} {ticket} cerrada exitosamente")
         except Exception as e:
             if self.logger:
-                self.logger.error(f"Error al cerrar operación {ticket}: {e}")
+                self.logger.error(f"Error al cerrar la operación {ticket}: {e}")
     
     def modify_operation(self, ticket, op_type):
         if self.logger:
