@@ -221,8 +221,35 @@ class ActionHandler:
                                 except Exception as e:
                                     self.app._log_error(f"Error al cancelar orden {order.ticket}: {e}")
                         
-                        self.app._log_success("Todas las operaciones han sido cerradas")
-                    
+                        # Verificar que todas las operaciones se hayan cerrado realmente
+                        import time
+                        time.sleep(1)  # Dar tiempo para que se procesen las órdenes
+
+                        # Verificar nuevamente las operaciones abiertas
+                        remaining_positions = mt5.positions_get(symbol=self.app.simulation_instance.symbol)
+                        remaining_orders = mt5.orders_get(symbol=self.app.simulation_instance.symbol)
+
+                        total_remaining = 0
+                        if remaining_positions:
+                            total_remaining += len(remaining_positions)
+                        if remaining_orders:
+                            total_remaining += len(remaining_orders)
+
+                        if total_remaining > 0:
+                            # Aún hay operaciones abiertas, no permitir cerrar
+                            self.app._log_error(f"No se pudieron cerrar todas las operaciones. Quedan {total_remaining} operación(es) abiertas.")
+                            messagebox.showerror(
+                                "Error al cerrar operaciones",
+                                f"No se pudieron cerrar todas las operaciones.\n\n"
+                                f"Quedan {total_remaining} operación(es) abiertas.\n\n"
+                                "La aplicación no se cerrará para evitar pérdidas.\n"
+                                "Por favor, cierre manualmente las operaciones restantes.",
+                                icon='error'
+                            )
+                            return  # No cerrar la aplicación
+                        else:
+                            self.app._log_success("Todas las operaciones han sido cerradas exitosamente")
+
                     else:  # Usuario presionó No
                         self.app._log_info("Manteniendo operaciones abiertas al salir")
                     
