@@ -2,6 +2,7 @@
 TODO
 
 1. Añadir limite de dinero a ganar por dia [Dinero inicial + beneficios] = [Dinero a ganar por dia] [TODO]
+2. LLamar a la funcion obtener_mensaje_error donde se genere el errror, para traducirlo.
 
 TESTEAR
 

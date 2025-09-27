@@ -6,6 +6,7 @@ import json
 import threading
 import datetime
 from forex.forex_list import ForexStrategies
+from operations.close_operations import close_operation_robust
 
 # --- MT5 Integration ---
 try:
@@ -657,7 +658,7 @@ class Simulation:
 
     def close_trade(self, position_ticket: int, volume: float, trade_type: str, strategy_context: str = None):
         """
-        Cierra una operación abierta en MT5 asegurando la conexión antes de enviar la orden.
+        Cierra una operación abierta en MT5 usando el método robusto de cierre.
         """
         if not self._init_mt5():
             return None
@@ -668,29 +669,11 @@ class Simulation:
             return None
         position_info = position_info[0]
 
-        symbol = position_info.symbol
-        order_type = mt5.ORDER_TYPE_SELL if trade_type == 'long' else mt5.ORDER_TYPE_BUY
-        price = mt5.symbol_info_tick(symbol).bid if trade_type == 'long' else mt5.symbol_info_tick(symbol).ask
-        comment = position_info.comment # Recuperar el comentario original
+        # Usar la función robusta para cerrar
+        success = close_operation_robust(position_ticket, None, 5)
 
-        request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": float(volume),
-            "type": order_type,
-            "position": position_ticket,
-            "price": price,
-            "deviation": 20,
-            "magic": 234000,
-            "comment": (strategy_name or "Bot-Simulation")[:20],
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_FOK,
-        }
-
-        result = mt5.order_send(request)
-
-        if result is None:
-            self._log(f"[SIM-ERROR] mt5.order_send devolvió None al cerrar. last_error={mt5.last_error()}", 'error')
+        if not success:
+            self._log(f"[SIM-ERROR] No se pudo cerrar la posición {position_ticket} con método robusto", 'error')
             return None
 
         # Determinar el tipo de estrategia y nombre desde el comentario
@@ -715,27 +698,21 @@ class Simulation:
             else:
                 strategy_type_name = "Señal de STRATEGY 'DESCONOCIDO'"
 
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
-            log_message = f"[SIM] {strategy_type_name} -> {trade_type.upper()}: Fallo al cerrar la operación (retcode={result.retcode})"
-            self._log(log_message, 'error')
+        # Si llegamos aquí, la operación se cerró exitosamente
+        # Obtener el beneficio del historial de deals
+        deal = mt5.history_deals_get(position=position_ticket)
+        profit = 0.0
+        if deal and len(deal) > 0:
+            profit = deal[-1].profit
+
+        log_message = f"[SIM] {strategy_type_name} -> '{trade_type.upper()}': {profit:+.2f}"
+        
+        if profit >= 0:
+            self._log(log_message, 'success')  # Verde para ganancia o sin pérdida
         else:
-            # Para obtener el beneficio, necesitaríamos consultar el historial de trades (deals).
-            # Por simplicidad, aquí solo confirmamos el cierre exitoso.
-            # El beneficio real se podría obtener buscando el 'deal' correspondiente al 'result.order'.
-            deal = mt5.history_deals_get(position=position_ticket)
-            profit = 0.0
-            if deal and len(deal) > 0:
-                # El último 'deal' de una posición cerrada suele ser el que tiene el beneficio.
-                profit = deal[-1].profit
+            self._log(log_message, 'error')  # Rojo para pérdida
 
-            log_message = f"[SIM] {strategy_type_name} -> '{trade_type.upper()}': {profit:+.2f}"
-            
-            if profit >= 0:
-                self._log(log_message, 'success') # Verde para ganancia o sin pérdida
-            else:
-                self._log(log_message, 'error') # Rojo para pérdida
-
-        return result
+        return success
 
     def get_account_summary(self):
         """
