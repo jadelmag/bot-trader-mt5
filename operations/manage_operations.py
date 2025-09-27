@@ -44,7 +44,7 @@ def _close_position(ticket, logger=None):
             "magic": 0,
             "comment": f"Cerrar posición {ticket}",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
         
         result = mt5.order_send(close_request)

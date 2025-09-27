@@ -48,7 +48,7 @@ def close_single_operation(ticket, logger=None):
             "magic": 0,
             "comment": f"Cerrar operación {ticket}",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": mt5.ORDER_FILLING_FOK,
         }
         
         # Enviar la orden de cierre

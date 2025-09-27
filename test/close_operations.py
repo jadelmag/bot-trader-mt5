@@ -67,7 +67,7 @@ def cerrar_operacion_individual(position, metodo="normal"):
             comentario = "CIERRE AGRESIVO"
         else:
             deviation = 20
-            filling = mt5.ORDER_FILLING_IOC
+            filling = mt5.ORDER_FILLING_FOK
             comentario = "CIERRE NORMAL"
         
         close_request = {

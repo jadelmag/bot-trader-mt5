@@ -2,17 +2,23 @@
 TODO
 
 1. Añadir limite de dinero a ganar por dia [Dinero inicial + beneficios] = [Dinero a ganar por dia] [TODO]
-2. Implementar cierre manual de operaciones [DONE]
-3. Implementar cierre automatico de operaciones [DONE]
-4. Al salir de la aplicacion, si el simulador esta ejecutandose y hay operaciones abiertas, debe preguntar: "¿Desea cerrar todas las operaciones abiertas pendientes?" [DONE]
-    - Si dice Sí, se cerraran todas las operaciones y se guardara el log
-    - Si dice No, se guardara el log y se mantendran las operaciones abiertas
-    - No se podra cerrar la aplicacion mientras haya operaciones abiertas.
-
-Error al intentar cerrar posiciones abiertas
+2. Al cerrar la aplicacion y decirle si no cierra las operaciones abiertas, 
+deberia comprobar que se han cerrado antes de cerrar la aplicacion 
+y si no se han cerrado no permitir cerrar la aplicacion.
 
 
-1- TESTEAR
+
+3. Al cerrar la operacion me dice esto:
+
+[20:36:20] Error al cerrar operación 53437853058: Unsupported filling mode (código: 10030)
+[20:36:20] Error al cerrar la operación 53437853058
+[20:36:23] Error al cerrar operación 53437853058: Unsupported filling mode (código: 10030)
+
+
+
+TESTEAR
+
+- TASK 1 -
 quiero que al pulsar en label="Ver operaciones abiertas" se habra una venta modal, 
 que no sea bloqueante y permita realizar otras acciones de la ventana padre, llame a la 
 funcion _ver_operaciones_abiertas_action y muestra todas las operaciones abiertas con el siguiente formato:
@@ -52,11 +58,3 @@ En una tercera fila:
 - No necesita boton porque al hacer click sobre la X de la ventana se cerrara la ventana. 
 
 
-3- TESTEAR
-como puedes ver en header_builder.py, los siguientes botones inicialmente estan disabled:
-simulation_menu.add_command(label="Ver operaciones abiertas", command=app._ver_operaciones_abiertas_action, state="disabled")
-simulation_menu.add_command(label="Cerrar operaciones", command=app._cerrar_operaciones_action, state="disabled")
-simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action, state="disabled")
-
-quiero que cuando se inicie la simulación, tras cerrarse el modal simulation_strategies_modal.py y se apliquen las estrategias,
-se habilite el boton "Ver operaciones abiertas", "Cerrar operaciones" y "Detener simulación" 

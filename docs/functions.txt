@@ -1,6 +1,0 @@
-porque en operaciones abiertas pone: Tipo: MANUAL Nombre: forex_strategy_s??
-
-deberia poner Tipo: FOREX porque la estrategia es forex
-si es candle deberia poner Tipo: CANDLE
-
-y el nombre de la estrategia no está completo.

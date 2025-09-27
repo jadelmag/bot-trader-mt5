@@ -65,20 +65,34 @@ class OperacionesAbiertasWindow:
         if not comment or comment == "Bot-Simulation":
             return "MANUAL", "Operación Manual"
         
-        comment_clean = comment.strip()
+        comment_clean = comment.strip().lower()
         
-        # Determinar el tipo basado en prefijos conocidos
-        if any(forex_indicator in comment_clean.lower() for forex_indicator in 
-               ['ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma']):
+        # Detectar FOREX por prefijo o palabras clave
+        if (comment_clean.startswith('forex_') or 
+            any(forex_word in comment_clean for forex_word in 
+                ['forex', 'ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma', 'strategy'])):
             strategy_type = "FOREX"
-            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ').title()
-        elif any(candle_pattern in comment_clean.lower() for candle_pattern in 
-                 ['doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark']):
+            # Limpiar y formatear nombre
+            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ')
+            # Si está truncado, intentar reconstruir nombre común
+            if strategy_name.startswith('strategy'):
+                strategy_name = "Estrategia Forex"
+            else:
+                strategy_name = strategy_name.title()
+        
+        # Detectar CANDLE por prefijo o patrones conocidos
+        elif (comment_clean.startswith('candle_') or 
+            any(candle_word in comment_clean for candle_word in 
+                ['candle', 'doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark'])):
             strategy_type = "CANDLE"
+            # Limpiar y formatear nombre
             strategy_name = comment_clean.replace('candle_', '').replace('_', ' ').title()
+            if not strategy_name or strategy_name == ' ':
+                strategy_name = "Patrón de Vela"
+        
         else:
             strategy_type = "MANUAL"
-            strategy_name = comment_clean if comment_clean else "Operación Manual"
+            strategy_name = comment.strip() if comment.strip() else "Operación Manual"
         
         return strategy_type, strategy_name
 

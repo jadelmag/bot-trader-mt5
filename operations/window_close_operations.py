@@ -76,24 +76,36 @@ class CerrarOperacionesWindow:
         main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=10)
         
         # Canvas y scrollbar
-        canvas = tk.Canvas(main_frame, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        self.operations_frame = ttk.Frame(canvas)
+        self.canvas = tk.Canvas(main_frame, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=self.canvas.yview)
+        self.operations_frame = ttk.Frame(self.canvas)
         
         self.operations_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
         
-        canvas.create_window((0, 0), window=self.operations_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        self.canvas.create_window((0, 0), window=self.operations_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
         
         # Mouse wheel support
         def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-        
-        canvas.pack(side="left", fill="both", expand=True)
+            try:
+                # Verificar que el canvas aún existe y la ventana está activa
+                if hasattr(self, 'canvas') and self.canvas and self.canvas.winfo_exists():
+                    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except tk.TclError:
+                # Ignorar errores si el widget ya no existe
+                pass
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Error en scroll: {e}")
+
+        # Usar bind en lugar de bind_all para evitar eventos globales
+        self.canvas.bind("<MouseWheel>", _on_mousewheel)
+        # También enlazar al frame de operaciones para capturar el scroll cuando el mouse esté sobre él
+        self.operations_frame.bind("<MouseWheel>", _on_mousewheel)
+        self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
         # Mensaje cuando no hay operaciones
@@ -305,7 +317,26 @@ class CerrarOperacionesWindow:
                 break
     
     def on_close(self):
+        """Cierra la ventana y limpia los eventos del canvas."""
         self.is_running = False
+        
+        # Limpiar eventos del canvas antes de cerrar
+        if hasattr(self, 'canvas') and self.canvas:
+            try:
+                self.canvas.unbind("<MouseWheel>")
+            except:
+                pass
+        
+        if hasattr(self, 'operations_frame') and self.operations_frame:
+            try:
+                self.operations_frame.unbind("<MouseWheel>")
+            except:
+                pass
+        
+        # Limpiar referencias
+        self.canvas = None
+        self.operations_frame = None
+        
         if self.update_thread and self.update_thread.is_alive():
             self.update_thread.join(timeout=1)
         if self.window:
