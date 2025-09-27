@@ -1,7 +1,16 @@
 
 TODO
 
-1. Añadir limite de dinero a ganar por dia [Dinero inicial + beneficios] = [Dinero a ganar por dia] [TODO]
+1. Añadir limite de dinero a ganar por dia, el cual sera un textbox que afectara a la simulacion:
+
+Se me ha olvidado una cosa, Si el limite diario es distinto de cero, es decir, hay limite diario:
+- Cuando llegue al limite diario, no se debe permitir abrir mas operaciones y si hay operaciones abiertas:
+    - si su beneficio es positivo, se debe cerrar.
+    - si su beneficio es negativo, se debe mantener abierta hasta que llegue a cero o sea positivo.
+
+
+
+2. En ver operaciones abiertas, el nombre de la estrategia se muestra mal (ya sea forex o candle).
 
 TESTEAR
 

@@ -65,6 +65,9 @@ class Simulation:
         self.debug_mode = debug_mode
         self.strategies_config = strategies_config if strategies_config is not None else {}
         self.general_config = self._load_general_config()
+        # Variables para límite de ganancia diaria
+        self.daily_start_balance = initial_balance
+        self.current_date = datetime.datetime.now().date()
 
         # --- Candle and Market Analysis Data ---
         self.candles_df = pd.DataFrame(columns=['time', 'open', 'high', 'low', 'close'])
@@ -170,6 +173,34 @@ class Simulation:
             self._log("[SIM-ERROR] El archivo de configuración general 'config.json' está corrupto.", 'error')
             return {}
 
+    def _check_daily_profit_limit(self):
+        """Verifica si se ha alcanzado el límite de ganancia diaria."""
+        daily_limit = self.general_config.get('daily_profit_limit', 0.0)
+        if daily_limit <= 0:
+            return True  # Sin límite configurado
+        
+        # Verificar si cambió el día
+        current_date = datetime.datetime.now().date()
+        if current_date != self.current_date:
+            # Nuevo día, resetear balance inicial
+            account_info = mt5.account_info() if mt5 else None
+            self.daily_start_balance = account_info.balance if account_info else self.balance
+            self.current_date = current_date
+            self._log(f"[SIM] Nuevo día detectado. Balance inicial: {self.daily_start_balance:.2f}")
+        
+        # Obtener balance actual
+        account_info = mt5.account_info() if mt5 else None
+        current_balance = account_info.balance if account_info else self.balance
+        
+        # Calcular ganancia del día
+        daily_profit = current_balance - self.daily_start_balance
+        
+        if daily_profit >= daily_limit:
+            self._log(f"[SIM-LIMIT] Límite de ganancia diaria alcanzado: {daily_profit:.2f}€ >= {daily_limit:.2f}€. No se abrirán nuevas operaciones.", 'warn')
+            return False
+        
+        return True
+
     def on_tick(self, timestamp, price):
         """
         Processes a new market tick, aggregating it into candles.
@@ -244,6 +275,10 @@ class Simulation:
         """
         Analyzes the market on each new completed candle to make trading decisions.
         """
+        # Verificar límite de ganancia diaria
+        if not self._check_daily_profit_limit():
+            return
+
         if self.candles_df.empty or not self.strategies_config:
             return
 
