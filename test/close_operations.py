@@ -80,7 +80,7 @@ def cerrar_operacion_individual(position, metodo="normal"):
             "deviation": deviation,
             "magic": position.magic,
             "comment": comentario,
-            "type_time": mt5.ORDER_TIME_GTC,
+            "type_time": mt5.ORDER_FILLING_FOK,
             "type_filling": filling,
         }
         

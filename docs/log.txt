@@ -2,19 +2,6 @@
 TODO
 
 1. Añadir limite de dinero a ganar por dia [Dinero inicial + beneficios] = [Dinero a ganar por dia] [TODO]
-2. Al cerrar la aplicacion y decirle si no cierra las operaciones abiertas, 
-deberia comprobar que se han cerrado antes de cerrar la aplicacion 
-y si no se han cerrado no permitir cerrar la aplicacion.
-
-
-
-3. Al cerrar la operacion me dice esto:
-
-[20:36:20] Error al cerrar operación 53437853058: Unsupported filling mode (código: 10030)
-[20:36:20] Error al cerrar la operación 53437853058
-[20:36:23] Error al cerrar operación 53437853058: Unsupported filling mode (código: 10030)
-
-
 
 TESTEAR
 
