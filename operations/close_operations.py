@@ -59,7 +59,7 @@ def _get_deal_profit(ticket, logger=None):
                     return deal.profit
         
         if logger:
-            logger.warning(f"No se encontró el deal de cierre para el ticket {ticket} en el historial reciente.")
+            logger.warn(f"No se encontró el deal de cierre para el ticket {ticket} en el historial reciente.")
         return 0.0 # Retornar 0 si no se encuentra
 
     except Exception as e:
@@ -115,7 +115,7 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
                 price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
                 spread_pips = (symbol_info.ask - symbol_info.bid) / symbol_info.point
                 if spread_pips > max_spread_pips and logger:
-                    logger.warning(f"⚠️ Spread alto: {spread_pips:.1f} pips.")
+                    logger.warn(f"⚠️ Spread alto: {spread_pips:.1f} pips.")
 
                 deviation = max(int(spread_pips * 1.5), 5)
                 comment_text = f"C{ticket}_{mode_name}_{attempt}"[:20]
