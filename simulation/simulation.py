@@ -29,6 +29,7 @@ from backtesting.detect_candles import CandleDetector
 from backtesting.apply_strategies import StrategyAnalyzer
 from custom.custom_strategies import CustomStrategies
 from simulation.key_list import get_id_for_name
+from loggin.audit_log import audit_logger
 
 class Simulation:
     """
@@ -69,6 +70,16 @@ class Simulation:
         # Variables para límite de ganancia diaria
         self.daily_start_balance = initial_balance
         self.current_date = datetime.datetime.now().date()
+
+        # --- Audit Logger ---
+        self.audit_logger = audit_logger
+        if not self.audit_logger.is_enabled:
+            if self.debug_mode:
+                self._log("[SIM] Advertencia: AuditLogger no está habilitado")
+        else:
+            if self.debug_mode:
+                self._log(f"[SIM] AuditLogger habilitado. Logs en: {audit_logger.log_file_path}")
+            self.audit_logger.log_system_event(f"Inicio simulación {symbol} {timeframe}")
 
         # --- Candle and Market Analysis Data ---
         self.candles_df = pd.DataFrame(columns=['time', 'open', 'high', 'low', 'close'])
@@ -116,6 +127,10 @@ class Simulation:
             'warn': self.logger.warn
         }
         log_methods.get(level, self.logger.log)(message)
+
+        # Registrar también en el archivo JSONL
+        if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+            self.audit_logger.log_message(message, level.upper())
 
     def _init_mt5(self):
         """Inicializa la conexión con MetaTrader 5 si no está activa."""
@@ -248,6 +263,11 @@ class Simulation:
                 self.trades_in_current_candle = 0 # Reset counter for the new candle
                 if self.debug_mode:
                     self._log(f"[SIM] Nueva vela {self.timeframe} formada a las {candle_start_time}. Contador de trades reseteado.")
+
+                # --- Registro de auditoría ---
+                if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+                    self.audit_logger.log_system_event(f"Nueva vela {self.timeframe} formada a las {candle_start_time}")
+
 
                 new_row = pd.DataFrame([self.current_candle])
                 if self.candles_df.empty:
@@ -688,6 +708,18 @@ class Simulation:
                 strategy_type = "DESCONOCIDO"
                 strat_name_clean = "DESCONOCIDO"
 
+            # --- Registro de auditoría ---
+            if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+                self.audit_logger.log_trade_open(
+                    symbol=symbol,
+                    trade_type=trade_type,
+                    volume=volume,
+                    price=price,
+                    sl=sl,
+                    tp=tp,
+                    comment=comment
+                )
+
             log_message = (
                 f"[SIM] Señal de {strategy_type} '{strat_name_clean}' -> '{trade_type.upper()}': "
                 f"{price:.{digits}f} | {volume} | {sl} | {tp}"
@@ -729,62 +761,101 @@ class Simulation:
         self.free_margin = self.equity - self.margin
 
     def close_trade(self, position_ticket: int, volume: float, trade_type: str, strategy_context: str = None):
-        """
-        Cierra una operación abierta en MT5 usando el método robusto de cierre.
-        """
+        """Cierra una operación mostrando claramente el resultado."""
         if not self._init_mt5():
             return None
 
         position_info = mt5.positions_get(ticket=position_ticket)
         if not position_info:
-            self._log(f"[SIM] La posición con ticket {position_ticket} ya estaba cerrada o no existe.", 'info')
+            self._log(f"[SIM] Posición {position_ticket} ya cerrada o no existe", 'info')
             return None
+            
         position_info = position_info[0]
+        balance_before = self.balance
 
-        # Usar la función robusta para cerrar
-        success = close_operation_robust(position_ticket, None, 5)
-
-        if not success:
-            self._log(f"[SIM-ERROR] No se pudo cerrar la posición {position_ticket} con método robusto", 'error')
+        # Cerrar operación
+        if not close_operation_robust(position_ticket, None, 5):
+            self._log(f"[ERROR] No se pudo cerrar {position_ticket}", 'error')
             return None
 
-        # Determinar el tipo de estrategia y nombre desde el comentario
-        strategy_type_name = "DESCONOCIDO"
-        comment = position_info.comment
+        # Obtener resultado
+        deal = mt5.history_deals_get(position=position_ticket)
+        if not deal:
+            self._log(f"[ERROR] No se obtuvo resultado de {position_ticket}", 'error')
+            return None
+
+        self._process_trade_result(
+            position_info.comment, 
+            trade_type, 
+            deal[-1].profit, 
+            balance_before
+        )
+
+        # --- Registro de auditoría ---
+        if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+            self.audit_logger.log_trade_close(
+                ticket=position_ticket,
+                symbol=symbol,
+                close_price=price,
+                profit=deal[-1].profit
+            )
+
+        return True
+
+    def _process_trade_result(self, comment: str, trade_type: str, profit: float, balance_before: float):
+        """Procesa y muestra el resultado de una operación cerrada."""
+        # Obtener nombre de la estrategia
+        strategy_name = "Estrategia"
         if comment:
             if "forex_" in comment:
-                parts = comment.split('_')
-                strategy_type = parts[0].upper()
-                strategy_name = '_'.join(parts[1:])
-                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
+                strategy_name = "FOREX " + comment.split('_')[1] if '_' in comment else "FOREX"
             elif "candle_" in comment:
-                parts = comment.split('_')
-                strategy_type = parts[0].upper()
-                strategy_name = '_'.join(parts[1:])
-                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
-            elif "custom " in comment:
-                parts = comment.split(' ', 1)
-                strategy_type = parts[0].upper()
-                strategy_name = parts[1]
-                strategy_type_name = f"Señal de {strategy_type} '{strategy_name}'"
-            else:
-                strategy_type_name = "Señal de STRATEGY 'DESCONOCIDO'"
+                strategy_name = "VELA " + comment.split('_')[1] if '_' in comment else "VELA"
+            elif "custom" in comment:
+                strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
 
-        # Si llegamos aquí, la operación se cerró exitosamente
-        # Obtener el beneficio del historial de deals
-        deal = mt5.history_deals_get(position=position_ticket)
-        profit = 0.0
-        if deal and len(deal) > 0:
-            profit = deal[-1].profit
-
-        log_message = f"[SIM] {strategy_type_name} -> '{trade_type.upper()}': {profit:+.2f}"
-        
-        if profit >= 0:
-            self._log(log_message, 'success')  # Verde para ganancia o sin pérdida
+        # Mostrar resultado
+        if profit > 0:
+            percent = (profit / balance_before * 100) if balance_before > 0 else 0
+            self._log(
+                f"[SIM] {strategy_name} | {trade_type.upper()} | "
+                f"GANANCIA: +${profit:.2f} (+{percent:.2f}%)", 
+                'success'
+            )
+        elif profit < 0:
+            percent = (abs(profit) / balance_before * 100) if balance_before > 0 else 0
+            self._log(
+                f"[SIM] {strategy_name} | {trade_type.upper()} | "
+                f"PÉRDIDA: -${abs(profit):.2f} (-{percent:.2f}%)", 
+                'error'
+            )
         else:
-            self._log(log_message, 'error')  # Rojo para pérdida
+            self._log(f"[SIM] {strategy_name} | {trade_type.upper()} | SIN CAMBIO", 'info')
 
-        return success
+        # Actualizar métricas
+        self.balance += profit
+        if profit > 0:
+            self.total_profit += profit
+        else:
+            self.total_loss += abs(profit)
+
+        # Mostrar resumen
+        self._log(
+            f"[SIM] Balance: ${self.balance:.2f} | "
+            f"Ganancias: ${self.total_profit:.2f} | "
+            f"Pérdidas: ${self.total_loss:.2f}", 
+            'info'
+        )
+
+        # Registrar también en el archivo JSONL el resumen
+        if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+            self.audit_logger.log_system_event(
+                f"Balance: ${self.balance:.2f} | "
+                f"{strategy_name} | {trade_type.upper()} | "
+                f"GANANCIA: +${profit:.2f} (+{percent:.2f}%) | "
+                f"Ganancias: ${self.total_profit:.2f} | "
+                f"Pérdidas: ${self.total_loss:.2f}"
+            )
 
     def get_account_summary(self):
         """

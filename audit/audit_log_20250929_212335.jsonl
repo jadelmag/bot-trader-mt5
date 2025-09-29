@@ -1,0 +1,14 @@
+{"timestamp": "2025-09-29T21:23:50.747475", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-09-29T21:23:50.752495", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 93803.47"}}
+{"timestamp": "2025-09-29T21:23:50.754523", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-09-29T21:24:09.883575", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:24:00"}}
+{"timestamp": "2025-09-29T21:25:03.443588", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:25:00"}}
+{"timestamp": "2025-09-29T21:25:59.909519", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:26:00"}}
+{"timestamp": "2025-09-29T21:25:59.924150", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG' detectada. Abriendo operación."}}
+{"timestamp": "2025-09-29T21:25:59.928642", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 93803.47"}}
+{"timestamp": "2025-09-29T21:25:59.986983", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 31.27, "open_price": 1.17312, "stop_loss": 1.17282, "take_profit": 1.17387, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-09-29T21:25:59.987391", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG': 1.17312 | 31.27 | 1.17282 | 1.17387"}}
+{"timestamp": "2025-09-29T21:27:00.341050", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:27:00"}}
+{"timestamp": "2025-09-29T21:28:03.885914", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:28:00"}}
+{"timestamp": "2025-09-29T21:29:06.341858", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:29:00"}}
+{"timestamp": "2025-09-29T21:29:59.736416", "event": "system_event", "data": {"level": "INFO", "message": "Nueva vela M1 formada a las 2025-09-29 22:30:00"}}
