@@ -1,5 +1,6 @@
 import MetaTrader5 as mt5
 import time
+from datetime import datetime, timedelta
 
 # -----------------------------
 # Configuraciones generales
@@ -40,11 +41,37 @@ def _verify_position_closed(ticket, logger=None, timeout=VERIFY_TIMEOUT):
         logger.error(f"❌ Falló el cierre de {ticket}. Volumen restante: {final[0].volume}")
     return not final
 
+def _get_deal_profit(ticket, logger=None):
+    """Obtiene el profit de un deal cerrado buscando en el historial reciente."""
+    try:
+        # Buscar en el historial de las últimas 24 horas
+        from_date = datetime.now() - timedelta(hours=24)
+        to_date = datetime.now()
+        
+        deals = mt5.history_deals_get(from_date, to_date)
+        
+        if deals:
+            # Filtrar por el ticket de la posición/orden
+            for deal in reversed(deals): # Buscar desde el más reciente
+                if deal.position_id == ticket and deal.entry == 1: # 1 = deal de salida
+                    if logger:
+                        logger.log(f"Deal de cierre encontrado para ticket {ticket} con profit {deal.profit:.2f}", "info")
+                    return deal.profit
+        
+        if logger:
+            logger.warning(f"No se encontró el deal de cierre para el ticket {ticket} en el historial reciente.")
+        return 0.0 # Retornar 0 si no se encuentra
+
+    except Exception as e:
+        if logger:
+            logger.error(f"Excepción al buscar profit del deal para {ticket}: {e}")
+        return 0.0
+
 # -----------------------------
 # Cierre robusto de una operación
 # -----------------------------
 def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_spread_pips=MAX_SPREAD_PIPS):
-    """Cierra una operación de forma robusta minimizando riesgo de slippage y pérdidas."""
+    """Cierra una operación de forma robusta y devuelve el resultado."""
     filling_modes = [
         ("FOK", mt5.ORDER_FILLING_FOK),
         ("IOC", mt5.ORDER_FILLING_IOC),
@@ -52,29 +79,25 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
     ]
 
     try:
-        # Obtener posición
         position = mt5.positions_get(ticket=ticket)
         if not position:
             if logger:
                 logger.error(f"No se encontró la posición {ticket}")
-            return False
+            return {"success": False, "profit": 0.0, "ticket": ticket}
         position = position[0]
 
-        # Info del símbolo
         symbol_info = mt5.symbol_info(position.symbol)
         if not symbol_info:
             if logger:
                 logger.error(f"No se pudo obtener info del símbolo {position.symbol}")
-            return False
+            return {"success": False, "profit": 0.0, "ticket": ticket}
 
-        # Volumen seguro
         volume_step = symbol_info.volume_step
         volume = max(volume_step, round(position.volume / volume_step) * volume_step)
 
         if logger:
             logger.log(f"🔍 Intentando cerrar {volume:.2f} lotes de {position.symbol} (ticket {ticket})")
 
-        # Tipo de orden opuesta
         order_type = mt5.ORDER_TYPE_SELL if position.type == mt5.POSITION_TYPE_BUY else mt5.ORDER_TYPE_BUY
 
         for mode_name, filling_mode in filling_modes:
@@ -89,18 +112,12 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
                     time.sleep(0.5)
                     continue
 
-                # Precio de cierre
                 price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
-
-                # Spread en pips
                 spread_pips = (symbol_info.ask - symbol_info.bid) / symbol_info.point
                 if spread_pips > max_spread_pips and logger:
-                    logger.warning(f"⚠️ Spread alto: {spread_pips:.1f} pips. Riesgo de slippage.")
+                    logger.warning(f"⚠️ Spread alto: {spread_pips:.1f} pips.")
 
-                # Deviation dinámico
                 deviation = max(int(spread_pips * 1.5), 5)
-
-                # Comentario corto
                 comment_text = f"C{ticket}_{mode_name}_{attempt}"[:20]
 
                 close_request = {
@@ -128,42 +145,28 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
 
                 if result.retcode == mt5.TRADE_RETCODE_DONE:
                     if logger:
-                        logger.success(f"✅ Orden de cierre enviada para {ticket} con {mode_name} "
-                                       f"(Vol {volume:.2f}, Precio {price:.5f})")
-                    return _verify_position_closed(ticket, logger)
+                        logger.success(f"✅ Orden de cierre enviada para {ticket} con {mode_name}")
+                    
+                    if _verify_position_closed(ticket, logger):
+                        profit = _get_deal_profit(ticket, logger)
+                        return {"success": True, "profit": profit, "ticket": ticket}
+                    else:
+                        return {"success": False, "profit": 0.0, "ticket": ticket}
 
                 else:
                     error_traducido = obtener_mensaje_error(result.retcode)
                     if logger:
-                        logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): "
-                                     f"{result.comment} (código {result.retcode} - {error_traducido})")
-
-                    # Cierre parcial seguro
-                    if "invalid volume" in result.comment.lower() or result.retcode in (
-                        mt5.TRADE_RETCODE_INVALID_VOLUME,
-                        mt5.TRADE_RETCODE_INVALID_PRICE,
-                    ):
-                        partial_volume = round((volume - volume_step) / volume_step) * volume_step
-                        if partial_volume >= volume_step:
-                            if logger:
-                                logger.log(f"🔄 Intentando cierre parcial: {partial_volume:.2f} lotes")
-                            close_request["volume"] = partial_volume
-                            partial_result = mt5.order_send(close_request)
-                            if partial_result and partial_result.retcode == mt5.TRADE_RETCODE_DONE:
-                                if logger:
-                                    logger.success(f"✅ Cierre parcial enviado: {partial_volume:.2f} lotes")
-                                return _verify_position_closed(ticket, logger)
-
+                        logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): {result.comment} (código {result.retcode} - {error_traducido})")
                     time.sleep(0.5)
 
         if logger:
             logger.error(f"❌ No se pudo cerrar la operación {ticket} tras {max_attempts * len(filling_modes)} intentos")
-        return False
+        return {"success": False, "profit": 0.0, "ticket": ticket}
 
     except Exception as e:
         if logger:
             logger.error(f"Excepción crítica al cerrar operación {ticket}: {e}")
-        return False
+        return {"success": False, "profit": 0.0, "ticket": ticket}
 
 # -----------------------------
 # Cierre de una sola operación
@@ -190,16 +193,15 @@ def close_all_operations(symbol, logger=None):
             logger.log(f"Cerrando {total} operaciones para {symbol} con método robusto...")
 
         for pos in positions:
-            success = close_operation_robust(pos.ticket, logger)
-            if success:
+            result = close_operation_robust(pos.ticket, logger)
+            if result and result.get("success"):
                 cerradas += 1
-                p_l_total += pos.profit
+                p_l_total += result.get("profit", pos.profit) # Usa profit del deal si está, si no, el flotante
 
         fallidas = total - cerradas
 
         if logger:
-            logger.log(f"✅ Resumen de cierre para {symbol}: Total: {total}, Cerradas: {cerradas}, "
-                       f"Fallidas: {fallidas}, P/L total: {p_l_total:.2f} $")
+            logger.log(f"✅ Resumen de cierre para {symbol}: Total: {total}, Cerradas: {cerradas}, Fallidas: {fallidas}, P/L total: {p_l_total:.2f} $")
 
         return {
             "total": total,
