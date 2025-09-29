@@ -765,7 +765,8 @@ class App:
                 logger=self.logger
             )
             
-            self._log_info("Ventana de operaciones abiertas abierta")
+            if self.debug_mode_var.get():
+                self._log_info("Ventana de operaciones abiertas abierta")
             
         except ImportError as e:
             self._log_error(f"Error al importar ventana de operaciones: {e}")
@@ -794,7 +795,8 @@ class App:
                 logger=self.logger
             )
             
-            self._log_info("Ventana de gestión de operaciones abierta")
+            if self.debug_mode_var.get():
+                self._log_info("Ventana de gestión de operaciones abierta")
             
         except ImportError as e:
             self._log_error(f"Error al importar ventana de gestión: {e}")

@@ -570,8 +570,11 @@ class Simulation:
 
             money_to_risk = equity * (final_risk_percent / 100.0)
 
-            sl_in_points = sl_pips  # <-- LÍNEA CORREGIDA
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            # sl_in_points = sl_pips 
+            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            sl_in_points = sl_pips * symbol_info.point
+            contract_size = symbol_info.trade_contract_size  # Típicamente 100,000 para Forex
+            loss_per_lot = sl_in_points * contract_size
 
             volume = money_to_risk / loss_per_lot
 

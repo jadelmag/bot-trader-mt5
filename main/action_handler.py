@@ -128,12 +128,14 @@ class ActionHandler:
         self.app.root.wait_window(modal)
 
         if hasattr(modal, 'result') and modal.result:
-            self.app._log_info("Configuración guardada correctamente.")
+            if self.app.debug_mode_var.get():
+                self.app._log_info("Configuración guardada correctamente.")
             if AuditLogger:
                 AuditLogger()._load_config()
                 AuditLogger()._setup_log_file()
         else:
-            self.app._log_info("La configuración no fue modificada.")
+            if self.app.debug_mode_var.get():
+                self.app._log_info("La configuración no fue modificada.")
 
     def save_session_log(self):
         """Guarda el contenido actual del logger en un archivo de sesión."""
