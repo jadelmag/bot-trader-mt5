@@ -47,3 +47,94 @@ En una tercera fila:
 - TASK 3 -
 
 Añadir limite de dinero a ganar por dia.
+
+
+
+
+
+[09:58:00] [SIM] Nueva vela M1 formada a las 2025-09-29 10:58:00. Contador de trades reseteado.
+[09:58:05] Ventana de operaciones abiertas abierta
+[09:58:11] Ventana de gestión de operaciones abierta
+[09:58:24] Intentando cerrar operación 53443843039 con múltiples filling modes...
+[09:58:24] Probando filling mode: FOK
+[09:58:24] Intento 1/5 (FOK): order_send() falló
+[09:58:24] Intento 2/5 (FOK): order_send() falló
+[09:58:24] Intento 3/5 (FOK): order_send() falló
+[09:58:24] Intento 4/5 (FOK): order_send() falló
+[09:58:24] Intento 5/5 (FOK): order_send() falló
+[09:58:24] Probando filling mode: IOC
+[09:58:24] Intento 1/5 (IOC): order_send() falló
+[09:58:24] Intento 2/5 (IOC): order_send() falló
+[09:58:24] Intento 3/5 (IOC): order_send() falló
+[09:58:24] Intento 4/5 (IOC): order_send() falló
+[09:58:24] Intento 5/5 (IOC): order_send() falló
+[09:58:24] Probando filling mode: RETURN
+[09:58:24] Intento 1/5 (RETURN): order_send() falló
+[09:58:24] Intento 2/5 (RETURN): order_send() falló
+[09:58:24] Intento 3/5 (RETURN): order_send() falló
+[09:58:24] Intento 4/5 (RETURN): order_send() falló
+[09:58:24] Intento 5/5 (RETURN): order_send() falló
+[09:58:24] ❌ No se pudo cerrar la operación 53443843039 después de 15 intentos
+[09:58:32] Intentando cerrar operación 53443843039 con múltiples filling modes...
+[09:58:32] Probando filling mode: FOK
+[09:58:32] Intento 1/5 (FOK): order_send() falló
+[09:58:32] Intento 2/5 (FOK): order_send() falló
+[09:58:32] Intento 3/5 (FOK): order_send() falló
+[09:58:32] Intento 4/5 (FOK): order_send() falló
+[09:58:32] Intento 5/5 (FOK): order_send() falló
+[09:58:32] Probando filling mode: IOC
+[09:58:32] Intento 1/5 (IOC): order_send() falló
+[09:58:32] Intento 2/5 (IOC): order_send() falló
+[09:58:32] Intento 3/5 (IOC): order_send() falló
+[09:58:32] Intento 4/5 (IOC): order_send() falló
+[09:58:32] Intento 5/5 (IOC): order_send() falló
+[09:58:32] Probando filling mode: RETURN
+[09:58:32] Intento 1/5 (RETURN): order_send() falló
+[09:58:32] Intento 2/5 (RETURN): order_send() falló
+[09:58:32] Intento 3/5 (RETURN): order_send() falló
+[09:58:32] Intento 4/5 (RETURN): order_send() falló
+[09:58:32] Intento 5/5 (RETURN): order_send() falló
+[09:58:32] ❌ No se pudo cerrar la operación 53443843039 después de 15 intentos
+[09:58:39] Intentando cerrar operación 53443843039 con múltiples filling modes...
+[09:58:39] Probando filling mode: FOK
+[09:58:39] Intento 1/5 (FOK): order_send() falló
+[09:58:40] Intento 2/5 (FOK): order_send() falló
+[09:58:40] Intento 3/5 (FOK): order_send() falló
+[09:58:40] Intento 4/5 (FOK): order_send() falló
+[09:58:40] Intento 5/5 (FOK): order_send() falló
+[09:58:40] Probando filling mode: IOC
+[09:58:40] Intento 1/5 (IOC): order_send() falló
+[09:58:40] Intento 2/5 (IOC): order_send() falló
+[09:58:40] Intento 3/5 (IOC): order_send() falló
+[09:58:40] Intento 4/5 (IOC): order_send() falló
+[09:58:40] Intento 5/5 (IOC): order_send() falló
+[09:58:40] Probando filling mode: RETURN
+[09:58:40] Intento 1/5 (RETURN): order_send() falló
+[09:58:40] Intento 2/5 (RETURN): order_send() falló
+[09:58:40] Intento 3/5 (RETURN): order_send() falló
+[09:58:40] Intento 4/5 (RETURN): order_send() falló
+[09:58:40] Intento 5/5 (RETURN): order_send() falló
+[09:58:40] ❌ No se pudo cerrar la operación 53443843039 después de 15 intentos
+[09:59:00] [SIM] Nueva vela M1 formada a las 2025-09-29 10:59:00. Contador de trades reseteado.
+[09:59:00] Ventana de operaciones abiertas abierta
+[09:59:09] Intentando cerrar operación 53443843039 con múltiples filling modes...
+[09:59:09] Probando filling mode: FOK
+[09:59:09] Intento 1/5 (FOK): order_send() falló
+[09:59:09] Intento 2/5 (FOK): order_send() falló
+[09:59:09] Intento 3/5 (FOK): order_send() falló
+[09:59:09] Intento 4/5 (FOK): order_send() falló
+[09:59:09] Intento 5/5 (FOK): order_send() falló
+[09:59:09] Probando filling mode: IOC
+[09:59:09] Intento 1/5 (IOC): order_send() falló
+[09:59:09] Intento 2/5 (IOC): order_send() falló
+[09:59:09] Intento 3/5 (IOC): order_send() falló
+[09:59:09] Intento 4/5 (IOC): order_send() falló
+[09:59:09] Intento 5/5 (IOC): order_send() falló
+[09:59:09] Probando filling mode: RETURN
+[09:59:09] Intento 1/5 (RETURN): order_send() falló
+[09:59:09] Intento 2/5 (RETURN): order_send() falló
+[09:59:09] Intento 3/5 (RETURN): order_send() falló
+[09:59:09] Intento 4/5 (RETURN): order_send() falló
+[09:59:09] Intento 5/5 (RETURN): order_send() falló
+[09:59:09] ❌ No se pudo cerrar la operación 53443843039 después de 15 intentos
+[09:59:09] Error al cerrar la operación 53443843039

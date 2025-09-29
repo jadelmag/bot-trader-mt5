@@ -7,6 +7,7 @@ import threading
 import datetime
 from forex.forex_list import ForexStrategies
 from operations.close_operations import close_operation_robust
+from metatrader.metatrader import obtener_mensaje_error
 
 # --- MT5 Integration ---
 try:
@@ -654,7 +655,7 @@ class Simulation:
             return None
 
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode}, last_error={mt5.last_error()}", 'error')
+            self._log(f"[SIM-ERROR] order_send falló, retcode={result.retcode} ({obtener_mensaje_error(result.retcode)}), last_error={mt5.last_error()}", 'error')
         else:
             # --- Formateo del mensaje de log personalizado ---
             strategy_type = "DESCONOCIDO"
