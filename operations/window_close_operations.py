@@ -4,6 +4,7 @@ import MetaTrader5 as mt5
 from datetime import datetime
 import threading
 import time
+from simulation.key_list import get_name_for_id
 
 class CerrarOperacionesWindow:
     def __init__(self, parent, simulation_instance, logger):
@@ -50,19 +51,21 @@ class CerrarOperacionesWindow:
             return "MANUAL", "Operación Manual"
         
         comment_clean = comment.strip()
+        keyIDComment = comment_clean.split('-')[1]
+        strategy_name = get_name_for_id(int(keyIDComment))
         
         # Determinar el tipo basado en prefijos conocidos
-        if any(forex_indicator in comment_clean.lower() for forex_indicator in 
+        if any(forex_indicator in strategy_name.lower() for forex_indicator in 
             ['ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma']):
             strategy_type = "FOREX"
-            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ').title()
-        elif any(candle_pattern in comment_clean.lower() for candle_pattern in 
+            strategy_name = strategy_name.replace('forex_', '').replace('_', ' ').title()
+        elif any(candle_pattern in strategy_name.lower() for candle_pattern in 
                 ['doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark']):
             strategy_type = "CANDLE"
-            strategy_name = comment_clean.replace('candle_', '').replace('_', ' ').title()
+            strategy_name = strategy_name.replace('candle_', '').replace('_', ' ').title()
         else:
             strategy_type = "MANUAL"
-            strategy_name = comment_clean if comment_clean else "Operación Manual"
+            strategy_name = strategy_name if strategy_name else "Operación Manual"
         
         return strategy_type, strategy_name
 
