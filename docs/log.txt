@@ -3,10 +3,6 @@ TODO
 
 1. En ver operaciones abiertas, el nombre de la estrategia se muestra mal (ya sea forex o candle). [TODO]
 
-
-
-
-
 TESTEAR
 
 - TASK 1 -

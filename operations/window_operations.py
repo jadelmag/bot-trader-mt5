@@ -23,7 +23,8 @@ class OperacionesAbiertasWindow:
         self.update_thread = None
         self.operations_frame = None
         self.operation_widgets = {}  # Diccionario para almacenar widgets de cada operación
-        
+        self.canvas = None  # Referencia al canvas para scroll/limpieza
+
         self.create_window()
         self.start_real_time_updates()
     
@@ -108,21 +109,37 @@ class OperacionesAbiertasWindow:
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Canvas y scrollbar para el contenido scrolleable
-        canvas = tk.Canvas(main_frame)
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        self.operations_frame = ttk.Frame(canvas)
-        
+        self.canvas = tk.Canvas(main_frame, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=self.canvas.yview)
+        self.operations_frame = ttk.Frame(self.canvas)
+
         # Configurar el scrolling
         self.operations_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
-        
-        canvas.create_window((0, 0), window=self.operations_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Empaquetar canvas y scrollbar
-        canvas.pack(side="left", fill="both", expand=True)
+
+        self.canvas.create_window((0, 0), window=self.operations_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Soporte de rueda del ratón con comprobaciones
+        def _on_mousewheel(event):
+            try:
+                if self.canvas and self.canvas.winfo_exists():
+                    self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            except tk.TclError:
+                # Widget destruido; ignorar
+                pass
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Error en scroll: {e}")
+
+        # Enlazar a widgets específicos (no bind_all)
+        self.canvas.bind("<MouseWheel>", _on_mousewheel)
+        self.operations_frame.bind("<MouseWheel>", _on_mousewheel)
+
+        # Empaquetar
+        self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
         # Mensaje cuando no hay operaciones
@@ -134,6 +151,9 @@ class OperacionesAbiertasWindow:
     def update_operations(self):
         """Actualiza la lista de operaciones abiertas."""
         if not self.simulation_instance:
+            return
+        # Evitar actualizar si la ventana ya no existe
+        if not self.window or not self.window.winfo_exists():
             return
         
         try:
@@ -165,7 +185,10 @@ class OperacionesAbiertasWindow:
             tickets_to_remove = set(self.operation_widgets.keys()) - current_tickets
             for ticket in tickets_to_remove:
                 self.remove_operation_widget(ticket)
-                
+
+        except tk.TclError:
+            # Widgets/ventana destruidos durante la actualización
+            return        
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error al actualizar operaciones: {e}")
@@ -261,40 +284,45 @@ class OperacionesAbiertasWindow:
             return
         
         widgets = self.operation_widgets[ticket]
-        
-        # Actualizar P/L
-        widgets['pl_label'].config(text=f"{position.profit:.2f} $")
-        
-        # Actualizar color del P/L
-        if position.profit >= 0:
-            widgets['pl_label'].config(foreground="green")
-        else:
-            widgets['pl_label'].config(foreground="red")
-        
-        # Actualizar precio actual
         try:
-            symbol = position.symbol
-            tick = mt5.symbol_info_tick(symbol)
+            # Comprobar existencia de widgets antes de configurar
+            if not widgets['pl_label'].winfo_exists() or not widgets['current_price_label'].winfo_exists():
+                return
+
+            # Actualizar P/L y color
+            widgets['pl_label'].config(text=f"{position.profit:.2f} $")
+            widgets['pl_label'].config(foreground="green" if position.profit >= 0 else "red")
+
+            # Actualizar precio actual
+            tick = mt5.symbol_info_tick(position.symbol)
             if tick:
-                if position.type == mt5.POSITION_TYPE_BUY:
-                    current_price = tick.bid
-                else:
-                    current_price = tick.ask
-                
+                current_price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
                 widgets['current_price_label'].config(text=f"{current_price:.5f}")
             else:
                 widgets['current_price_label'].config(text="N/A")
-        except Exception as e:
-            widgets['current_price_label'].config(text="Error")
-        
+        except tk.TclError:
+            # Algún widget fue destruido mientras se actualizaba
+            return
+        except Exception:
+            try:
+                if widgets['current_price_label'].winfo_exists():
+                    widgets['current_price_label'].config(text="Error")
+            except tk.TclError:
+                pass
+
         # Actualizar posición almacenada
         widgets['position'] = position
     
     def remove_operation_widget(self, ticket):
         """Elimina el widget de una operación."""
         if ticket in self.operation_widgets:
-            self.operation_widgets[ticket]['frame'].destroy()
-            del self.operation_widgets[ticket]
+            try:
+                if self.operation_widgets[ticket]['frame'].winfo_exists():
+                    self.operation_widgets[ticket]['frame'].destroy()
+            except tk.TclError:
+                pass
+            finally:
+                del self.operation_widgets[ticket]
     
     def close_operation(self, ticket):
         """Cierra una operación específica."""
@@ -339,7 +367,7 @@ class OperacionesAbiertasWindow:
                 time.sleep(1)
                 
             except Exception as e:
-                if self.logger:
+                if self.logger and self.window and self.window.winfo_exists():
                     self.window.after_idle(lambda: self.logger.error(f"Error en actualización: {e}"))
                 break
     
@@ -348,9 +376,25 @@ class OperacionesAbiertasWindow:
         self.is_running = False
         if self.update_thread and self.update_thread.is_alive():
             self.update_thread.join(timeout=1)
-        
+
+        # Limpiar eventos de scroll
+        if self.canvas:
+            try:
+                self.canvas.unbind("<MouseWheel>")
+            except Exception:
+                pass
+        if self.operations_frame:
+            try:
+                self.operations_frame.unbind("<MouseWheel>")
+            except Exception:
+                pass
+
         if self.window:
             self.window.destroy()
+
+        # Limpiar referencias
+        self.canvas = None
+        self.operations_frame = None
     
     def show(self):
         """Muestra la ventana."""
