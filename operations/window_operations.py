@@ -4,6 +4,7 @@ import MetaTrader5 as mt5
 from datetime import datetime
 import threading
 import time
+from simulation.key_list import get_name_for_id
 
 class OperacionesAbiertasWindow:
     def __init__(self, parent, simulation_instance, logger):
@@ -67,27 +68,25 @@ class OperacionesAbiertasWindow:
             return "MANUAL", "Operación Manual"
         
         comment_clean = comment.strip().lower()
+
+        keyIDComment = comment_clean.split('-')[1]
+        strategy_name = get_name_for_id(int(keyIDComment))
         
         # Detectar FOREX por prefijo o palabras clave
-        if (comment_clean.startswith('forex_') or 
-            any(forex_word in comment_clean for forex_word in 
+        if (strategy_name.startswith('forex_') or 
+            any(forex_word in strategy_name for forex_word in 
                 ['forex', 'ema', 'rsi', 'macd', 'bollinger', 'ichimoku', 'stoch', 'atr', 'sma', 'strategy'])):
             strategy_type = "FOREX"
             # Limpiar y formatear nombre
-            strategy_name = comment_clean.replace('forex_', '').replace('_', ' ')
-            # Si está truncado, intentar reconstruir nombre común
-            if strategy_name.startswith('strategy'):
-                strategy_name = "Estrategia Forex"
-            else:
-                strategy_name = strategy_name.title()
+            strategy_name = strategy_name.replace('forex_', '').replace('_', ' ')
         
         # Detectar CANDLE por prefijo o patrones conocidos
-        elif (comment_clean.startswith('candle_') or 
-            any(candle_word in comment_clean for candle_word in 
+        elif (strategy_name.startswith('candle_') or 
+            any(candle_word in strategy_name for candle_word in 
                 ['candle', 'doji', 'hammer', 'engulf', 'star', 'harami', 'piercing', 'dark'])):
             strategy_type = "CANDLE"
             # Limpiar y formatear nombre
-            strategy_name = comment_clean.replace('candle_', '').replace('_', ' ').title()
+            strategy_name = strategy_name.replace('candle_', '').replace('_', ' ').title()
             if not strategy_name or strategy_name == ' ':
                 strategy_name = "Patrón de Vela"
         

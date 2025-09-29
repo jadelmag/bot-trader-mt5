@@ -28,7 +28,7 @@ CONFIG_PATH = os.path.join(PROJECT_ROOT, "strategies", "config.json")
 from backtesting.detect_candles import CandleDetector
 from backtesting.apply_strategies import StrategyAnalyzer
 from custom.custom_strategies import CustomStrategies
-
+from simulation.key_list import get_id_for_name
 
 class Simulation:
     """
@@ -641,6 +641,10 @@ class Simulation:
             if sl_pips > 0: sl = round(price + sl_pips * point, digits)
             if tp_pips > 0: tp = round(price - tp_pips * point, digits)
 
+       
+        id_patron = get_id_for_name(strategy_name)
+        comment = f"key-{id_patron}-Bot-Simulation"
+
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -651,7 +655,7 @@ class Simulation:
             "tp": tp,
             "deviation": 20,
             "magic": 234000,
-            "comment": (strategy_name or "Bot-Simulation")[:20],
+            "comment": (comment)[:20],
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_FOK,
         }
