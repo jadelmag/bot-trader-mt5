@@ -775,7 +775,8 @@ class App:
             operations_window = OperacionesAbiertasWindow(
                 parent=self.root,
                 simulation_instance=self.simulation_instance,
-                logger=self.logger
+                logger=self.logger,
+                app=self  # Añadir referencia a la app
             )
             
             if self.debug_mode_var.get():

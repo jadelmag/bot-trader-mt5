@@ -7,7 +7,7 @@ import time
 from simulation.key_list import get_name_for_id
 
 class OperacionesAbiertasWindow:
-    def __init__(self, parent, simulation_instance, logger):
+    def __init__(self, parent, simulation_instance, logger, app=None):
         """
         Ventana modal no bloqueante para mostrar operaciones abiertas.
         
@@ -25,6 +25,7 @@ class OperacionesAbiertasWindow:
         self.operations_frame = None
         self.operation_widgets = {}  # Diccionario para almacenar widgets de cada operación
         self.canvas = None  # Referencia al canvas para scroll/limpieza
+        self.app = app  # Referencia a la aplicación principal
 
         self.create_window()
         self.start_real_time_updates()
@@ -335,6 +336,12 @@ class OperacionesAbiertasWindow:
             if success:
                 if self.logger:
                     self.logger.success(f"Operación {ticket} cerrada exitosamente")
+                # Actualizar la UI principal si tenemos referencia a la app
+                if self.app and hasattr(self.app, 'action_handler'):
+                    try:
+                        self.parent.after(0, self.app.action_handler._update_ui_account_info)
+                except:
+                    pass  # Si falla, no interrumpir el flujo
             else:
                 if self.logger:
                     self.logger.error(f"Error al cerrar la operación {ticket}")
