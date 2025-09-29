@@ -1,7 +1,7 @@
 
 TODO
 
-1. Es posible que al cerrar la operacion se pierda el dinero?
+1. Actualizar el dinero cuando se cierren las operaciones 
 2. Comprobar limite de dinero a ganar por dia.
 
 

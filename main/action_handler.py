@@ -164,6 +164,29 @@ class ActionHandler:
         except Exception as e:
             self.app._log_error(f"No se pudo guardar el log de la sesión: {e}")
 
+    def _update_ui_account_info(self):
+        """Actualiza la información de la cuenta en la interfaz gráfica."""
+        try:
+            if mt5 and mt5.terminal_info():
+                account_info = mt5.account_info()
+                if account_info:
+                    # Actualizar variables de la UI
+                    self.app.equity_var.set(f"{account_info.equity:.2f} $")
+                    self.app.margin_var.set(f"{account_info.margin:.2f} $")
+                    self.app.free_margin_var.set(f"{account_info.margin_free:.2f} $")
+                    
+                    # Si no hay simulación, mostrar P/L flotante
+                    if not self.app.simulation_running:
+                        floating_pl = account_info.profit
+                        if floating_pl >= 0:
+                            self.app.profit_var.set(f"{floating_pl:.2f} $")
+                            self.app.loss_var.set("0.00 $")
+                        else:
+                            self.app.profit_var.set("0.00 $")
+                            self.app.loss_var.set(f"{abs(floating_pl):.2f} $")
+        except Exception as e:
+            pass  # No logear para evitar spam
+
     def _close_operations_in_thread(self, open_positions, pending_orders):
         """Cierra operaciones en hilo separado para evitar bloquear la UI."""
         def close_operations():
@@ -178,6 +201,8 @@ class ActionHandler:
                             from operations.manage_operations import close_single_operation
                             if close_single_operation(pos.ticket, 'position', self.app.logger):
                                 success_count += 1
+                                # Actualizar UI después de cerrar posición
+                                self.app.root.after(0, self._update_ui_account_info)
                         except Exception as e:
                             self.app._log_error(f"Error cerrando posición {pos.ticket}: {e}")
                 
@@ -188,6 +213,8 @@ class ActionHandler:
                             from operations.manage_operations import cancel_pending_order
                             if cancel_pending_order(order.ticket, self.app.logger):
                                 success_count += 1
+                                # Actualizar UI después de cancelar orden
+                                self.app.root.after(0, self._update_ui_account_info)
                         except Exception as e:
                             self.app._log_error(f"Error cancelando orden {order.ticket}: {e}")
                 
@@ -215,6 +242,8 @@ class ActionHandler:
         """Maneja el resultado del cierre de operaciones."""
         if success:
             self.app._log_success("Todas las operaciones han sido cerradas exitosamente")
+            # Actualizar UI una vez más al finalizar
+            self._update_ui_account_info()
             self._finalize_exit()
         else:
             if remaining > 0:
