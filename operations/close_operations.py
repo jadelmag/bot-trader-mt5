@@ -70,143 +70,124 @@ def close_all_operations(symbol, logger=None):
 def close_operation_robust(ticket, logger=None, max_attempts=5):
     """
     Cierra una operación específica por su ticket de forma robusta.
-    Intenta cerrar con diferentes filling modes hasta 5 veces cada uno.
-    
-    Args:
-        ticket: Número de ticket de la operación a cerrar
-        logger: Logger para mostrar mensajes (opcional)
-        max_attempts: Número máximo de intentos por filling mode (default: 5)
-    
-    Returns:
-        bool: True si la operación se cerró exitosamente, False en caso contrario
+    Incluye manejo de filling modes, retries, precios actualizados y
+    cierre parcial en caso necesario.
     """
-    # Lista de filling modes a probar en orden de preferencia
+
     filling_modes = [
         ("FOK", mt5.ORDER_FILLING_FOK),
-        ("IOC", mt5.ORDER_FILLING_IOC), 
-        ("RETURN", mt5.ORDER_FILLING_RETURN)
+        ("IOC", mt5.ORDER_FILLING_IOC),
+        ("RETURN", mt5.ORDER_FILLING_RETURN),
     ]
-    
+
     try:
-        # Verificar conexión con MT5
-        terminal_info = mt5.terminal_info()
-        if not terminal_info:
-            if logger:
-                logger.error("No hay conexión con MT5")
-            return False
-        
-        if logger:
-            logger.log(f"🔍 Diagnóstico MT5 - Conectado: {terminal_info.connected}, Trading: {terminal_info.trade_allowed}")
-            logger.log(f"💰 Balance: {terminal_info.balance:.2f} $, Equity: {terminal_info.equity:.2f} $")
-            logger.log(f"📊 Margen libre: {terminal_info.margin_free:.2f} $, Nivel margen: {terminal_info.margin_level:.2f}%")
-        
-        # Obtener información de la posición
+        # Obtener la posición
         position = mt5.positions_get(ticket=ticket)
-        if not position or len(position) == 0:
+        if not position:
             if logger:
                 logger.error(f"No se encontró la posición con ticket {ticket}")
             return False
-        
-        position = position[0]  # Tomar la primera (y única) posición
-        
-        # Verificar información del símbolo
+        position = position[0]
+
+        # Info del símbolo
         symbol_info = mt5.symbol_info(position.symbol)
         if not symbol_info:
             if logger:
-                logger.error(f"No se pudo obtener información del símbolo {position.symbol}")
+                logger.error(f"No se pudo obtener info del símbolo {position.symbol}")
             return False
-        
+
+        # Redondear volumen al step permitido
+        volume_step = symbol_info.volume_step
+        volume = round(position.volume / volume_step) * volume_step
+
         if logger:
-            logger.log(f"📊 Símbolo {position.symbol}: Trading={symbol_info.trade_mode}")
-            logger.log(f"📏 Vol_min={symbol_info.volume_min}, Vol_max={symbol_info.volume_max}")
-            logger.log(f"💼 Posición: Tipo={position.type}, Vol={position.volume}, Magic={position.magic}")
-        
-        # Determinar el tipo de orden de cierre
-        if position.type == mt5.POSITION_TYPE_BUY:
-            order_type = mt5.ORDER_TYPE_SELL
-        else:
-            order_type = mt5.ORDER_TYPE_BUY
-        
-        if logger:
-            logger.log(f"Intentando cerrar operación {ticket} con múltiples filling modes...")
-        
-        # Probar cada filling mode hasta max_attempts veces
+            logger.log(f"🔍 Intentando cerrar {volume:.2f} lotes de {position.symbol} (ticket {ticket})")
+
+        # Determinar tipo de orden opuesta
+        order_type = mt5.ORDER_TYPE_SELL if position.type == mt5.POSITION_TYPE_BUY else mt5.ORDER_TYPE_BUY
+
+        # Probar cada filling mode
         for mode_name, filling_mode in filling_modes:
             if logger:
                 logger.log(f"Probando filling mode: {mode_name}")
-            
+
             for attempt in range(1, max_attempts + 1):
-                try:
-                    # Obtener precio actual
-                    tick = mt5.symbol_info_tick(position.symbol)
-                    if not tick:
-                        if logger:
-                            logger.error(f"No se pudo obtener precio para {position.symbol}")
-                        continue
-                    
-                    price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
-                    
-                    # Crear la solicitud de cierre
-                    close_request = {
-                        "action": mt5.TRADE_ACTION_DEAL,
-                        "symbol": position.symbol,
-                        "volume": position.volume,
-                        "type": order_type,
-                        "position": ticket,
-                        "price": price,
-                        "deviation": 20,
-                        "magic": position.magic,
-                        "comment": f"Cerrar {ticket} - {mode_name} - Intento {attempt}",
-                        "type_time": mt5.ORDER_TIME_GTC,
-                        "type_filling": filling_mode,
-                    }
-                    
-                    # Enviar la orden de cierre
-                    result = mt5.order_send(close_request)
-                    
-                    if result is None:
-                        if logger:
-                            logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): order_send() falló")
-                        time.sleep(0.5)  # Esperar antes del siguiente intento
-                        continue
-                    
-                    if result.retcode == mt5.TRADE_RETCODE_DONE:
-                        # ¡Éxito! Operación cerrada
-                        profit_loss = position.profit
-                        trade_type = "Long" if position.type == mt5.POSITION_TYPE_BUY else "Short"
-                        
-                        if logger:
-                            timestamp = datetime.now().strftime("%H:%M:%S")
-                            logger.success(f"[{timestamp}] ✅ Operación cerrada exitosamente!")
-                            logger.log(f"Ticket: {ticket} | Tipo: {trade_type} | "
-                                      f"Volumen: {position.volume:.2f} | P/L: {profit_loss:.2f} $ | "
-                                      f"Precio cierre: {price:.5f} | Método: {mode_name} (Intento {attempt})")
-                        
-                        return True
-                    
-                    else:
-                        # Error en este intento
-                        if logger:
-                            error_traducido = obtener_mensaje_error(result.retcode)
-                            logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): "
-                                        f"{result.comment} (código: {result.retcode} - {error_traducido})")
-                        
-                        # Si es el último intento con este filling mode, no esperar
-                        if attempt < max_attempts:
-                            time.sleep(0.5)  # Esperar antes del siguiente intento
-                
-                except Exception as e:
+                tick = mt5.symbol_info_tick(position.symbol)
+                if not tick:
                     if logger:
-                        logger.error(f"Excepción en intento {attempt}/{max_attempts} ({mode_name}): {e}")
-                    if attempt < max_attempts:
-                        time.sleep(0.5)
-        
-        # Si llegamos aquí, no se pudo cerrar con ningún método
+                        logger.error(f"No se pudo obtener precio para {position.symbol}")
+                    time.sleep(0.5)
+                    continue
+
+                # Precios de cierre correctos según tipo
+                price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
+
+                # Deviation dinámico en función del spread
+                deviation = max(20, int(symbol_info.spread * 2))
+
+                # Generar un comentario corto y válido
+                comment_text = f"C{ticket}_{mode_name}_{attempt}"
+                if len(comment_text) > 20:
+                    comment_text = comment_text[:20]
+
+                close_request = {
+                    "action": mt5.TRADE_ACTION_DEAL,
+                    "symbol": position.symbol,
+                    "volume": volume,
+                    "type": order_type,
+                    "position": ticket,
+                    "price": price,
+                    "deviation": deviation,
+                    "magic": position.magic,
+                    "comment": comment_text,
+                    "type_time": mt5.ORDER_TIME_GTC,
+                    "type_filling": filling_mode,
+                }
+
+                result = mt5.order_send(close_request)
+
+                if result is None:
+                    err = mt5.last_error()
+                    if logger:
+                        logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): "
+                                     f"order_send() falló - {err}")
+                    time.sleep(0.5)
+                    continue
+
+                if result.retcode == mt5.TRADE_RETCODE_DONE:
+                    if logger:
+                        logger.success(f"✅ Operación {ticket} cerrada con {mode_name} "
+                                       f"(Intento {attempt}, Vol {volume:.2f}, Precio {price:.5f})")
+                    return True
+                else:
+                    error_traducido = obtener_mensaje_error(result.retcode)
+                    if logger:
+                        logger.error(f"Intento {attempt}/{max_attempts} ({mode_name}): "
+                                     f"{result.comment} (código: {result.retcode} - {error_traducido})")
+
+                    # Si falla con el volumen completo, intentar parcial
+                    if "invalid volume" in result.comment.lower() or result.retcode in (
+                        mt5.TRADE_RETCODE_INVALID_VOLUME,
+                        mt5.TRADE_RETCODE_INVALID_PRICE,
+                    ):
+                        partial_volume = max(volume_step, volume - volume_step)
+                        if partial_volume < volume:
+                            if logger:
+                                logger.log(f"🔄 Intentando cerrar parcialmente {partial_volume:.2f} lotes...")
+                            close_request["volume"] = partial_volume
+                            partial_result = mt5.order_send(close_request)
+                            if partial_result and partial_result.retcode == mt5.TRADE_RETCODE_DONE:
+                                if logger:
+                                    logger.success(f"✅ Cierre parcial exitoso: {partial_volume:.2f} lotes")
+                                return True
+
+                    time.sleep(0.5)
+
         if logger:
-            logger.error(f"❌ No se pudo cerrar la operación {ticket} después de {max_attempts * len(filling_modes)} intentos")
-        
+            logger.error(f"❌ No se pudo cerrar la operación {ticket} tras {max_attempts * len(filling_modes)} intentos")
+
         return False
-        
+
     except Exception as e:
         if logger:
             logger.error(f"Excepción crítica al cerrar operación {ticket}: {e}")
