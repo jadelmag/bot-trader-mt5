@@ -24,7 +24,7 @@ def create_header(app):
     app.options_btn.grid(row=0, column=1, padx=(10, 0))
     options_menu = tk.Menu(app.options_btn, tearoff=False)
     app.options_btn["menu"] = options_menu
-    options_menu.add_checkbutton(label="Modo Debug", variable=app.debug_mode_var)
+    options_menu.add_checkbutton(label="Modo Debug", variable=app.debug_mode_var, command=app._toggle_debug_mode_action)
     options_menu.add_separator()
     options_menu.add_command(label="Guardar Gráfica", command=app.action_handler.save_chart_to_csv)
     options_menu.add_separator()

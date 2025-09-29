@@ -744,6 +744,19 @@ class App:
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
 
+    def _toggle_debug_mode_action(self):
+        """
+        Activa o desactiva el modo debug en la simulación activa.
+        """
+        is_debug = self.debug_mode_var.get()
+        
+        # Si la simulación está corriendo, actualiza la instancia en tiempo real
+        if hasattr(self, 'simulation_instance') and self.simulation_instance:
+            self.simulation_instance.set_debug_mode(is_debug)
+        else:
+            # Si no, solo loguea el cambio de estado para la próxima simulación
+            status = "activado" if is_debug else "desactivado"
+
     def _ver_operaciones_abiertas_action(self):
         """Muestra las operaciones abiertas en una ventana modal no bloqueante."""
         if not self.simulation_instance:

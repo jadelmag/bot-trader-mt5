@@ -83,6 +83,13 @@ class Simulation:
         self._init_mt5()
         self._fetch_initial_candles() # Cargar velas históricas
 
+    def set_debug_mode(self, debug_mode: bool):
+        """Permite cambiar el modo debug durante la ejecución."""
+        if self.debug_mode != debug_mode:
+            self.debug_mode = debug_mode
+            if self.logger:
+                status = "ACTIVADO" if debug_mode else "DESACTIVADO"
+
     def _get_timeframe_delta(self, timeframe_str):
         """Converts a timeframe string to a pandas Timedelta."""
         mapping = {
@@ -239,7 +246,8 @@ class Simulation:
             if self.current_candle is not None:
                 # --- NEW CANDLE FORMED --- 
                 self.trades_in_current_candle = 0 # Reset counter for the new candle
-                self._log(f"[SIM] Nueva vela {self.timeframe} formada a las {candle_start_time}. Contador de trades reseteado.")
+                if self.debug_mode:
+                    self._log(f"[SIM] Nueva vela {self.timeframe} formada a las {candle_start_time}. Contador de trades reseteado.")
 
                 new_row = pd.DataFrame([self.current_candle])
                 if self.candles_df.empty:
