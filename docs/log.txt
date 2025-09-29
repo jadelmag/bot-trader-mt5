@@ -1,8 +1,7 @@
 
 TODO
 
-1. Actualizar el dinero cuando se cierren las operaciones 
-2. Comprobar limite de dinero a ganar por dia.
-
+1. Comprobar limite de dinero a ganar por dia.
+2. Generar simulaciones para ver si las estrategias y los patrones de velas cumplen con el objetivo.
 
 
