@@ -89,10 +89,16 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
     
     try:
         # Verificar conexión con MT5
-        if not mt5.terminal_info():
+        terminal_info = mt5.terminal_info()
+        if not terminal_info:
             if logger:
                 logger.error("No hay conexión con MT5")
             return False
+        
+        if logger:
+            logger.log(f"🔍 Diagnóstico MT5 - Conectado: {terminal_info.connected}, Trading: {terminal_info.trade_allowed}")
+            logger.log(f"💰 Balance: {terminal_info.balance:.2f} $, Equity: {terminal_info.equity:.2f} $")
+            logger.log(f"📊 Margen libre: {terminal_info.margin_free:.2f} $, Nivel margen: {terminal_info.margin_level:.2f}%")
         
         # Obtener información de la posición
         position = mt5.positions_get(ticket=ticket)
@@ -102,6 +108,18 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
             return False
         
         position = position[0]  # Tomar la primera (y única) posición
+        
+        # Verificar información del símbolo
+        symbol_info = mt5.symbol_info(position.symbol)
+        if not symbol_info:
+            if logger:
+                logger.error(f"No se pudo obtener información del símbolo {position.symbol}")
+            return False
+        
+        if logger:
+            logger.log(f"📊 Símbolo {position.symbol}: Trading={symbol_info.trade_mode}")
+            logger.log(f"📏 Vol_min={symbol_info.volume_min}, Vol_max={symbol_info.volume_max}")
+            logger.log(f"💼 Posición: Tipo={position.type}, Vol={position.volume}, Magic={position.magic}")
         
         # Determinar el tipo de orden de cierre
         if position.type == mt5.POSITION_TYPE_BUY:
