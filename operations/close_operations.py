@@ -9,6 +9,29 @@ except ImportError:
     def obtener_mensaje_error(codigo_error: int) -> str:
         return f"Error desconocido (código: {codigo_error})"
 
+
+def _verify_position_closed(ticket, logger, timeout=5):
+    """Verifica si una posición se ha cerrado completamente después de una orden."""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        remaining_position = mt5.positions_get(ticket=ticket)
+        if not remaining_position:
+            if logger:
+                logger.success(f"✅ Verificación exitosa: La posición {ticket} está cerrada.")
+            return True
+        
+        if logger:
+            logger.log(f"Aguardando cierre completo de {ticket}. Volumen restante: {remaining_position[0].volume}", "warning")
+        
+        time.sleep(0.5)
+
+    final_position = mt5.positions_get(ticket=ticket)
+    if final_position:
+        if logger:
+            logger.error(f"❌ Fallo en la verificación: La posición {ticket} no se cerró completamente. "
+                         f"Volumen restante: {final_position[0].volume}")
+    return False
+
 def close_single_operation(ticket, logger=None):
     """
     Función de compatibilidad que usa el método robusto.
@@ -122,6 +145,12 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
                 # Precios de cierre correctos según tipo
                 price = tick.bid if position.type == mt5.POSITION_TYPE_BUY else tick.ask
 
+                # Verificación de Spread antes de enviar la orden
+                current_spread_pips = symbol_info.spread / (symbol_info.point * 10)
+                if current_spread_pips > max_spread_pips:
+                    if logger:
+                        logger.warning(f"⚠️ Spread alto detectado: {current_spread_pips:.1f} pips (umbral: {max_spread_pips}). El cierre puede tener slippage.")
+
                 # Deviation dinámico en función del spread
                 deviation = max(20, int(symbol_info.spread * 2))
 
@@ -156,9 +185,10 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
 
                 if result.retcode == mt5.TRADE_RETCODE_DONE:
                     if logger:
-                        logger.success(f"✅ Operación {ticket} cerrada con {mode_name} "
-                                       f"(Intento {attempt}, Vol {volume:.2f}, Precio {price:.5f})")
-                    return True
+                        logger.success(f"Orden de cierre para {ticket} enviada con {mode_name} "
+                                    f"(Intento {attempt}, Vol {volume:.2f}, Precio {price:.5f})")
+                    # Verificar que la posición se cerró realmente
+                    return _verify_position_closed(ticket, logger)
                 else:
                     error_traducido = obtener_mensaje_error(result.retcode)
                     if logger:
@@ -178,8 +208,9 @@ def close_operation_robust(ticket, logger=None, max_attempts=5):
                             partial_result = mt5.order_send(close_request)
                             if partial_result and partial_result.retcode == mt5.TRADE_RETCODE_DONE:
                                 if logger:
-                                    logger.success(f"✅ Cierre parcial exitoso: {partial_volume:.2f} lotes")
-                                return True
+                                    logger.success(f"Orden de cierre parcial enviada: {partial_volume:.2f} lotes")
+                                # Verificar cierre después de intento parcial
+                                return _verify_position_closed(ticket, logger)
 
                     time.sleep(0.5)
 

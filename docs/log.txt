@@ -1,18 +1,8 @@
 
 TODO
 
-1. En ver operaciones abiertas, el nombre de la estrategia se muestra mal (ya sea forex o candle). [TODO]
-2. Es posible que al cerrar la operacion se pierda el dinero?
-3. Comprobar limite de dinero a ganar por dia.
-
-TESTEAR
-
-- TASK 1 -
-quiero que al pulsar en label="Ver operaciones abiertas" se habra una venta modal, 
-
-
-2- TESTEAR
-quiero que al pulsar en label="Cerrar operaciones" se habra una venta modal, 
+1. Es posible que al cerrar la operacion se pierda el dinero?
+2. Comprobar limite de dinero a ganar por dia.
 
 
 
