@@ -279,128 +279,209 @@ class ForexStrategies:
         return None
 
     @staticmethod
-    def strategy_candle_pattern_reversal(df, lookback=50):
+    def strategy_candle_pattern_reversal(df, lookback=200):
         """
-        Estrategia mejorada de reversión con patrones de velas en niveles clave.
-        Incluye múltiples confirmaciones y filtros para mejorar la tasa de acierto.
+        Estrategia FOREX optimizada de reversión con patrones de velas en niveles clave.
+        Versión mejorada para EURUSD con parámetros específicos y gestión de riesgo avanzada.
+        
+        Args:
+            df (DataFrame): DataFrame con datos OHLC y indicadores
+            lookback (int): Periodo de lookback para niveles (200 velas)
+        
+        Returns:
+            str: 'long', 'short' o None
         """
-        # Verificar que tenemos suficientes datos
-        if len(df) < lookback + 10:
+        
+        # Configuración específica para EURUSD
+        pair = "EURUSD"
+        pair_settings = {
+            "tolerance_base": 0.0015,  # 0.15%
+            "rsi_overbought": 68,
+            "rsi_oversold": 32,
+            "min_atr_multiplier": 1.2,
+            "volatility_threshold": 0.0008
+        }
+        
+        # 1. VERIFICACIONES INICIALES
+        if len(df) < lookback + 20:
             return None
             
-        # 1. Calcular soportes y resistencias dinámicas (método mejorado)
-        # Usar ventana móvil para encontrar niveles más relevantes
-        recent_data = df.iloc[-lookback:]
+        # Columnas requeridas
+        required_columns = ['open', 'high', 'low', 'close', 'rsi', 'atr']
+        if not all(col in df.columns for col in required_columns):
+            return None
         
-        # Encontrar múltiples niveles de soporte/resistencia
+        # 2. FILTRO DE HORARIO (Sesiones de alta liquidez)
+        current_time = df.index[-1] if hasattr(df.index[-1], 'hour') else pd.to_datetime(df.index[-1])
+        current_hour = current_time.hour
+        
+        # Horarios de sesiones Londres/NY (GMT)
+        london_session = range(7, 16)    # 7:00 - 16:00 GMT
+        ny_session = range(12, 21)       # 12:00 - 21:00 GMT
+        high_liquidity_hours = list(set(london_session) | set(ny_session))
+        
+        if current_hour not in high_liquidity_hours:
+            return None
+        
+        # 3. DETECCIÓN MEJORADA DE SOPORTES/RESISTENCIAS
+        recent_data = df.iloc[-lookback:]
+        current_price = df['close'].iloc[-1]
+        
+        # Método 1: Pivot Points Diarios
+        daily_high = recent_data['high'].max()
+        daily_low = recent_data['low'].min()
+        daily_close = recent_data['close'].iloc[-1]
+        
+        pivot = (daily_high + daily_low + daily_close) / 3
+        r1 = 2 * pivot - daily_low
+        s1 = 2 * pivot - daily_high
+        r2 = pivot + (daily_high - daily_low)
+        s2 = pivot - (daily_high - daily_low)
+        
+        # Método 2: Mínimos y máximos locales con ventana adaptativa
+        window_size = max(10, lookback // 20)
         supports = []
         resistances = []
         
-        # Método 1: Mínimos y máximos locales
-        for i in range(5, lookback-5, 5):
-            window = recent_data.iloc[i-5:i+5]
-            local_min = window['low'].min()
-            local_max = window['high'].max()
-            supports.append(local_min)
-            resistances.append(local_max)
+        for i in range(window_size, len(recent_data) - window_size, window_size // 2):
+            window = recent_data.iloc[i-window_size:i+window_size]
+            
+            # Encontrar mínimos locales
+            if window['low'].iloc[window_size] == window['low'].min():
+                supports.append(window['low'].iloc[window_size])
+            
+            # Encontrar máximos locales  
+            if window['high'].iloc[window_size] == window['high'].max():
+                resistances.append(window['high'].iloc[window_size])
         
-        # Método 2: Niveles psicológicos (números redondos)
-        current_price = df['close'].iloc[-1]
-        round_level = round(current_price, 3)  # Para forex, 3 decimales
-        supports.append(round_level - 0.001)
-        resistances.append(round_level + 0.001)
+        # Método 3: Niveles psicológicos (redondeo)
+        psychological_levels = []
+        base_level = round(current_price, 3)
+        for i in range(-5, 6):
+            level = base_level + (i * 0.005)  # Cada 50 pips
+            psychological_levels.append(level)
         
-        # Obtener los niveles más cercanos al precio actual
-        support = max([s for s in supports if s < current_price], default=df['low'].iloc[-lookback:].min())
-        resistance = min([r for r in resistances if r > current_price], default=df['high'].iloc[-lookback:].max())
+        # Combinar todos los niveles
+        all_supports = supports + [s1, s2] + [l for l in psychological_levels if l < current_price]
+        all_resistances = resistances + [r1, r2] + [l for l in psychological_levels if l > current_price]
         
-        # 2. Detectar patrones de velas EN LA VELA ACTUAL
+        # Encontrar niveles más relevantes (más toques)
+        support = max(all_supports, key=lambda x: sum(abs(recent_data['low'] - x) < 0.0005)) if all_supports else daily_low
+        resistance = min(all_resistances, key=lambda x: sum(abs(recent_data['high'] - x) < 0.0005)) if all_resistances else daily_high
+        
+        # 4. TOLERANCIA ADAPTATIVA MEJORADA
+        atr = df['atr'].iloc[-1]
+        volatility_ratio = atr / current_price
+        
+        # Ajustar tolerancia basada en volatilidad
+        if volatility_ratio > pair_settings["volatility_threshold"]:
+            # Alta volatilidad - tolerancia más amplia
+            tolerance = min(pair_settings["tolerance_base"] * 1.5, atr * pair_settings["min_atr_multiplier"])
+        else:
+            # Baja volatilidad - tolerancia más ajustada
+            tolerance = max(pair_settings["tolerance_base"], atr * pair_settings["min_atr_multiplier"] * 0.8)
+        
+        tolerance = min(tolerance, pair_settings["tolerance_base"] * 2)
+        
+        # 5. DETECCIÓN DE PATRONES DE VELAS
         candle_data = df.to_dict('records')
         current_index = len(candle_data) - 1
         
-        # Llamar detect_all_patterns con el índice correcto
-        signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+        try:
+            signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+        except:
+            # Fallback básico si hay error en la detección
+            signals = {'long': [], 'short': [], 'neutral': []}
         
-        # 3. Calcular indicadores de confirmación
-        # RSI para filtrar extremos
-        rsi = df['rsi'].iloc[-1] if 'rsi' in df.columns else 50
-        rsi_prev = df['rsi'].iloc[-2] if 'rsi' in df.columns else 50
+        # 6. INDICADORES DE CONFIRMACIÓN MEJORADOS
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2] if len(df) > 1 else rsi
         
-        # Calcular cambio de volumen (si está disponible)
+        # Volumen relativo (si disponible)
         volume_increase = False
-        if 'tick_volume' in df.columns and len(df) > 1:
-            avg_volume = df['tick_volume'].iloc[-20:].mean()
+        if 'tick_volume' in df.columns and len(df) > 20:
+            avg_volume = df['tick_volume'].iloc[-50:].mean()
             current_volume = df['tick_volume'].iloc[-1]
-            volume_increase = current_volume > avg_volume * 1.2
+            volume_increase = current_volume > avg_volume * 1.3
         
-        # 4. Calcular tolerancia adaptativa basada en ATR
-        if 'atr' in df.columns:
-            atr = df['atr'].iloc[-1]
-            tolerance = min(0.02, max(0.005, atr * 2))  # Entre 0.5% y 2%
-        else:
-            tolerance = 0.015  # 1.5% por defecto
+        # Momentum adicional
+        price_above_ema = False
+        if 'ema_20' in df.columns:
+            price_above_ema = df['close'].iloc[-1] > df['ema_20'].iloc[-1]
         
-        # 5. Evaluar condiciones para LONG
-        # Distancia al soporte
+        # 7. EVALUACIÓN LONG MEJORADA
         distance_to_support = abs(df['low'].iloc[-1] - support) / support
         is_near_support = distance_to_support < tolerance
         
-        # Patrones alcistas fuertes
-        bullish_patterns = ['hammer', 'engulfing', 'morning_star', 'piercing_line', 
-                          'inverted_hammer', 'three_white_soldiers']
-        has_bullish_pattern = any(pattern in signals['long'] for pattern in bullish_patterns)
+        # Patrones alcistas con pesos
+        bullish_weights = {
+            'hammer': 2, 'inverted_hammer': 2, 'bullish_engulfing': 3,
+            'piercing_line': 2, 'morning_star': 3, 'three_white_soldiers': 3
+        }
         
-        # Doji como señal de indecisión en soporte
+        has_bullish_pattern = any(pattern in signals['long'] for pattern in bullish_weights.keys())
+        bullish_pattern_strength = sum(bullish_weights.get(pattern, 1) for pattern in signals['long'] if pattern in bullish_weights)
+        
+        # Condiciones adicionales
         has_doji_at_support = 'doji' in signals['neutral'] and is_near_support
+        rsi_oversold = rsi < pair_settings["rsi_oversold"] and rsi > rsi_prev
+        price_confirmation = df['close'].iloc[-1] > df['open'].iloc[-1]
+        strong_bullish_candle = (df['close'].iloc[-1] - df['open'].iloc[-1]) > (atr * 0.3)
         
-        # RSI en sobreventa con divergencia
-        rsi_oversold = rsi < 35 and rsi > rsi_prev  # RSI subiendo desde sobreventa
-        
-        # Confirmación de precio
-        price_confirmation = df['close'].iloc[-1] > df['open'].iloc[-1]  # Vela alcista
-        
-        # SEÑAL LONG con múltiples confirmaciones
+        # SCORE LONG
         long_score = 0
-        if is_near_support: long_score += 2
-        if has_bullish_pattern: long_score += 3
+        if is_near_support: long_score += 3
+        if has_bullish_pattern: long_score += bullish_pattern_strength
         if has_doji_at_support: long_score += 1
         if rsi_oversold: long_score += 2
         if volume_increase: long_score += 1
         if price_confirmation: long_score += 1
+        if strong_bullish_candle: long_score += 2
+        if price_above_ema: long_score += 1
         
-        if long_score >= 4:  # Necesitamos al menos 4 puntos de confirmación
-            return 'long'
-        
-        # 6. Evaluar condiciones para SHORT
-        # Distancia a la resistencia
+        # 8. EVALUACIÓN SHORT MEJORADA
         distance_to_resistance = abs(df['high'].iloc[-1] - resistance) / resistance
         is_near_resistance = distance_to_resistance < tolerance
         
-        # Patrones bajistas fuertes
-        bearish_patterns = ['shooting_star', 'engulfing', 'evening_star', 'dark_cloud_cover',
-                          'hanging_man', 'three_black_crows']
-        has_bearish_pattern = any(pattern in signals['short'] for pattern in bearish_patterns)
+        # Patrones bajistas con pesos
+        bearish_weights = {
+            'shooting_star': 2, 'hanging_man': 2, 'bearish_engulfing': 3,
+            'dark_cloud_cover': 2, 'evening_star': 3, 'three_black_crows': 3
+        }
         
-        # Doji como señal de indecisión en resistencia
+        has_bearish_pattern = any(pattern in signals['short'] for pattern in bearish_weights.keys())
+        bearish_pattern_strength = sum(bearish_weights.get(pattern, 1) for pattern in signals['short'] if pattern in bearish_weights)
+        
+        # Condiciones adicionales
         has_doji_at_resistance = 'doji' in signals['neutral'] and is_near_resistance
+        rsi_overbought = rsi > pair_settings["rsi_overbought"] and rsi < rsi_prev
+        price_confirmation_short = df['close'].iloc[-1] < df['open'].iloc[-1]
+        strong_bearish_candle = (df['open'].iloc[-1] - df['close'].iloc[-1]) > (atr * 0.3)
         
-        # RSI en sobrecompra con divergencia
-        rsi_overbought = rsi > 65 and rsi < rsi_prev  # RSI bajando desde sobrecompra
-        
-        # Confirmación de precio
-        price_confirmation_short = df['close'].iloc[-1] < df['open'].iloc[-1]  # Vela bajista
-        
-        # SEÑAL SHORT con múltiples confirmaciones
+        # SCORE SHORT
         short_score = 0
-        if is_near_resistance: short_score += 2
-        if has_bearish_pattern: short_score += 3
+        if is_near_resistance: short_score += 3
+        if has_bearish_pattern: short_score += bearish_pattern_strength
         if has_doji_at_resistance: short_score += 1
         if rsi_overbought: short_score += 2
         if volume_increase: short_score += 1
         if price_confirmation_short: short_score += 1
+        if strong_bearish_candle: short_score += 2
+        if not price_above_ema: short_score += 1
         
-        if short_score >= 4:  # Necesitamos al menos 4 puntos de confirmación
-            return 'short'
+        # 9. DECISIÓN FINAL CON FILTROS ADICIONALES
+        required_score = 6  # Score mínimo requerido
+        
+        # Evitar señales contradictorias
+        if long_score >= required_score and short_score < required_score - 2:
+            # Confirmación final: precio debe estar mostrando fuerza alcista
+            if df['close'].iloc[-1] > df['close'].iloc[-2]:
+                return 'long'
+        
+        if short_score >= required_score and long_score < required_score - 2:
+            # Confirmación final: precio debe estar mostrando debilidad bajista
+            if df['close'].iloc[-1] < df['close'].iloc[-2]:
+                return 'short'
         
         return None
 

@@ -31,6 +31,7 @@ from backtesting.apply_strategies import StrategyAnalyzer
 from custom.custom_strategies import CustomStrategies
 from simulation.key_list import get_id_for_name
 from loggin.audit_log import audit_logger
+from candles.candle_list import CandlePatterns
 
 class Simulation:
     """
@@ -615,20 +616,20 @@ class Simulation:
         if self.debug_mode:
             self._log(f"[SIM-DEBUG] Última vela: O:{last_candle['open']} H:{last_candle['high']} L:{last_candle['low']} C:{last_candle['close']}")
 
-        detector = CandleDetector(df)
         last_candle_index = len(df) - 1
-        
+        candles_list = df.to_dict('records')
+
         for pattern_name in selected_patterns:
-            detection_func = getattr(detector, f'is_{pattern_name}', None)
-            if detection_func:
+            pattern_func = getattr(CandlePatterns, f'is_{pattern_name}', None)
+            if pattern_func:
                 try:
-                    signal = detection_func(df.to_dict('records'), last_candle_index)
+                    signal = pattern_func(candles_list, last_candle_index)
                     if signal in ['long', 'short']:
-                        self._log(f"[SIM] Señal de {pattern_name}: {signal}", 'info')
+                        self._log(f"[SIM] Patrón {pattern_name} detectado: {signal}", 'info')
                         return signal, pattern_name
                 except Exception as e:
                     self._log(f"[SIM-ERROR] Error al detectar patrón {pattern_name}: {str(e)}", 'error')
-
+        
         return 'neutral', None
 
     def _get_active_forex_params(self):
@@ -724,7 +725,10 @@ class Simulation:
             return 0.0
 
     def _check_for_closing_signals(self, ma_signal, candle_signal):
-        """Cierra posiciones cuando hay señales contrarias en cualquiera de los indicadores o se alcanza TP/SL."""
+        """Cierra posiciones según el tipo de operación:
+        - Trades de velas: solo por señales de velas contrarias o SL/TP
+        - Trades forex: por MA o velas contrarias
+        """
         if not mt5 or not mt5.terminal_info():
             self._log("[SIM-ERROR] No hay conexión con MT5", 'error')
             return
@@ -743,7 +747,7 @@ class Simulation:
                             else mt5.symbol_info_tick(self.symbol).ask)
 
             # Verificar TP y SL
-            if position.sl > 0 or position.tp > 0:  # Solo si hay TP/SL definidos
+            if position.sl > 0 or position.tp > 0:
                 sl_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price <= position.sl) or \
                         (position.type == mt5.POSITION_TYPE_SELL and current_price >= position.sl)
                 tp_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price >= position.tp) or \
@@ -756,27 +760,41 @@ class Simulation:
                                 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
                     continue
 
-            # Verificar señales de cierre (cualquiera de las dos señales contrarias)
-            close_long = (position.type == mt5.POSITION_TYPE_BUY and 
-                        (ma_signal == 'short' or candle_signal == 'short'))
+            # Determinar tipo de operación por comentario
+            position_comment = position.comment if hasattr(position, 'comment') else ""
+            is_candle_trade = "candle" in position_comment.lower() or "key-" in position_comment.lower()
             
-            close_short = (position.type == mt5.POSITION_TYPE_SELL and 
-                        (ma_signal == 'long' or candle_signal == 'long'))
+            # Lógica diferenciada según tipo
+            if is_candle_trade:
+                # SOLO cerrar por señal de vela contraria (NO por MA)
+                close_long = (position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short')
+                close_short = (position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long')
+                
+                if close_long or close_short:
+                    self._log(f"[SIM] Señal de VELA contraria. Cerrando trade de velas {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
+                    self.close_trade(position.ticket, position.volume, 
+                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+            else:
+                # Forex: cerrar por MA o velas (lógica original)
+                close_long = (position.type == mt5.POSITION_TYPE_BUY and 
+                            (ma_signal == 'short' or candle_signal == 'short'))
+                close_short = (position.type == mt5.POSITION_TYPE_SELL and 
+                            (ma_signal == 'long' or candle_signal == 'long'))
 
-            if close_long or close_short:
-                signal_type = []
-                if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
-                    signal_type.append("MA")
-                if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
-                    signal_type.append("Vela")
-                if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
-                    signal_type.append("MA")
-                if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
-                    signal_type.append("Vela")
-                    
-                self._log(f"[SIM] Señal contraria detectada ({' y '.join(signal_type)}). Cerrando posición {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
-                self.close_trade(position.ticket, position.volume, 
-                            'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                if close_long or close_short:
+                    signal_type = []
+                    if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
+                        signal_type.append("MA")
+                    if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
+                        signal_type.append("Vela")
+                    if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
+                        signal_type.append("MA")
+                    if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
+                        signal_type.append("Vela")
+                        
+                    self._log(f"[SIM] Señal contraria ({' y '.join(signal_type)}). Cerrando FOREX {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
+                    self.close_trade(position.ticket, position.volume, 
+                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
 
     def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
         """

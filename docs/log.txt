@@ -5,8 +5,3 @@ TODO
 2. Generar simulaciones para ver si las estrategias y los patrones de velas cumplen con el objetivo.
 
 
-Análisis del Cierre de Operaciones en simulation.py
-Después de revisar el código, he identificado el problema principal:
-
-
-
