@@ -62,6 +62,7 @@ class Simulation:
         
         self.open_trades = []
         self.trades_in_current_candle = 0
+        self.trade_types_in_current_candle = []
 
         # --- Logger and Configs ---
         self.logger = logger
@@ -327,6 +328,7 @@ class Simulation:
             if self.current_candle is not None:
                 # --- NEW CANDLE FORMED --- 
                 self.trades_in_current_candle = 0 # Reset counter for the new candle
+                self.trade_types_in_current_candle = [] # Reset trade types for the new candle
                 self._log(f"[SIM] 📊 Nueva vela {self.timeframe} a las {candle_start_time.strftime('%H:%M:%S')} | Balance: ${self.balance:.2f}")
 
                 # --- Registro de auditoría ---
@@ -407,11 +409,6 @@ class Simulation:
                 self._log(f"[SIM-PROTECTION] Equity ({account_info.equity:.2f}) está por debajo del límite ({equity_limit:.2f}). No se abrirán nuevas operaciones.", 'warn')
                 return
 
-        # --- 1. Comprobación de Máx. de Operaciones por Vela ---
-        max_orders_per_candle = self.general_config.get('max_orders_per_candle', 1)
-        if self.trades_in_current_candle >= max_orders_per_candle:
-            return # No abrir más operaciones en esta vela
-
         # Ensure DataFrame has correct column names for analyzers
         analysis_df = self.candles_df.rename(columns={
             'open': 'open', 'high': 'high', 'low': 'low', 'close': 'close'
@@ -471,7 +468,7 @@ class Simulation:
 
         if selected_candle_patterns:
             candle_signal, pattern_name = self._get_candle_signal(self.candles_df)
-            if candle_signal in ['long', 'short']:
+            if candle_signal in ['long', 'short'] and 'candle' not in self.trade_types_in_current_candle:
                 self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Intentando abrir operación.")
                 
                 # Cargar configuración específica para este patrón
@@ -489,15 +486,10 @@ class Simulation:
                             tp_pips=tp_pips,
                             strategy_name=f"candle_{pattern_name}"
                         )
-                        return # Salir después de abrir la operación
+                        self.trade_types_in_current_candle.append('candle')
                 else:
                     self._log(f"[SIM-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
 
-        # --- 3. Analizar Estrategias de Forex (Si no hubo señal de vela) ---
-        if len(open_positions) > 0:
-            if self.debug_mode:
-                self._log("[SIM-DEBUG] Ya hay una operación abierta. Omitiendo análisis de estrategias Forex.")
-            return
 
         forex_strategies = self.strategies_config.get('forex_strategies', {})
         selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
@@ -516,7 +508,7 @@ class Simulation:
             # Llamar a la función de la estrategia directamente
             trade_type = strategy_func(df_copy)
 
-            if trade_type in ['long', 'short']:
+            if trade_type in ['long', 'short'] and 'forex' not in self.trade_types_in_current_candle:
                 sl_pips = params.get('stop_loss_pips', 20.0)
                 rr_ratio = params.get('rr_ratio', 2.0)
                 risk_multiplier = params.get('percent_ratio', 1.0)
@@ -536,7 +528,8 @@ class Simulation:
                         tp_pips=sl_pips * rr_ratio,
                         strategy_name=f"forex_{strategy_name}"
                     )
-                    return # Salir después de la primera operación exitosa
+                    self.trade_types_in_current_candle.append('forex')
+                    break # Salir del bucle de estrategias forex
 
     def _execute_custom_strategies(self):
         """Maneja la lógica de ejecución para estrategias personalizadas."""

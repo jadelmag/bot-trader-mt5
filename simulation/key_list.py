@@ -26,7 +26,30 @@ STRATEGY_NAMES = [
     "forex_strategy_scalping_stochrsi_ema",
     "forex_strategy_fibonacci_reversal",
     "forex_strategy_chart_pattern_breakout",
-    "forex_strategy_hybrid_optimizer"
+    "forex_strategy_hybrid_optimizer",
+    # Candle Patterns
+    "candle_hammer",
+    "candle_shooting_star",
+    "candle_marubozu",
+    "candle_dragonfly_doji",
+    "candle_gravestone_doji",
+    "candle_hanging_man",
+    "candle_inverted_hammer",
+    "candle_morning_star",
+    "candle_doji",
+    "candle_long_legged_doji",
+    "candle_doji_reversal",
+    "candle_engulfing",
+    "candle_harami",
+    "candle_piercing_line",
+    "candle_dark_cloud_cover",
+    "candle_evening_star",
+    "candle_three_white_soldiers",
+    "candle_three_black_crows",
+    "candle_three_inside_up_down",
+    "candle_three_outside_up_down",
+    "candle_rising_three_methods",
+    "candle_falling_three_methods"
 ]
 
 def get_id_for_name(name: str) -> int:

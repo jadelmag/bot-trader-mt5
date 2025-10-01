@@ -1,0 +1,70 @@
+{"timestamp": "2025-10-01T20:27:09.933295", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-01T20:27:09.938708", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 84384.42"}}
+{"timestamp": "2025-10-01T20:27:09.941135", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-01T20:28:05.363524", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:28:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:28:05.363977", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:28:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:28:05.365921", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.0001435714285713858"}}
+{"timestamp": "2025-10-01T20:28:05.368094", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.0001435714285713858"}}
+{"timestamp": "2025-10-01T20:28:05.368315", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Total de velas: 201"}}
+{"timestamp": "2025-10-01T20:28:05.368620", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Última vela - O:1.1737000000000002 H:1.1738 L:1.1736900000000001 C:1.1737000000000002"}}
+{"timestamp": "2025-10-01T20:28:05.369040", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: long"}}
+{"timestamp": "2025-10-01T20:28:05.369238", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:28:05.369534", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.1737000000000002 H:1.1738 L:1.1736900000000001 C:1.1737000000000002"}}
+{"timestamp": "2025-10-01T20:28:05.372507", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Patrón doji_reversal detectado: short"}}
+{"timestamp": "2025-10-01T20:28:05.373605", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:28:05.373869", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.1737000000000002 H:1.1738 L:1.1736900000000001 C:1.1737000000000002"}}
+{"timestamp": "2025-10-01T20:28:05.375913", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Patrón doji_reversal detectado: short"}}
+{"timestamp": "2025-10-01T20:28:05.376129", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de VELA 'doji_reversal' -> 'SHORT' detectada. Intentando abrir operación."}}
+{"timestamp": "2025-10-01T20:28:05.381338", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 84384.42"}}
+{"timestamp": "2025-10-01T20:28:05.434034", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Enviando request: {'action': 1, 'symbol': 'EURUSD', 'volume': 28.13, 'type': 1, 'price': 1.17374, 'sl': 1.17404, 'tp': 1.17314, 'deviation': 20, 'magic': 234000, 'comment': 'key-21-Bot-Simulatio', 'type_time': 0, 'type_filling': 0}"}}
+{"timestamp": "2025-10-01T20:28:05.434221", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 28.13, "open_price": 1.17374, "stop_loss": 1.17404, "take_profit": 1.17314, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-01T20:28:05.434563", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de CANDLE 'doji_reversal' -> 'SHORT': 1.17374 | 28.13 | 1.17404 | 1.17314"}}
+{"timestamp": "2025-10-01T20:28:05.437088", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Parámetros para Forex: SL Pips=20.0, RR Ratio=2.0, Volumen Calculado=42.17"}}
+{"timestamp": "2025-10-01T20:28:05.437416", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_fibonacci_reversal' -> 'LONG' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T20:28:05.442560", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 84384.42"}}
+{"timestamp": "2025-10-01T20:28:05.443026", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Enviando request: {'action': 1, 'symbol': 'EURUSD', 'volume': 42.17, 'type': 0, 'price': 1.17376, 'sl': 1.17356, 'tp': 1.17416, 'deviation': 20, 'magic': 234000, 'comment': 'key-8-Bot-Simulation', 'type_time': 0, 'type_filling': 0}"}}
+{"timestamp": "2025-10-01T20:28:05.443235", "event": "log_message", "data": {"level": "ERROR", "message": "[SIM-ERROR] order_send falló, retcode=10019 (Fondos insuficientes (not enough money)), last_error=(1, 'Success')"}}
+{"timestamp": "2025-10-01T20:29:00.829249", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:29:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:29:00.829566", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:29:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:29:00.831438", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00013357142857139959"}}
+{"timestamp": "2025-10-01T20:29:00.833641", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00013357142857139959"}}
+{"timestamp": "2025-10-01T20:29:00.833835", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Total de velas: 202"}}
+{"timestamp": "2025-10-01T20:29:00.834113", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Última vela - O:1.17375 H:1.17375 L:1.17366 C:1.17368"}}
+{"timestamp": "2025-10-01T20:29:00.834537", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: long"}}
+{"timestamp": "2025-10-01T20:29:00.834737", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:29:00.835014", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17375 H:1.17375 L:1.17366 C:1.17368"}}
+{"timestamp": "2025-10-01T20:29:00.838530", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Patrón evening_star detectado: short"}}
+{"timestamp": "2025-10-01T20:29:00.839614", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:29:00.839878", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17375 H:1.17375 L:1.17366 C:1.17368"}}
+{"timestamp": "2025-10-01T20:29:00.843242", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Patrón evening_star detectado: short"}}
+{"timestamp": "2025-10-01T20:29:00.843457", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de VELA 'evening_star' -> 'SHORT' detectada. Intentando abrir operación."}}
+{"timestamp": "2025-10-01T20:29:00.848114", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 84384.42"}}
+{"timestamp": "2025-10-01T20:29:00.848617", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Enviando request: {'action': 1, 'symbol': 'EURUSD', 'volume': 28.11, 'type': 1, 'price': 1.17374, 'sl': 1.17404, 'tp': 1.17314, 'deviation': 20, 'magic': 234000, 'comment': 'key-26-Bot-Simulatio', 'type_time': 0, 'type_filling': 0}"}}
+{"timestamp": "2025-10-01T20:29:00.848833", "event": "log_message", "data": {"level": "ERROR", "message": "[SIM-ERROR] order_send falló, retcode=10019 (Fondos insuficientes (not enough money)), last_error=(1, 'Success')"}}
+{"timestamp": "2025-10-01T20:30:00.249463", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:30:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:30:00.249816", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:30:00 | Balance: $84384.42"}}
+{"timestamp": "2025-10-01T20:30:00.251609", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00014357142857141753"}}
+{"timestamp": "2025-10-01T20:30:00.253217", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00014357142857141753"}}
+{"timestamp": "2025-10-01T20:30:00.253432", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Total de velas: 203"}}
+{"timestamp": "2025-10-01T20:30:00.253742", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Última vela - O:1.17375 H:1.17389 L:1.1736499999999999 C:1.17381"}}
+{"timestamp": "2025-10-01T20:30:00.254170", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: long"}}
+{"timestamp": "2025-10-01T20:30:00.254374", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:30:00.254624", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17375 H:1.17389 L:1.1736499999999999 C:1.17381"}}
+{"timestamp": "2025-10-01T20:30:00.263681", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:30:00.263958", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17375 H:1.17389 L:1.1736499999999999 C:1.17381"}}
+{"timestamp": "2025-10-01T20:31:00.715512", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:31:00 | Balance: $83665.62"}}
+{"timestamp": "2025-10-01T20:31:00.715878", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:31:00 | Balance: $83665.62"}}
+{"timestamp": "2025-10-01T20:31:00.717597", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00015142857142854841"}}
+{"timestamp": "2025-10-01T20:31:00.719101", "event": "log_message", "data": {"level": "WARN", "message": "[SIM] 🔔 Cierre automático detectado: #53482236166 (SHORT) | Razón: SL | P/L: $-718.80"}}
+{"timestamp": "2025-10-01T20:31:00.719296", "event": "log_message", "data": {"level": "ERROR", "message": "[SIM] ❌ CIERRE #53482236166 | Estrategia | candle_doji_reversal | SHORT | Precio: 1.17404 | PÉRDIDA: -$718.80 (-0.86%)"}}
+{"timestamp": "2025-10-01T20:31:00.719499", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Balance: $82946.82 | Ganancias: $0.00 | Pérdidas: $718.80"}}
+{"timestamp": "2025-10-01T20:31:00.719719", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $82946.82 | Estrategia | candle_doji_reversal | SHORT | PÉRDIDA: -$718.80 (-0.86%) | Ganancias: $0.00 | Pérdidas: $718.80"}}
+{"timestamp": "2025-10-01T20:31:00.719950", "event": "trade_close", "data": {"ticket": 53482236166, "symbol": "EURUSD", "close_price": 1.17404, "profit": -718.8}}
+{"timestamp": "2025-10-01T20:31:00.721155", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] ATR calculado: 0.00015142857142854841"}}
+{"timestamp": "2025-10-01T20:31:00.721354", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Total de velas: 204"}}
+{"timestamp": "2025-10-01T20:31:00.721672", "event": "log_message", "data": {"level": "DEBUG", "message": "[SIM-DEBUG] Última vela - O:1.17381 H:1.1740599999999999 L:1.17371 C:1.1739899999999999"}}
+{"timestamp": "2025-10-01T20:31:00.722204", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: long"}}
+{"timestamp": "2025-10-01T20:31:00.722443", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:31:00.722742", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17381 H:1.1740599999999999 L:1.17371 C:1.1739899999999999"}}
+{"timestamp": "2025-10-01T20:31:00.731687", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Patrones seleccionados: ['dark_cloud_cover', 'doji_reversal', 'engulfing', 'evening_star', 'hammer', 'hanging_man', 'harami', 'long_legged_doji', 'marubozu', 'shooting_star']"}}
+{"timestamp": "2025-10-01T20:31:00.731966", "event": "log_message", "data": {"level": "INFO", "message": "[SIM-DEBUG] Última vela: O:1.17381 H:1.1740599999999999 L:1.17371 C:1.1739899999999999"}}
