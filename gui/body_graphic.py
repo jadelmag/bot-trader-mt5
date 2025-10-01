@@ -372,8 +372,6 @@ class BodyGraphic(ttk.Frame):
                 current_tick_time = pd.to_datetime(tick.time, unit='s')
 
                 if timeframe_delta and current_tick_time >= (last_candle_time + timeframe_delta):
-                    if self.logger:
-                        self.logger.success(f"Nueva vela detectada para {self.timeframe}. Refrescando gráfico...")
                     self.refresh() # Llama a refresh y termina este ciclo de actualización
                     return
             # --- Fin de la lógica ---

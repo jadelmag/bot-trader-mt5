@@ -8,6 +8,7 @@ import datetime
 from forex.forex_list import ForexStrategies
 from operations.close_operations import close_operation_robust
 from metatrader.metatrader import obtener_mensaje_error
+from simulation.key_list import get_name_for_id
 
 # --- MT5 Integration ---
 try:
@@ -79,7 +80,7 @@ class Simulation:
         else:
             if self.debug_mode:
                 self._log(f"[SIM] AuditLogger habilitado. Logs en: {audit_logger.log_file_path}")
-            self.audit_logger.log_system_event(f"Inicio simulación {symbol} {timeframe}")
+            self.audit_logger.log_system_event(f"Inicio simulación {self.symbol} {self.timeframe}")
 
         # --- Candle and Market Analysis Data ---
         self.candles_df = pd.DataFrame(columns=['time', 'open', 'high', 'low', 'close'])
@@ -88,6 +89,7 @@ class Simulation:
         self.ma_slow = None
         self.atr = None # Añadir para ATR
 
+        self.tracked_tickets = set()  # Set para trackear tickets abiertos
         self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
     
         # --- Inicializar MetaTrader 5 ---
@@ -245,6 +247,69 @@ class Simulation:
             else:
                 self._log(f"[SIM-LIMIT] Manteniendo operación con pérdida: #{position.ticket}, P/L: {position.profit:.2f}€", 'info')
 
+    def _check_auto_closed_positions(self):
+        """Detecta y registra operaciones cerradas automáticamente por MT5 (SL/TP)."""
+        if not mt5 or not mt5.terminal_info() or not hasattr(self, 'tracked_tickets'):
+            return
+        
+        # Obtener tickets actualmente abiertos en MT5
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        current_tickets = set()
+        if open_positions:
+            current_tickets = {pos.ticket for pos in open_positions}
+        
+        # Detectar tickets que fueron cerrados
+        closed_tickets = self.tracked_tickets - current_tickets
+        
+        if closed_tickets:
+            # Procesar cada ticket cerrado
+            for ticket in closed_tickets:
+                # Buscar en el historial de deals
+                deals = mt5.history_deals_get(position=ticket)
+                if deals and len(deals) >= 2:  # Al menos apertura y cierre
+                    close_deal = deals[-1]  # Último deal es el cierre
+                    open_deal = deals[0]   # Primer deal es la apertura
+                    
+                    # Determinar tipo de operación
+                    trade_type = 'long' if open_deal.type == mt5.DEAL_TYPE_BUY else 'short'
+                    
+                    # Determinar razón del cierre
+                    reason = "SL/TP automático"
+                    if close_deal.comment:
+                        if 'sl' in close_deal.comment.lower():
+                            reason = "SL"
+                        elif 'tp' in close_deal.comment.lower():
+                            reason = "TP"
+                    
+                    # Registrar el cierre
+                    self._log(
+                        f"[SIM] 🔔 Cierre automático detectado: #{ticket} ({trade_type.upper()}) | "
+                        f"Razón: {reason} | P/L: ${close_deal.profit:.2f}",
+                        'warn' if close_deal.profit < 0 else 'success'
+                    )
+                    
+                    # Procesar resultado
+                    self._process_trade_result(
+                        ticket,
+                        open_deal.comment or "",
+                        trade_type,
+                        close_deal.profit,
+                        self.balance,
+                        close_deal.price
+                    )
+                    
+                    # Registrar en audit log
+                    if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+                        self.audit_logger.log_trade_close(
+                            ticket=ticket,
+                            symbol=self.symbol,
+                            close_price=close_deal.price,
+                            profit=close_deal.profit
+                        )
+            
+            # Actualizar set de tickets trackeados
+            self.tracked_tickets = current_tickets
+
     def on_tick(self, timestamp, price):
         """
         Processes a new market tick, aggregating it into candles.
@@ -261,12 +326,11 @@ class Simulation:
             if self.current_candle is not None:
                 # --- NEW CANDLE FORMED --- 
                 self.trades_in_current_candle = 0 # Reset counter for the new candle
-                if self.debug_mode:
-                    self._log(f"[SIM] Nueva vela {self.timeframe} formada a las {candle_start_time}. Contador de trades reseteado.")
+                self._log(f"[SIM] 📊 Nueva vela {self.timeframe} a las {candle_start_time.strftime('%H:%M:%S')} | Balance: ${self.balance:.2f}")
 
                 # --- Registro de auditoría ---
                 if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
-                    self.audit_logger.log_system_event(f"Nueva vela {self.timeframe} formada a las {candle_start_time}")
+                    self.audit_logger.log_system_event(f"[SIM] 📊 Nueva vela {self.timeframe} a las {candle_start_time.strftime('%H:%M:%S')} | Balance: ${self.balance:.2f}")
 
 
                 new_row = pd.DataFrame([self.current_candle])
@@ -276,6 +340,8 @@ class Simulation:
                     self.candles_df = pd.concat([self.candles_df, new_row], ignore_index=True)
                 # A new candle has been confirmed, run analysis
                 self._calculate_indicators()
+                # Verificar cierres automáticos por SL/TP
+                self._check_auto_closed_positions()
                 self._analyze_market_and_execute_strategy()
 
             # Start a new candle
@@ -349,6 +415,23 @@ class Simulation:
         analysis_df = self.candles_df.rename(columns={
             'open': 'open', 'high': 'high', 'low': 'low', 'close': 'close'
         })
+
+        # --- 0. Verificar datos de velas ---
+        if len(self.candles_df) < 2:
+            if self.debug_mode:
+                self._log("[SIM-DEBUG] No hay suficientes velas para analizar", 'debug')
+            return
+
+        # --- 1. Calcular Indicadores ---
+        self._calculate_indicators()
+
+        # --- 1.1. Verificar datos de velas ---
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Total de velas: {len(self.candles_df)}", 'debug')
+        if not analysis_df.empty:
+            last_candle = analysis_df.iloc[-1]
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] Última vela - O:{last_candle['open']} H:{last_candle['high']} L:{last_candle['low']} C:{last_candle['close']}", 'debug')
 
         # --- 2. Obtener señales de mercado ---
         ma_signal = self._get_ma_signal(analysis_df)
@@ -507,6 +590,11 @@ class Simulation:
 
     def _get_candle_signal(self, df):
         """Analyzes the last candle for patterns selected in the strategy config."""
+        if df.empty or len(df) < 2:
+            if self.debug_mode: 
+                self._log("[SIM-DEBUG] No hay suficientes velas para analizar", 'debug')
+            return 'neutral', None
+
         candle_strategies = self.strategies_config.get('candle_strategies', {})
         selected_patterns = [
             name.replace('is_', '') 
@@ -515,19 +603,32 @@ class Simulation:
         ]
 
         if not selected_patterns:
+            if self.debug_mode: 
+                self._log("[SIM-DEBUG] No hay patrones de velas seleccionados en la configuración", 'debug')
             return 'neutral', None
+
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Patrones seleccionados: {selected_patterns}")
+
+        # Verificar que tengamos datos suficientes
+        last_candle = df.iloc[-1]
+        if self.debug_mode:
+            self._log(f"[SIM-DEBUG] Última vela: O:{last_candle['open']} H:{last_candle['high']} L:{last_candle['low']} C:{last_candle['close']}")
 
         detector = CandleDetector(df)
         last_candle_index = len(df) - 1
         
         for pattern_name in selected_patterns:
-            detection_func = detector.pattern_methods.get(f'is_{pattern_name}')
+            detection_func = getattr(detector, f'is_{pattern_name}', None)
             if detection_func:
-                signal = detection_func(df.to_dict('records'), last_candle_index)
-                if signal in ['long', 'short']:
-                    if self.debug_mode:
-                        self._log(f"[SIM-DEBUG] Señal de Patrón de Vela detectada: {pattern_name} -> {signal}")
-                    return signal, pattern_name # Devolver también el nombre del patrón
+                try:
+                    signal = detection_func(df.to_dict('records'), last_candle_index)
+                    if signal in ['long', 'short']:
+                        self._log(f"[SIM] Señal de {pattern_name}: {signal}", 'info')
+                        return signal, pattern_name
+                except Exception as e:
+                    self._log(f"[SIM-ERROR] Error al detectar patrón {pattern_name}: {str(e)}", 'error')
+
         return 'neutral', None
 
     def _get_active_forex_params(self):
@@ -623,22 +724,59 @@ class Simulation:
             return 0.0
 
     def _check_for_closing_signals(self, ma_signal, candle_signal):
-        """Itera sobre las posiciones abiertas y las cierra si hay una señal contraria fuerte."""
+        """Cierra posiciones cuando hay señales contrarias en cualquiera de los indicadores o se alcanza TP/SL."""
         if not mt5 or not mt5.terminal_info():
+            self._log("[SIM-ERROR] No hay conexión con MT5", 'error')
             return
 
         open_positions = mt5.positions_get(symbol=self.symbol)
-        if open_positions is None or len(open_positions) == 0:
+        if open_positions is None:
+            self._log("[SIM-ERROR] No se pudieron obtener las posiciones abiertas", 'error')
+            return
+
+        if len(open_positions) == 0:
             return
 
         for position in open_positions:
-            if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short' and candle_signal == 'short':
-                self._log(f"[SIM] Señal contraria detectada. Cerrando posición LONG #{position.ticket}.", 'warn')
-                self.close_trade(position.ticket, position.volume, 'long')
+            # Obtener el precio actual
+            current_price = (mt5.symbol_info_tick(self.symbol).bid if position.type == mt5.POSITION_TYPE_BUY 
+                            else mt5.symbol_info_tick(self.symbol).ask)
 
-            elif position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long' and candle_signal == 'long':
-                self._log(f"[SIM] Señal contraria detectada. Cerrando posición SHORT #{position.ticket}.", 'warn')
-                self.close_trade(position.ticket, position.volume, 'short')
+            # Verificar TP y SL
+            if position.sl > 0 or position.tp > 0:  # Solo si hay TP/SL definidos
+                sl_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price <= position.sl) or \
+                        (position.type == mt5.POSITION_TYPE_SELL and current_price >= position.sl)
+                tp_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price >= position.tp) or \
+                        (position.type == mt5.POSITION_TYPE_SELL and current_price <= position.tp)
+
+                if sl_hit or tp_hit:
+                    reason = "TP" if tp_hit else "SL"
+                    self._log(f"[SIM] {reason} alcanzado para posición #{position.ticket} ({'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'}). Precio: {current_price:.5f}", 'warn')
+                    self.close_trade(position.ticket, position.volume, 
+                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                    continue
+
+            # Verificar señales de cierre (cualquiera de las dos señales contrarias)
+            close_long = (position.type == mt5.POSITION_TYPE_BUY and 
+                        (ma_signal == 'short' or candle_signal == 'short'))
+            
+            close_short = (position.type == mt5.POSITION_TYPE_SELL and 
+                        (ma_signal == 'long' or candle_signal == 'long'))
+
+            if close_long or close_short:
+                signal_type = []
+                if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
+                    signal_type.append("MA")
+                if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
+                    signal_type.append("Vela")
+                if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
+                    signal_type.append("MA")
+                if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
+                    signal_type.append("Vela")
+                    
+                self._log(f"[SIM] Señal contraria detectada ({' y '.join(signal_type)}). Cerrando posición {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
+                self.close_trade(position.ticket, position.volume, 
+                            'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
 
     def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
         """
@@ -726,6 +864,9 @@ class Simulation:
             )
             self._log(log_message, 'success')
             self.trades_in_current_candle += 1
+            # Añadir ticket al set de tracking
+            if hasattr(self, 'tracked_tickets') and result.order:
+                self.tracked_tickets.add(result.order)
 
         return result
 
@@ -773,6 +914,10 @@ class Simulation:
         position_info = position_info[0]
         balance_before = self.balance
 
+        # Log de P/L flotante antes de cerrar
+        floating_pl = position_info.profit
+        self._log(f"[SIM] 🔄 Cerrando #{position_ticket} ({trade_type.upper()}) | P/L flotante: ${floating_pl:.2f} | Balance: ${balance_before:.2f}", 'info')
+
         # Cerrar operación
         if not close_operation_robust(position_ticket, None, 5):
             self._log(f"[ERROR] No se pudo cerrar {position_ticket}", 'error')
@@ -785,25 +930,32 @@ class Simulation:
             return None
 
         self._process_trade_result(
+            position_ticket,  # NUEVO
             position_info.comment, 
             trade_type, 
             deal[-1].profit, 
-            balance_before
+            balance_before,
+            position_info.price_current  # NUEVO
         )
 
         # --- Registro de auditoría ---
         if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
             self.audit_logger.log_trade_close(
                 ticket=position_ticket,
-                symbol=symbol,
-                close_price=price,
+                symbol=self.symbol,
+                close_price=position_info.price_current,
                 profit=deal[-1].profit
             )
 
         return True
 
-    def _process_trade_result(self, comment: str, trade_type: str, profit: float, balance_before: float):
+    def _process_trade_result(self, ticket: int, comment: str, trade_type: str, profit: float, balance_before: float, close_price: float):
         """Procesa y muestra el resultado de una operación cerrada."""
+        # Calcular porcentaje al inicio
+        percent = (abs(profit) / balance_before * 100) if balance_before > 0 else 0
+
+        copy_comment = comment
+        
         # Obtener nombre de la estrategia
         strategy_name = "Estrategia"
         if comment:
@@ -814,23 +966,26 @@ class Simulation:
             elif "custom" in comment:
                 strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
 
+        comment_clean = copy_comment.strip()
+        keyIDComment = comment_clean.split('-')[1]
+        strategy_type = get_name_for_id(int(keyIDComment))
+
         # Mostrar resultado
+        # Añadir ticket y precio de cierre
         if profit > 0:
-            percent = (profit / balance_before * 100) if balance_before > 0 else 0
             self._log(
-                f"[SIM] {strategy_name} | {trade_type.upper()} | "
-                f"GANANCIA: +${profit:.2f} (+{percent:.2f}%)", 
+                f"[SIM] ✅ CIERRE #{ticket} | {strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"Precio: {close_price:.5f} | GANANCIA: +${profit:.2f} (+{percent:.2f}%)", 
                 'success'
             )
         elif profit < 0:
-            percent = (abs(profit) / balance_before * 100) if balance_before > 0 else 0
             self._log(
-                f"[SIM] {strategy_name} | {trade_type.upper()} | "
-                f"PÉRDIDA: -${abs(profit):.2f} (-{percent:.2f}%)", 
+                f"[SIM] ❌ CIERRE #{ticket} | {strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"Precio: {close_price:.5f} | PÉRDIDA: -${abs(profit):.2f} (-{percent:.2f}%)", 
                 'error'
             )
         else:
-            self._log(f"[SIM] {strategy_name} | {trade_type.upper()} | SIN CAMBIO", 'info')
+            self._log(f"[SIM] {strategy_name} | {strategy_type} | {trade_type.upper()} | SIN CAMBIO", 'info')
 
         # Actualizar métricas
         self.balance += profit
@@ -849,10 +1004,18 @@ class Simulation:
 
         # Registrar también en el archivo JSONL el resumen
         if hasattr(self, 'audit_logger') and self.audit_logger.is_enabled:
+            # Determinar el texto del resultado
+            if profit > 0:
+                result_text = f"GANANCIA: +${profit:.2f} (+{percent:.2f}%)"
+            elif profit < 0:
+                result_text = f"PÉRDIDA: -${abs(profit):.2f} (-{percent:.2f}%)"
+            else:
+                result_text = "SIN CAMBIO"
+            
             self.audit_logger.log_system_event(
                 f"Balance: ${self.balance:.2f} | "
-                f"{strategy_name} | {trade_type.upper()} | "
-                f"GANANCIA: +${profit:.2f} (+{percent:.2f}%) | "
+                f"{strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"{result_text} | "
                 f"Ganancias: ${self.total_profit:.2f} | "
                 f"Pérdidas: ${self.total_loss:.2f}"
             )

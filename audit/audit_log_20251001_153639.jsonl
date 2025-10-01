@@ -1,0 +1,100 @@
+{"timestamp": "2025-10-01T15:37:14.283072", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-01T15:37:14.288070", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 90075.66"}}
+{"timestamp": "2025-10-01T15:37:14.290013", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-01T15:38:00.591056", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:38:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:38:00.591511", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:38:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:39:01.911760", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:39:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:39:01.912067", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:39:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:40:01.251231", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:40:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:40:01.251570", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:40:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:41:01.609091", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:41:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:41:01.609427", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:41:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:42:00.932792", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:42:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:42:00.933094", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:42:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:43:01.320241", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:43:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:43:01.320591", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:43:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:44:00.633081", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:44:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:44:00.633424", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:44:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:44:00.648393", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T15:44:00.652344", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 90075.66"}}
+{"timestamp": "2025-10-01T15:44:00.721668", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 30.03, "open_price": 1.1758899999999999, "stop_loss": 1.17559, "take_profit": 1.17664, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T15:44:00.721992", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG': 1.17589 | 30.03 | 1.17559 | 1.17664"}}
+{"timestamp": "2025-10-01T15:45:01.066159", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:45:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:45:01.066507", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:45:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:46:01.375362", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:46:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:46:01.375728", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:46:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:47:00.786008", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:47:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:47:00.786351", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:47:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:48:01.221823", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:48:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:48:01.222177", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:48:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:49:01.728581", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:49:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:49:01.729010", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:49:00 | Balance: $90075.66"}}
+{"timestamp": "2025-10-01T15:50:00.339811", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:50:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:50:00.340157", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:50:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:51:00.779047", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:51:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:51:00.779450", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:51:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:51:00.794959", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T15:51:00.798928", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89309.32"}}
+{"timestamp": "2025-10-01T15:51:00.875194", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 29.77, "open_price": 1.17531, "stop_loss": 1.17561, "take_profit": 1.17456, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T15:51:00.875545", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT': 1.17531 | 29.77 | 1.17561 | 1.17456"}}
+{"timestamp": "2025-10-01T15:52:01.318104", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:52:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:52:01.318461", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:52:00 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:52:01.322679", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal contraria detectada (MA). Cerrando posición SHORT #53478453808."}}
+{"timestamp": "2025-10-01T15:52:01.326924", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89309.32"}}
+{"timestamp": "2025-10-01T15:52:01.327192", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 🔄 Cerrando #53478453808 (SHORT) | P/L flotante: $329.32 | Balance: $89309.32"}}
+{"timestamp": "2025-10-01T15:52:01.385192", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] ✅ CIERRE #53478453808 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | Precio: 1.17518 | GANANCIA: +$329.32 (+0.37%)"}}
+{"timestamp": "2025-10-01T15:52:01.385449", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Balance: $89638.64 | Ganancias: $329.32 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:52:01.385637", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $89638.64 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | GANANCIA: +$329.32 (+0.37%) | Ganancias: $329.32 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:52:01.385822", "event": "trade_close", "data": {"ticket": 53478453808, "symbol": "EURUSD", "close_price": 1.1751800000000001, "profit": 329.32}}
+{"timestamp": "2025-10-01T15:52:01.397599", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T15:52:01.401852", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89638.64"}}
+{"timestamp": "2025-10-01T15:52:01.454647", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 29.88, "open_price": 1.17517, "stop_loss": 1.17547, "take_profit": 1.17442, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T15:52:01.455084", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT': 1.17517 | 29.88 | 1.17547 | 1.17442"}}
+{"timestamp": "2025-10-01T15:53:01.904043", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:53:00 | Balance: $89638.64"}}
+{"timestamp": "2025-10-01T15:53:01.904404", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:53:00 | Balance: $89638.64"}}
+{"timestamp": "2025-10-01T15:53:01.908775", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal contraria detectada (MA). Cerrando posición SHORT #53478472064."}}
+{"timestamp": "2025-10-01T15:53:01.912731", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89638.64"}}
+{"timestamp": "2025-10-01T15:53:01.913063", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 🔄 Cerrando #53478472064 (SHORT) | P/L flotante: $177.99 | Balance: $89638.64"}}
+{"timestamp": "2025-10-01T15:53:01.973638", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] ✅ CIERRE #53478472064 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | Precio: 1.17510 | GANANCIA: +$177.99 (+0.20%)"}}
+{"timestamp": "2025-10-01T15:53:01.973969", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Balance: $89816.63 | Ganancias: $507.31 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:53:01.974144", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $89816.63 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | GANANCIA: +$177.99 (+0.20%) | Ganancias: $507.31 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:53:01.974305", "event": "trade_close", "data": {"ticket": 53478472064, "symbol": "EURUSD", "close_price": 1.1751, "profit": 177.99}}
+{"timestamp": "2025-10-01T15:53:01.986607", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T15:53:01.990765", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89816.63"}}
+{"timestamp": "2025-10-01T15:53:02.047029", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 29.94, "open_price": 1.17509, "stop_loss": 1.17539, "take_profit": 1.17434, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T15:53:02.047435", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT': 1.17509 | 29.94 | 1.17539 | 1.17434"}}
+{"timestamp": "2025-10-01T15:54:00.430855", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:54:00 | Balance: $89816.63"}}
+{"timestamp": "2025-10-01T15:54:00.431248", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:54:00 | Balance: $89816.63"}}
+{"timestamp": "2025-10-01T15:54:00.435417", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal contraria detectada (MA). Cerrando posición SHORT #53478486360."}}
+{"timestamp": "2025-10-01T15:54:00.439374", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89816.63"}}
+{"timestamp": "2025-10-01T15:54:00.439654", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 🔄 Cerrando #53478486360 (SHORT) | P/L flotante: $25.48 | Balance: $89816.63"}}
+{"timestamp": "2025-10-01T15:54:00.494545", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] ✅ CIERRE #53478486360 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | Precio: 1.17508 | GANANCIA: +$25.48 (+0.03%)"}}
+{"timestamp": "2025-10-01T15:54:00.494931", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Balance: $89842.11 | Ganancias: $532.79 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:54:00.495246", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $89842.11 | Estrategia | forex_strategy_candle_pattern_reversal | SHORT | GANANCIA: +$25.48 (+0.03%) | Ganancias: $532.79 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-01T15:54:00.495468", "event": "trade_close", "data": {"ticket": 53478486360, "symbol": "EURUSD", "close_price": 1.17508, "profit": 25.48}}
+{"timestamp": "2025-10-01T15:54:00.507904", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T15:54:00.511862", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89842.11"}}
+{"timestamp": "2025-10-01T15:54:00.565968", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 29.95, "open_price": 1.17507, "stop_loss": 1.17537, "take_profit": 1.17432, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T15:54:00.566269", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'SHORT': 1.17507 | 29.95 | 1.17537 | 1.17432"}}
+{"timestamp": "2025-10-01T15:55:01.079336", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:55:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:55:01.079722", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:55:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:56:02.482415", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:56:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:56:02.482759", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:56:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:57:00.835673", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:57:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:57:00.836026", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:57:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:58:02.339832", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:58:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:58:02.340228", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:58:00 | Balance: $89842.11"}}
+{"timestamp": "2025-10-01T15:59:00.773020", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:59:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T15:59:00.773319", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:59:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T16:00:01.238190", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:00:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T16:00:01.238546", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:00:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T16:01:00.702463", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:01:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T16:01:00.702814", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:01:00 | Balance: $89077.67"}}
+{"timestamp": "2025-10-01T16:01:00.718279", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG' detectada. Abriendo operación."}}
+{"timestamp": "2025-10-01T16:01:00.722347", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 89077.67"}}
+{"timestamp": "2025-10-01T16:01:00.778383", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 29.69, "open_price": 1.1756, "stop_loss": 1.1753, "take_profit": 1.17635, "comment": "key-6-Bot-Simulation"}}
+{"timestamp": "2025-10-01T16:01:00.778787", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Señal de FOREX 'strategy_candle_pattern_reversal' -> 'LONG': 1.17560 | 29.69 | 1.1753 | 1.17635"}}
+{"timestamp": "2025-10-01T16:02:01.162687", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:02:00 | Balance: $88319.82"}}
+{"timestamp": "2025-10-01T16:02:01.162992", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:02:00 | Balance: $88319.82"}}
+{"timestamp": "2025-10-01T16:03:01.665724", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:03:00 | Balance: $88319.82"}}
+{"timestamp": "2025-10-01T16:03:01.666153", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 17:03:00 | Balance: $88319.82"}}
