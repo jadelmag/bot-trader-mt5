@@ -667,6 +667,10 @@ class App:
 
                 # Habilitar el control del modo agresivo, sin activarlo por defecto
                 self.simulation_menu.entryconfig("Modo agresivo", state="normal")
+                # Habilitar botones de gestión de operaciones
+                self.simulation_menu.entryconfig("Ver operaciones abiertas", state="normal")
+                self.simulation_menu.entryconfig("Cerrar operaciones", state="normal") 
+                self.simulation_menu.entryconfig("Detener simulación", state="normal")
 
             except Exception as e:
                 self._log_error(f"Error al iniciar la simulación: {e}")
@@ -695,6 +699,11 @@ class App:
             if self.modo_agresivo_activo.get():
                 self.modo_agresivo_activo.set(False)
                 self._log_info("Modo Agresivo DESACTIVADO al detener la simulación.")
+
+            # Deshabilitar botones de gestión de operaciones
+            self.simulation_menu.entryconfig("Ver operaciones abiertas", state="disabled")
+            self.simulation_menu.entryconfig("Cerrar operaciones", state="disabled") 
+            self.simulation_menu.entryconfig("Detener simulación", state="disabled")
 
             # Reactivar las actualizaciones en vivo del gráfico
             if hasattr(self, 'graphic'):
@@ -734,6 +743,81 @@ class App:
 
         except Exception as e:
             self._log_error(f"Error al detener la simulación: {e}")
+
+    def _toggle_debug_mode_action(self):
+        """
+        Activa o desactiva el modo debug en la simulación activa.
+        """
+        is_debug = self.debug_mode_var.get()
+        
+        # Si la simulación está corriendo, actualiza la instancia en tiempo real
+        if hasattr(self, 'simulation_instance') and self.simulation_instance:
+            self.simulation_instance.set_debug_mode(is_debug)
+        else:
+            # Si no, solo loguea el cambio de estado para la próxima simulación
+            status = "activado" if is_debug else "desactivado"
+
+    def _ver_operaciones_abiertas_action(self):
+        """Muestra las operaciones abiertas en una ventana modal no bloqueante."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        try:
+            # Importar la ventana de operaciones abiertas
+            from operations.window_operations import OperacionesAbiertasWindow
+            
+            # Crear y mostrar la ventana modal no bloqueante
+            operations_window = OperacionesAbiertasWindow(
+                parent=self.root,
+                simulation_instance=self.simulation_instance,
+                logger=self.logger,
+                app=self  # Añadir referencia a la app
+            )
+            
+            if self.debug_mode_var.get():
+                self._log_info("Ventana de operaciones abiertas abierta")
+            
+        except ImportError as e:
+            self._log_error(f"Error al importar ventana de operaciones: {e}")
+            messagebox.showerror("Error", "No se pudo abrir la ventana de operaciones abiertas")
+
+        except Exception as e:
+            self._log_error(f"Error al abrir ventana de operaciones: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
+
+    def _cerrar_operaciones_action(self):
+        """Abre ventana modal para gestionar operaciones abiertas."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        try:
+            from operations.window_close_operations import CerrarOperacionesWindow
+            
+            operations_window = CerrarOperacionesWindow(
+                parent=self.root,
+                simulation_instance=self.simulation_instance,
+                logger=self.logger
+            )
+            
+            if self.debug_mode_var.get():
+                self._log_info("Ventana de gestión de operaciones abierta")
+            
+        except ImportError as e:
+            self._log_error(f"Error al importar ventana de gestión: {e}")
+            messagebox.showerror("Error", "No se pudo abrir la ventana de gestión de operaciones")
+        except Exception as e:
+            self._log_error(f"Error al abrir ventana de gestión: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
 
     def _detener_actualizacion_action(self):
         """Pausa o reanuda las actualizaciones del gráfico y del balance."""

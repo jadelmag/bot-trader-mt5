@@ -22,6 +22,7 @@ class ConfigAppModal(tk.Toplevel):
         self.money_limit_var = tk.StringVar()
         self.audit_log_var = tk.BooleanVar()
         self.risk_per_trade_var = tk.StringVar(value="1.0") # Default 1%
+        self.daily_profit_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
 
         # --- Layout --- #
         main_frame = ttk.Frame(self, padding="15")
@@ -32,7 +33,7 @@ class ConfigAppModal(tk.Toplevel):
         self._build_buttons(main_frame)
 
         self._load_config()
-        self._center_window(500, 400)
+        self._center_window(500, 450)
 
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
         self.grab_set() # Modal behavior
@@ -74,6 +75,12 @@ class ConfigAppModal(tk.Toplevel):
     def _build_general_section(self, parent):
         general_frame = ttk.LabelFrame(parent, text="Configuración General", padding="10")
         general_frame.pack(fill="x", pady=(0, 15))
+
+        # Daily Profit Limit
+        daily_limit_frame = ttk.Frame(general_frame)
+        daily_limit_frame.pack(fill="x", pady=5)
+        ttk.Label(daily_limit_frame, text="Límite de Ganancia Diaria (€):").pack(side="left", padx=5)
+        ttk.Entry(daily_limit_frame, textvariable=self.daily_profit_limit_var, width=15).pack(side="left")
 
         # Money Limit
         limit_frame = ttk.Frame(general_frame)
@@ -121,6 +128,10 @@ class ConfigAppModal(tk.Toplevel):
             risk_value = config.get("risk_per_trade_percent", "1.0")
             self.risk_per_trade_var.set(f"{float(risk_value):.8f}")
 
+            # Cargar límite de ganancia diaria
+            daily_profit_limit = config.get("daily_profit_limit", "0.0")
+            self.daily_profit_limit_var.set(str(daily_profit_limit))
+
         except (json.JSONDecodeError, TypeError):
             messagebox.showerror("Error", f"El archivo de configuración '{os.path.basename(CONFIG_PATH)}' está corrupto.", parent=self)
 
@@ -130,7 +141,14 @@ class ConfigAppModal(tk.Toplevel):
             interval_hours = int(self.interval_var.get()) if self.interval_var.get() else 0
             money_limit = float(self.money_limit_var.get()) if self.money_limit_var.get() else 0.0
             risk_percent = float(self.risk_per_trade_var.get()) if self.risk_per_trade_var.get() else 1.0
+            daily_profit_limit = float(self.daily_profit_limit_var.get()) if self.daily_profit_limit_var.get() else 0.0
 
+            # Validar que el límite de ganancia diaria no sea negativo
+            if daily_profit_limit < 0:
+                messagebox.showwarning("Valor Inválido", "El límite de ganancia diaria no puede ser negativo.", parent=self)
+                return
+
+            # Validar que el correo electrónico sea requerido si las notificaciones están activadas
             if self.email_notifications_var.get() and not self.email_var.get():
                 messagebox.showwarning("Campo Requerido", "El correo electrónico es obligatorio si las notificaciones están activadas.", parent=self)
                 return
@@ -143,7 +161,8 @@ class ConfigAppModal(tk.Toplevel):
                 "money_limit": money_limit,
                 "audit_log_enabled": self.audit_log_var.get(),
                 # Guardar como string formateado para evitar notación científica
-                "risk_per_trade_percent": f"{risk_percent:.8f}"
+                "risk_per_trade_percent": f"{risk_percent:.8f}",
+                "daily_profit_limit": daily_profit_limit
             }
 
             # Ensure directory exists
@@ -156,7 +175,7 @@ class ConfigAppModal(tk.Toplevel):
             self.destroy()
 
         except ValueError:
-            messagebox.showerror("Error de Validación", "Por favor, introduce un número válido para el intervalo, límite y riesgo.", parent=self)
+            messagebox.showerror("Error de Validación", "Por favor, introduce un número válido para el intervalo, límite, riesgo y límite de ganancia diaria.", parent=self)
         except Exception as e:
             messagebox.showerror("Error al Guardar", f"No se pudo guardar la configuración: {e}", parent=self)
 

@@ -1,12 +1,6 @@
 
 TODO
 
-1. Añadir limite de dinero al dia
-2. Implementar cierre manual de operaciones
-3. Implementar cierre automatico de operaciones
-4. Al salir si el simulador esta abierto que pregunte si desea cerrar todas las operaciones
-    - Si dice Sí, se cerraran todas las operaciones y se guardara el log
-    - Si dice No, se guardara el log y se mantendran las operaciones abiertas
+1. Comprobar limite de dinero a ganar por dia.
+2. Generar simulaciones para ver si las estrategias y los patrones de velas cumplen con el objetivo.
 
-
-Error al intentar cerrar posiciones abiertas

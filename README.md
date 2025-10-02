@@ -1,161 +1,239 @@
-# Bot Trader MT5
+# Bot Trader MT5 - Sistema Avanzado de Trading Automatizado
 
-Un sofisticado bot de trading para MetaTrader 5, con una interfaz gráfica de usuario (GUI) construida con Tkinter. El bot está diseñado para analizar los mercados de divisas, detectar señales de trading basadas en una completa biblioteca de estrategias técnicas y gestionar las conexiones de forma segura.
+Un sofisticado bot de trading para MetaTrader 5 con interfaz gráfica profesional, diseñado para análisis técnico avanzado, ejecución automatizada de estrategias y gestión inteligente de riesgos en los mercados de divisas.
 
 ---
 
-## 🚀 Características Principales
+## Características Principales
 
-### Interfaz Gráfica Intuitiva (GUI)
--   **Visualización Profesional**: Gráficos de velas en tiempo real con `mplfinance`, que se actualizan dinámicamente.
--   **Panel de Control Centralizado**: Selectores para cambiar fácilmente entre símbolos (`EURUSD`, `XAUUSD`, etc.) y marcos de tiempo (`M1` a `D1`).
--   **Menús de Acceso Rápido**: Accede a todas las herramientas de análisis, backtesting, simulación y configuración desde menús desplegables.
--   **Logger Integrado**: Un panel de registro detallado que muestra el estado de la conexión, señales de trading, operaciones ejecutadas, errores y resúmenes de análisis.
--   **Dashboard de Cuenta**: Visualiza en tiempo real el balance, equity, margen, beneficios y pérdidas de tu cuenta de trading.
+### Interfaz Gráfica Profesional
+- **Dashboard en Tiempo Real**: Visualización completa del estado de la cuenta (balance, equity, margen, P/L)
+- **Gráficos Dinámicos**: Velas japonesas actualizadas en tiempo real con mplfinance
+- **Panel de Control Intuitivo**: Selectores para símbolos (EURUSD, XAUUSD, etc.) y marcos temporales (M1 a D1)
+- **Sistema de Logging Avanzado**: Registro detallado de operaciones, señales y eventos del sistema
+- **Ventanas Modales No Bloqueantes**: Gestión de operaciones abiertas sin interrumpir el flujo principal
 
-### Motor de Trading y Simulación en Tiempo Real
--   **Ejecución de Estrategias en Vivo**: El bot analiza el mercado en cada nueva vela y puede ejecutar operaciones automáticamente.
--   **Lógica de Doble Señal**: Combina señales de indicadores de tendencia (como cruces de medias móviles) con señales de patrones de velas para confirmar entradas al mercado.
--   **Gestión de Riesgo Dinámica**: Calcula automáticamente el volumen de la operación (`lotaje`) basándose en un porcentaje de riesgo sobre el equity y un stop-loss en pips definidos.
--   **Manejo de Operaciones**: Abre y cierra operaciones directamente en MetaTrader 5, incluyendo la configuración de Stop Loss y Take Profit.
--   **Protección de Capital**: Incluye un límite de equity configurable para detener la apertura de nuevas operaciones si el capital cae por debajo de un umbral.
+### Motor de Trading Inteligente
+- **Ejecución Automatizada**: Análisis y ejecución de operaciones en cada nueva vela
+- **Sistema de Señales Duales**: Combinación de indicadores técnicos y patrones de velas
+- **Gestión Dinámica de Volumen**: Cálculo automático basado en porcentaje de riesgo y ATR
+- **Protección Multicapa**: 
+  - Límite de equity mínimo
+  - **NUEVO: Límite de ganancia diaria con cierre inteligente**
+  - Stop Loss y Take Profit automáticos
+- **Cierre Robusto**: Sistema de cierre con múltiples modos de filling (FOK, IOC, RETURN)
 
-### Potente Módulo de Backtesting
--   **Backtesting "Perfecto"**: Evalúa la rentabilidad histórica de todas las estrategias y patrones de velas, asumiendo conocimiento futuro para identificar el potencial máximo de cada señal.
--   **Informes Detallados**: Genera resúmenes claros que muestran el número de operaciones rentables y el beneficio total para cada estrategia, ayudándote a decidir cuáles son las más efectivas.
--   **Auditoría de Trades**: Registra cada operación de backtesting en un fichero de auditoría (`JSONL`), permitiendo un análisis post-mortem exhaustivo.
+### Sistema de Límite de Ganancia Diaria (NUEVO)
+- **Control de Beneficios**: Establece un límite máximo de ganancia por día
+- **Cierre Inteligente**: Al alcanzar el límite:
+  - Cierra automáticamente operaciones con beneficio positivo (asegura ganancias)
+  - Mantiene abiertas operaciones con pérdidas (oportunidad de recuperación)
+- **Reseteo Automático**: Detección de nuevo día y reinicio del contador
+- **Configuración Flexible**: Valor 0 = sin límite, acepta decimales
 
 ### Análisis Técnico Avanzado
--   **Detección de Patrones de Velas**: Identifica más de 10 patrones de velas (Martillo, Envolvente, Doji, etc.) y analiza su rendimiento histórico.
--   **Análisis de Estrategias Forex**: Evalúa el rendimiento de múltiples estrategias de trading basadas en indicadores como Medias Móviles, RSI, MACD y Bandas de Bollinger.
--   **Configuración de Estrategias**: Permite seleccionar y configurar qué estrategias de velas y forex se utilizarán en la simulación en tiempo real.
+- **Detección de Patrones**: Más de 15 patrones de velas japonesas (Martillo, Envolvente, Doji, etc.)
+- **Indicadores Técnicos**: RSI, MACD, Medias Móviles, Bandas de Bollinger, ATR
+- **Estrategias Forex**: Sistema modular de estrategias basadas en indicadores
+- **Estrategias Personalizadas**: Implementación de algoritmos propietarios como "Pico y Pala"
+
+### Módulo de Backtesting Profesional
+- **Backtesting Perfecto**: Evaluación histórica con conocimiento futuro para identificar potencial máximo
+- **Informes Detallados**: Análisis de rentabilidad por estrategia con métricas clave
+- **Auditoría Completa**: Registro JSONL de todas las operaciones para análisis post-mortem
+- **Métricas Avanzadas**: Win rate, profit factor, drawdown máximo
 
 ### Configuración y Personalización
--   **Gestión Centralizada**: Un modal de configuración permite ajustar parámetros clave de la aplicación.
--   **Notificaciones por Email**: Configura el envío de resúmenes periódicos del estado de la cuenta a tu correo electrónico, con control sobre el intervalo de envío.
--   **Parámetros de Riesgo**: Define el capital mínimo para operar y el porcentaje de riesgo por operación.
--   **Persistencia de Preferencias**: La aplicación guarda tus últimas selecciones de símbolo y timeframe para mayor comodidad.
+- **Panel de Configuración Centralizado**: Modal para ajustar todos los parámetros del sistema
+- **Notificaciones Email**: Resúmenes periódicos automáticos del estado de la cuenta
+- **Gestión de Riesgo**: Control de capital mínimo y porcentaje de riesgo por operación
+- **Persistencia de Datos**: Guardado automático de preferencias y configuraciones
 
-### Gestión Segura y Conexión
--   **Conexión Segura a MT5**: Utiliza un modal de inicio de sesión para conectar de forma segura a tu cuenta de MetaTrader 5.
--   **Manejo de Credenciales**: Carga las credenciales desde un archivo `.env` para mantenerlas separadas del código fuente.
-
----
-
-## Requisitos
-
-* Python 3.13 [Download: https://www.python.org/downloads/]
-* Conexión a internet (para descargar datos de Yahoo Finance y FinRL)
-* Git (para clonar el repositorio) [Download: https://git-scm.com/downloads]
-* MetaTrader 5
+### Gestión de Operaciones Avanzada
+- **Ventana de Operaciones en Tiempo Real**: Visualización no bloqueante con actualización de precios
+- **Cierre Individual**: Botón dedicado para cerrar operaciones específicas
+- **Sistema de Colores**: Verde para ganancias, rojo para pérdidas
+- **Threading Optimizado**: Actualizaciones sin bloquear la interfaz principal
 
 ---
 
-## 🛠️ Instalación y Configuración
+## Últimas Actualizaciones
 
-Sigue estos pasos para poner en marcha el proyecto.
+### Límite de Ganancia Diaria (v2.1.0)
+- **Configuración Visual**: Campo dedicado en el modal de configuración
+- **Validación Inteligente**: No acepta valores negativos, permite decimales
+- **Lógica de Negocio**: `Ganancia_Objetivo = Balance_Inicial + Límite_Configurado`
+- **Cierre Selectivo**: Preserva operaciones con potencial de recuperación
+- **Reseteo Automático**: Detección de cambio de día y reinicio del sistema
 
-1.  **Clona el repositorio**:
-    ```bash
-    git clone <your-repository-url>
-    cd bot-trader-mt5
-    ```
-
-2.  **Crea un entorno virtual** (recomendado):
-    ```bash
-    python -m venv venv
-    # En Windows:
-    venv\Scripts\activate
-    # En macOS/Linux:
-    # source venv/bin/activate
-    ```
-
-3.  **Instala las dependencias**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Configura tus credenciales**:
-    -   Crea un archivo llamado `.env` en el directorio raíz del proyecto.
-    -   Añade los detalles de tu cuenta de MetaTrader 5 a este archivo con el siguiente formato:
-        ```env
-        MT5_ACCOUNT=12345678
-        MT5_PASSWORD="tu_contraseña"
-        MT5_SERVER="nombre_de_tu_servidor"
-        ```
+### Mejoras en Gestión de Operaciones
+- **Ventana de Operaciones Abiertas**: Visualización en tiempo real con actualización de precios
+- **Cierre Individual**: Botón dedicado para cerrar operaciones específicas
+- **Sistema de Colores**: Verde para ganancias, rojo para pérdidas
+- **Threading Optimizado**: Actualizaciones sin bloquear la interfaz
 
 ---
 
-## Esquema de Directorios y Archivos (Resumen)
+## Instalación y Configuración
+
+### Requisitos del Sistema
+- **Python 3.13+** [Descargar](https://www.python.org/downloads/)
+- **MetaTrader 5** (Terminal activo)
+- **Git** [Descargar](https://git-scm.com/downloads)
+- **Conexión a Internet** (para datos de mercado)
+
+### Instalación Paso a Paso
+
+1. **Clonar el repositorio**:
+   ```bash
+   git clone <repository-url>
+   cd bot-trader-mt5
+   ```
+
+2. **Crear entorno virtual**:
+   ```bash
+   python -m venv venv
+   # Windows:
+   venv\Scripts\activate
+   # macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Instalar dependencias**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configurar credenciales**:
+   Crear archivo `.env` en la raíz:
+   ```env
+   MT5_ACCOUNT=12345678
+   MT5_PASSWORD="tu_contraseña"
+   MT5_SERVER="nombre_servidor"
+   ```
+
+---
+
+## Guía de Uso
+
+### Inicio Rápido
+1. **Ejecutar la aplicación**:
+   ```bash
+   python gui_main.py
+   ```
+
+2. **Conectar a MT5**: Usar el modal de login con credenciales del `.env`
+
+3. **Configurar parámetros**: 
+   - Acceder a "Configuración" → "Configuración de la Aplicación"
+   - Establecer límite de ganancia diaria (ej: 100.0 para 100€)
+   - Configurar riesgo por operación y capital mínimo
+
+4. **Seleccionar estrategias**: Elegir patrones de velas y estrategias forex
+
+5. **Iniciar simulación**: El bot comenzará a analizar y operar automáticamente
+
+### Configuración del Límite Diario
+```
+Ejemplo práctico:
+- Balance inicial: 1000€
+- Límite diario: 200€
+- Objetivo: 1000€ + 200€ = 1200€
+
+Al alcanzar 1200€:
+✅ Operaciones con +50€ → Se cierran (ganancia asegurada)
+⏳ Operaciones con -30€ → Se mantienen (oportunidad de recuperación)
+```
+
+### Monitoreo de Operaciones
+- **Ver Operaciones Abiertas**: Ventana no bloqueante con actualización en tiempo real
+- **Cierre Individual**: Botón para cerrar operaciones específicas
+- **Logging Detallado**: Seguimiento completo de todas las acciones
+
+---
+
+## Arquitectura del Proyecto
 
 ```
-app/
-|
-├── actions/                              # Módulos para acciones
-│   ├── actions.py                        # Acciones
-│   ├── tooltip.py                        # Tooltips
-│   └── trade_manager.py                  # Gestión de operaciones
-|
-├── audit/                                # Directorio para logs de operaciones en JSONL
-|
-├── backtesting/                         
-│   ├── __init__.py                       # Inicialización de módulos
-│   ├── apply_strategies.py               # Aplicación de estrategias
-│   ├── backtesting.py                    # Backtesting
-│   ├── detect_candles.py                 # Detección de velas
-│   ├── report_generator.py               # Generador de informes
-│   └── strategy_simulator.py             # Simulador de estrategias
-|
-├── candles/                              
-|   └── candle_list.py                    # Patrones de velas
-|
-├── custom/
-|   └── custom_strategies.py              # Estrategias personalizadas
-|
-├── docs/                                 # Documentación
-|   ├── candles.md                        # Documentación de patrones de velas
-|   ├── forex.md                          # Documentación de estrategias de forex
-|   ├── log.txt                           # Log de la aplicación
-|   └── todo.md                           # Tareas pendientes
-|
-├── email/                                # Módulo para envío de notificaciones por email
-|   └── email_sender.py                   # Envío de notificaciones por email
-|
-├── forex/
-│   └── forex_list.py                     # Lista de estrategias de forex
-|
-├── gui/
-│   ├── __init__.py                       # Inicialización de módulos
-│   ├── body_graphic.py                   # Gráfico principal de la aplicación
-│   └── body_logger.py                    # Logger de la aplicación
-|
-├── loggin/                               # Módulos para logging
-│   ├── __init__.py                       # Inicialización de módulos
-│   ├── audit_log.py                      # Logger de auditoría
-│   └── loggin.py                         # Logger de la aplicación
-|
-├── modals/                               # Módulos para modales de la aplicación
-│   ├── __init__.py                       # Inicialización de módulos
-│   ├── backtesting_modal.py              # Modal de backtesting
+bot-trader-mt5/
+│
+├── actions/                    # Sistema de acciones y tooltips
+│   ├── actions.py
+│   ├── tooltip.py
+│   └── trade_manager.py
+│
+├── audit/                      # Logs de auditoría en formato JSONL
+│   └── audit_log_*.jsonl
+| 
+├── backtesting/               # Motor de backtesting
+│   ├── backtesting.py
+│   ├── detect_candles.py
+│   ├── apply_strategies.py
+│   ├── indicators.py
+│   ├── │strategy_simulator.py
+│   └── report_generator.py
+│
+├── candles/                   # Patrones de velas japonesas
+│   └── candle_list.py
+│
+├── custom/                    # Estrategias personalizadas
+│   └── custom_strategies.py
+│
+├── docs/                      # Documentación técnica
+│   ├── backtesting.md
+│   ├── candles.md
+│   ├── forex.md
+│   └── log.txt
+│
+├── email/                     # Sistema de notificaciones
+│   └── email_sender.py
+│
+├── forex/                     # Estrategias de divisas
+│   └── forex_list.py
+│
+├── gui/                       # Interfaz gráfica
+│   ├── body_graphic.py
+│   └── body_logger.py
+│
+├── loggin/                    # Sistema de logging
+│   ├── audit_log.py
+│   └── loggin.py
+│
+├── main/                      # Núcleo de la aplicación
+│   ├── action_handler.py
+│   ├── analysis_handler.py
+│   ├── body_builder.py
+│   ├── header_builder.py
+│   ├── login_handler.py
+│   └── preferences_manager.py
+│
+├── metatrader/               # Conexión MT5
+│   └── metatrader.py
+│
+├── modals/                    # Ventanas modales
 │   ├── candle_config_modal.py            # Modal de configuración de velas
 │   ├── config_app_modal.py               # Modal de configuración de la aplicación
 │   ├── detect_all_candles_modal.py       # Modal de detección de velas
 │   ├── detect_all_forex_modal.py         # Modal de detección de forex
 │   ├── loggin_modal.py                   # Modal de logging
+│   ├── simulation_strategies_modal.py    # Modal de simulación de estrategias
 │   └── strategy_simulator_modal.py       # Modal de simulador de estrategias
-|
-├── resumes/                            # Directorio para informes de backtesting
-│   └── backtesting_2025-09-20_12-51-52.txt
-|
-├── simultation/   
-│   └── simulation.py                     # Simulación de trading
-|
-├── simultation_logs/   
-│   └── simulation_2025-09-20_12-51-52.txt # Log de la simulación
-|
-├── strategies/                         # Patrones de velas y estrategias de trading
-|   ├── config.json                       # Fichero de configuración de la app
-|   └── ... (Múltiples ficheros .json con estrategias)
+│
+├── operations/               # Gestión de operaciones
+│   ├── close_operations.py      # ⭐ Cierre robusto
+│   ├── manage_operations.py
+│   ├── window_operations.py     # ⭐ Ventana de operaciones
+│   └── window_close_operations.py
+│
+├── simulation/               # Motor de simulación
+│   └── simulation.py            # ⭐ Con límite de ganancia diaria
+│
+├── strategies/               # Configuraciones de estrategias
+│   ├── config.json             # ⭐ Incluye daily_profit_limit
+│   └── *.json                  # Patrones individuales
+│
+├── test/                     # Herramientas de testing
+│   └── close_operations.py     # Script de emergencia
 |
 ├── .env                                  # Archivo de variables de entorno
 ├── .gitignore                            # Archivo de configuración de Git
@@ -169,37 +247,74 @@ app/
 
 ---
 
-## ▶️ Cómo Usar la Aplicación
+## Stack Tecnológico
 
-1. Crea un archivo `.env` en el directorio raíz del proyecto.
-2. Añade los detalles de tu cuenta de MetaTrader 5 a este archivo con el siguiente formato:
-    ```env
-    MT5_ACCOUNT=12345678
-    MT5_PASSWORD="tu_contraseña"
-    MT5_SERVER="nombre_de_tu_servidor"
-    ```
-3. Asegúrate de que tu terminal de MetaTrader 5 esté en funcionamiento.
-4. Ejecuta la aplicación desde tu terminal:
-    ```bash
-    python main.py
-    ```
-5. Usa el botón **"Conectar"** en la GUI. El modal de inicio de sesión aparecerá pre-rellenado con tus credenciales del archivo `.env`. Haz clic en "Conectar".
-6. Una vez conectado, selecciona un símbolo y un marco de tiempo, y haz clic en **"Iniciar MT5"** para cargar el gráfico.
-7. Usa el menú **"Herramientas"** para analizar el gráfico en busca de patrones de velas o señales de estrategia.
+| Tecnología | Propósito | Versión |
+|------------|-----------|---------|
+| **Python** | Lenguaje principal | 3.13+ |
+| **MetaTrader5** | API de trading | Latest |
+| **Tkinter** | Interfaz gráfica | Built-in |
+| **Pandas** | Análisis de datos | Latest |
+| **Pandas-TA** | Indicadores técnicos | Latest |
+| **mplfinance** | Gráficos financieros | Latest |
+| **python-dotenv** | Variables de entorno | Latest |
+| **threading** | Concurrencia | Built-in |
 
 ---
 
-## 💻 Tecnologías Clave
+## Configuraciones Avanzadas
 
--   **Python 3**
--   **MetaTrader5**: Para la conexión al terminal de MT5 y la obtención de datos de mercado.
--   **Tkinter**: Para la interfaz gráfica de usuario.
--   **Pandas**: Para la manipulación y el análisis de datos.
--   **Pandas-TA**: Para el cálculo de indicadores técnicos.
--   **python-dotenv**: Para la gestión de variables de entorno y credenciales.
--   **SciPy**: Para operaciones numéricas (utilizado en la detección de patrones).
+### Parámetros Principales
+- **Límite de Ganancia Diaria**: Control de beneficios máximos por día
+- **Capital Mínimo**: Protección de cuenta con límite inferior
+- **Riesgo por Operación**: Porcentaje del equity a arriesgar
+- **Notificaciones Email**: Resúmenes automáticos periódicos
 
+### Gestión de Riesgos
+- **Stop Loss Dinámico**: Basado en ATR o pips fijos
+- **Take Profit Inteligente**: Ratios riesgo/beneficio configurables
+- **Límites de Operaciones**: Control de número máximo por vela
+- **Protección de Drawdown**: Cierre automático en pérdidas excesivas
+
+---
+
+## Métricas y Rendimiento
+
+### KPIs Monitoreados
+- **Win Rate**: Porcentaje de operaciones ganadoras
+- **Profit Factor**: Ratio beneficios/pérdidas
+- **Drawdown Máximo**: Mayor pérdida consecutiva
+- **Sharpe Ratio**: Rendimiento ajustado por riesgo
+- **Ganancia Diaria**: Control de objetivos de beneficio
+
+### Reportes Disponibles
+- **Backtesting Detallado**: Análisis histórico completo
+- **Auditoría de Operaciones**: Log JSONL de todas las transacciones
+- **Resúmenes Diarios**: Balance, operaciones y rendimiento
+- **Análisis por Estrategia**: Rendimiento individual de cada patrón
+
+---
+
+## Soporte y Troubleshooting
+
+### Herramientas de Diagnóstico
+- **Script de Cierre de Emergencia**: `test/close_operations.py`
+- **Logs Detallados**: Sistema de logging multicapa
+- **Validación de Conexión**: Verificación automática de MT5
+
+### Problemas Comunes
+1. **Error de Conexión MT5**: Verificar terminal activo y credenciales
+2. **Operaciones No Ejecutadas**: Revisar configuración de riesgo y capital
+3. **Límite Diario No Funciona**: Verificar formato numérico en configuración
+
+---
 
 ## Licencia
 
 Commons Clause + Apache/MIT
+
+---
+
+**Desarrollado para traders que buscan automatización profesional y gestión inteligente de riesgos en los mercados financieros.**
+
+**¡Happy Trading! 📈💰**

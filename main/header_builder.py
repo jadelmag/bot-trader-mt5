@@ -24,7 +24,7 @@ def create_header(app):
     app.options_btn.grid(row=0, column=1, padx=(10, 0))
     options_menu = tk.Menu(app.options_btn, tearoff=False)
     app.options_btn["menu"] = options_menu
-    options_menu.add_checkbutton(label="Modo Debug", variable=app.debug_mode_var)
+    options_menu.add_checkbutton(label="Modo Debug", variable=app.debug_mode_var, command=app._toggle_debug_mode_action)
     options_menu.add_separator()
     options_menu.add_command(label="Guardar Gráfica", command=app.action_handler.save_chart_to_csv)
     options_menu.add_separator()
@@ -39,7 +39,9 @@ def create_header(app):
     app.simulation_btn["menu"] = simulation_menu
     app.simulation_menu = simulation_menu
     simulation_menu.add_command(label="Iniciar simulación", command=app._iniciar_simulacion_action)
-    simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action)
+    simulation_menu.add_command(label="Ver operaciones abiertas", command=app._ver_operaciones_abiertas_action, state="disabled")
+    simulation_menu.add_command(label="Cerrar operaciones", command=app._cerrar_operaciones_action, state="disabled")
+    simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action, state="disabled")
     simulation_menu.add_separator()
     simulation_menu.add_checkbutton(label="Modo agresivo", variable=app.modo_agresivo_activo, command=app._modo_agresivo_action)
     simulation_menu.entryconfig("Modo agresivo", state="disabled") # Deshabilitado por defecto

@@ -48,6 +48,25 @@ class AuditLogger:
         except OSError:
             self.is_enabled = False # No se pudo crear el directorio o archivo
 
+    def log_message(self, message: str, level: str = "INFO"):
+        """Registra un mensaje general en el log."""
+        if not self.is_enabled or not self.log_file_path:
+            return
+
+        try:
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event": "log_message",
+                "data": {
+                    "level": level,
+                    "message": message
+                }
+            }
+            with open(self.log_file_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        except Exception as e:
+            print(f"[ERROR] No se pudo escribir en el log: {e}")
+
     def log_event(self, event_type: str, data: dict):
         """Registra un evento en el archivo de log si está habilitado."""
         if not self.is_enabled or not self.log_file_path:
