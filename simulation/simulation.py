@@ -618,7 +618,7 @@ class Simulation:
                 try:
                     signal = pattern_func(candles_list, last_candle_index)
                     if signal in ['long', 'short']:
-                        self._log(f"[SIM] Patrón {pattern_name} detectado: {signal}", 'info')
+                        # self._log(f"[SIM] Patrón {pattern_name} detectado: {signal}", 'info')
                         return signal, pattern_name
                 except Exception as e:
                     self._log(f"[SIM-ERROR] Error al detectar patrón {pattern_name}: {str(e)}", 'error')
@@ -888,8 +888,10 @@ class Simulation:
             if not symbol_info:
                 return 0.0
             
-            sl_in_points = sl_pips
-            loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            # Usar el mismo método que _calculate_volume()
+            sl_in_points = sl_pips * symbol_info.point
+            contract_size = symbol_info.trade_contract_size  # ~100,000 para Forex
+            loss_per_lot = sl_in_points * contract_size
             return loss_per_lot * volume
         except Exception:
             return 0.0
