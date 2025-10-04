@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.signal import find_peaks
 from candles.candle_list import CandlePatterns
+ 
 
 class ForexStrategies:
     """
@@ -12,64 +13,264 @@ class ForexStrategies:
     # --- Estrategias de Señal --- 
 
     @staticmethod
-    def strategy_price_action_sr(df, lookback=50):
+    def strategy_price_action_sr(df, lookback=25):
         """
-        Estrategia de Price Action MEJORADA que opera en zonas de Soporte/Resistencia
-        con confirmación de tendencia y momentum.
+        Estrategia Price Action OPTIMIZADA para M1.
+        Focus en S/R dinámicos con confirmación rápida y filtros M1.
         """
-        required = ['low', 'high', 'close', 'ema_200', 'rsi']
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['low', 'high', 'close', 'ema_50', 'rsi', 'atr']
         if not all(col in df.columns for col in required) or len(df) < lookback:
             return None
 
-        # --- 1. Filtro de Tendencia Principal ---
+        # --- FILTRO DE VOLATILIDAD M1 ---
+        current_atr = df['atr'].iloc[-1]
+        avg_atr = df['atr'].rolling(20).mean().iloc[-1]
+        
+        # Evitar periodos de volatilidad extrema
+        if current_atr > avg_atr * 2.5:
+            return None
+
+        # --- 1. IDENTIFICACIÓN S/R DINÁMICA M1 ---
+        recent_data = df.iloc[-lookback:]
+        
+        # Soportes: Mínimos locales últimos 25 velas
+        support_levels = []
+        for i in range(2, len(recent_data)-2):
+            if (recent_data['low'].iloc[i] < recent_data['low'].iloc[i-1] and
+                recent_data['low'].iloc[i] < recent_data['low'].iloc[i-2] and
+                recent_data['low'].iloc[i] < recent_data['low'].iloc[i+1] and
+                recent_data['low'].iloc[i] < recent_data['low'].iloc[i+2]):
+                support_levels.append(recent_data['low'].iloc[i])
+
+        # Resistencias: Máximos locales últimos 25 velas
+        resistance_levels = []
+        for i in range(2, len(recent_data)-2):
+            if (recent_data['high'].iloc[i] > recent_data['high'].iloc[i-1] and
+                recent_data['high'].iloc[i] > recent_data['high'].iloc[i-2] and
+                recent_data['high'].iloc[i] > recent_data['high'].iloc[i+1] and
+                recent_data['high'].iloc[i] > recent_data['high'].iloc[i+2]):
+                resistance_levels.append(recent_data['high'].iloc[i])
+
+        if not support_levels or not resistance_levels:
+            return None
+
+        # Tomar los 2 niveles más recientes de cada uno
+        current_support = sorted(support_levels)[-2] if len(support_levels) >= 2 else support_levels[-1]
+        current_resistance = sorted(resistance_levels)[-2] if len(resistance_levels) >= 2 else resistance_levels[-1]
+
+        # --- 2. FILTRO TENDENCIA M1 ---
         price = df['close'].iloc[-1]
-        ema_200 = df['ema_200'].iloc[-1]
-        is_uptrend = price > ema_200
-        is_downtrend = price < ema_200
+        ema_20 = df['ema_20'].iloc[-1] if 'ema_20' in df.columns else df['ema_50'].iloc[-1]
+        ema_50 = df['ema_50'].iloc[-1]
+        
+        # Tendencia más reactiva para M1
+        is_uptrend = price > ema_20 and ema_20 > ema_50
+        is_downtrend = price < ema_20 and ema_20 < ema_50
 
-        # --- 2. Identificar Zonas de Soporte y Resistencia ---
-        # Usamos cuantiles para encontrar zonas en lugar de un solo punto
-        recent_data = df.iloc[-lookback:-2]
-        support_zone_top = recent_data['low'].quantile(0.25)
-        support_zone_bottom = recent_data['low'].quantile(0.05)
-        resistance_zone_bottom = recent_data['high'].quantile(0.75)
-        resistance_zone_top = recent_data['high'].quantile(0.95)
-
-        # --- 3. Detectar Patrones de Velas en la Vela Actual ---
+        # --- 3. DETECCIÓN PATRONES VELAS M1 ---
         candle_data = df.to_dict('records')
         current_index = len(candle_data) - 1
+        
+        # Usar solo patrones de alta probabilidad para M1
         signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
-        bullish_patterns = ['hammer', 'engulfing', 'morning_star', 'piercing_line']
-        bearish_patterns = ['shooting_star', 'engulfing', 'evening_star', 'dark_cloud_cover']
-        has_bullish_pattern = any(p in signals['long'] for p in bullish_patterns)
-        has_bearish_pattern = any(p in signals['short'] for p in bearish_patterns)
+        
+        # Patrones M1 específicos
+        m1_bullish_patterns = ['hammer', 'bullish_engulfing', 'piercing_line', 'morning_star']
+        m1_bearish_patterns = ['shooting_star', 'bearish_engulfing', 'dark_cloud_cover', 'evening_star']
+        
+        has_bullish_pattern = any(p in signals['long'] for p in m1_bullish_patterns)
+        has_bearish_pattern = any(p in signals['short'] for p in m1_bearish_patterns)
 
-        # --- 4. Lógica de Decisión ---
-        # Lógica para LONG: Tendencia alcista + Rebote en zona de soporte + Confirmación
-        if is_uptrend:
-            is_in_support_zone = support_zone_bottom <= df['low'].iloc[-1] <= support_zone_top
-            rsi_confirm = df['rsi'].iloc[-1] < 45 # Precio en un retroceso
+        # --- 4. TOLERANCIA DINÁMICA M1 ---
+        tolerance = current_atr * 0.8  # 80% del ATR actual
 
-            if is_in_support_zone and has_bullish_pattern and rsi_confirm:
-                return 'long'
+        # --- 5. LÓGICA MEJORADA M1 ---
+        current_low = df['low'].iloc[-1]
+        current_high = df['high'].iloc[-1]
+        current_close = df['close'].iloc[-1]
+        rsi = df['rsi'].iloc[-1]
 
-        # Lógica para SHORT: Tendencia bajista + Rebote en zona de resistencia + Confirmación
-        if is_downtrend:
-            is_in_resistance_zone = resistance_zone_bottom <= df['high'].iloc[-1] <= resistance_zone_top
-            rsi_confirm = df['rsi'].iloc[-1] > 55 # Precio en un retroceso
+        # SEÑAL LONG: Rebote en soporte + tendencia alcista
+        if (is_uptrend and 
+            abs(current_low - current_support) <= tolerance and
+            has_bullish_pattern and
+            rsi < 55 and  # Más flexible para M1
+            current_close > df['open'].iloc[-1]):  # Vela alcista de confirmación
+            
+            # Confirmación adicional: precio sobre apertura
+            return 'long'
 
-            if is_in_resistance_zone and has_bearish_pattern and rsi_confirm:
-                return 'short'
+        # SEÑAL SHORT: Rebote en resistencia + tendencia bajista  
+        if (is_downtrend and
+            abs(current_high - current_resistance) <= tolerance and
+            has_bearish_pattern and
+            rsi > 45 and  # Más flexible para M1
+            current_close < df['open'].iloc[-1]):  # Vela bajista de confirmación
+            
+            return 'short'
 
         return None
 
     @staticmethod
     def strategy_ma_crossover(df):
-        if 'ema_fast' not in df.columns or 'ema_slow' not in df.columns: return None
-        if df['ema_fast'].iloc[-1] > df['ema_slow'].iloc[-1] and df['ema_fast'].iloc[-2] <= df['ema_slow'].iloc[-2]:
-            return 'long'
-        if df['ema_fast'].iloc[-1] < df['ema_slow'].iloc[-1] and df['ema_fast'].iloc[-2] >= df['ema_slow'].iloc[-2]:
-            return 'short'
+        """
+        Estrategia MA Crossover OPTIMIZADA para M1.
+        Combina múltiples EMA con filtros de tendencia, volumen y volatilidad para reducir señales falsas.
+        """
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['close', 'ema_8', 'ema_21', 'ema_50', 'atr']
+        if not all(col in df.columns for col in required) or len(df) < 50:
+            return None
+
+        # --- FILTRO DE VOLATILIDAD M1 ---
+        current_atr = df['atr'].iloc[-1]
+        avg_atr = df['atr'].rolling(25).mean().iloc[-1]
+        
+        # Evitar condiciones de mercado desfavorables para MA crossover
+        if (current_atr < avg_atr * 0.3 or  # Volatilidad muy baja (mucho ruido)
+            current_atr > avg_atr * 2.5):   # Volatilidad muy alta (whiplash)
+            return None
+
+        # --- 1. CONFIGURACIÓN EMA RÁPIDA M1 ---
+        # EMA más rápidas y sensibles para M1
+        ema_fast = df['ema_8'].iloc[-1]     # Muy rápida (8 períodos)
+        ema_medium = df['ema_21'].iloc[-1]  # Media (21 períodos)
+        ema_slow = df['ema_50'].iloc[-1]    # Lenta (50 períodos)
+        
+        # Valores anteriores para detectar cruces
+        ema_fast_prev = df['ema_8'].iloc[-2]
+        ema_medium_prev = df['ema_21'].iloc[-2]
+        ema_slow_prev = df['ema_50'].iloc[-2]
+        
+        current_price = df['close'].iloc[-1]
+        previous_price = df['close'].iloc[-2]
+
+        # --- 2. DETECCIÓN DE CRUCES MÚLTIPLES M1 ---
+        
+        # CRUCE PRINCIPAL: Fast sobre Medium
+        fast_medium_cross_up = ema_fast > ema_medium and ema_fast_prev <= ema_medium_prev
+        fast_medium_cross_down = ema_fast < ema_medium and ema_fast_prev >= ema_medium_prev
+        
+        # CRUCE SECUNDARIO: Medium sobre Slow  
+        medium_slow_cross_up = ema_medium > ema_slow and ema_medium_prev <= ema_slow_prev
+        medium_slow_cross_down = ema_medium < ema_slow and ema_medium_prev >= ema_slow_prev
+        
+        # ALINEACIÓN DE TENDENCIA
+        bullish_alignment = ema_fast > ema_medium > ema_slow
+        bearish_alignment = ema_fast < ema_medium < ema_slow
+
+        # --- 3. FILTRO DE TENDENCIA PRINCIPAL M1 ---
+        # Usar EMA 50 como filtro de tendencia principal
+        price_above_slow = current_price > ema_slow
+        price_below_slow = current_price < ema_slow
+        
+        # Fuerza de la tendencia
+        trend_strength = abs(ema_fast - ema_slow) / current_price
+        strong_trend = trend_strength > (current_atr * 0.8 / current_price)
+
+        # --- 4. CONFIRMACIÓN DE MOMENTUM M1 ---
+        momentum_bullish = False
+        momentum_bearish = False
+        
+        if 'rsi' in df.columns:
+            rsi = df['rsi'].iloc[-1]
+            rsi_prev = df['rsi'].iloc[-2]
+            
+            # Momentum alcista: RSI subiendo y no sobrecomprado
+            momentum_bullish = (rsi > 40 and rsi < 70 and 
+                            rsi > rsi_prev and 
+                            current_price > previous_price)
+            
+            # Momentum bajista: RSI bajando y no sobrevendido
+            momentum_bearish = (rsi > 30 and rsi < 60 and 
+                            rsi < rsi_prev and 
+                            current_price < previous_price)
+        else:
+            # Fallback: usar precio como momentum
+            momentum_bullish = current_price > previous_price
+            momentum_bearish = current_price < previous_price
+
+        # --- 5. CONFIRMACIÓN DE VOLUMEN M1 ---
+        volume_confirmation = True
+        if 'tick_volume' in df.columns and len(df) > 10:
+            current_volume = df['tick_volume'].iloc[-1]
+            avg_volume = df['tick_volume'].rolling(10).mean().iloc[-1]
+            volume_confirmation = current_volume > avg_volume * 0.8
+
+        # --- 6. ANÁLISIS DE ÁNGULO Y SEPARACIÓN M1 ---
+        # Calcular la separación entre EMAs (evitar cruces muy cercanos)
+        fast_medium_separation = abs(ema_fast - ema_medium) / current_price
+        medium_slow_separation = abs(ema_medium - ema_slow) / current_price
+        
+        min_separation = current_atr * 0.0001  # Separación mínima requerida
+        
+        separation_ok = (fast_medium_separation > min_separation and 
+                        medium_slow_separation > min_separation)
+
+        # --- 7. SISTEMA DE PUNTUACIÓN M1 ---
+        
+        # CONDICIONES LONG
+        long_conditions = [
+            fast_medium_cross_up,                    # 3 pts: Cruce principal
+            medium_slow_cross_up or bullish_alignment, # 2 pts: Alineación o cruce secundario
+            price_above_slow,                        # 2 pts: Precio sobre EMA lenta
+            momentum_bullish,                        # 1 pt:  Momentum confirmado
+            volume_confirmation,                     # 1 pt:  Volumen adecuado
+            separation_ok,                           # 1 pt:  Separación suficiente
+            strong_trend,                            # 1 pt:  Tendencia fuerte
+        ]
+        
+        long_score = sum([3 if i == 0 else 2 if i in [1, 2] else 1 for i, condition in enumerate(long_conditions) if condition])
+
+        # CONDICIONES SHORT
+        short_conditions = [
+            fast_medium_cross_down,                  # 3 pts: Cruce principal
+            medium_slow_cross_down or bearish_alignment, # 2 pts: Alineación o cruce secundario
+            price_below_slow,                        # 2 pts: Precio bajo EMA lenta
+            momentum_bearish,                        # 1 pt:  Momentum confirmado
+            volume_confirmation,                     # 1 pt:  Volumen adecuado
+            separation_ok,                           # 1 pt:  Separación suficiente
+            strong_trend,                            # 1 pt:  Tendencia fuerte
+        ]
+        
+        short_score = sum([3 if i == 0 else 2 if i in [1, 2] else 1 for i, condition in enumerate(short_conditions) if condition])
+
+        # --- 8. LÓGICA FINAL DE SEÑALES M1 ---
+        min_score = 6  # Puntuación mínima para señal válida
+
+        # SEÑAL LONG: Puntuación alta y mejor que short
+        if (long_score >= min_score and 
+            long_score > short_score and
+            # Filtro adicional: evitar cruces contra la tendencia principal
+            (bullish_alignment or medium_slow_cross_up)):
+            
+            # Confirmación final: patrón de vela alcista
+            candle_data = df.to_dict('records')
+            current_index = len(candle_data) - 1
+            candle_signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+            
+            bullish_candle_confirmation = any(p in candle_signals['long'] for p in ['bullish_engulfing', 'hammer', 'marubozu'])
+            
+            if bullish_candle_confirmation or current_price > df['open'].iloc[-1]:
+                return 'long'
+
+        # SEÑAL SHORT: Puntuación alta y mejor que long
+        if (short_score >= min_score and 
+            short_score > long_score and
+            # Filtro adicional: evitar cruces contra la tendencia principal
+            (bearish_alignment or medium_slow_cross_down)):
+            
+            # Confirmación final: patrón de vela bajista
+            candle_data = df.to_dict('records')
+            current_index = len(candle_data) - 1
+            candle_signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+            
+            bearish_candle_confirmation = any(p in candle_signals['short'] for p in ['bearish_engulfing', 'shooting_star', 'marubozu'])
+            
+            if bearish_candle_confirmation or current_price < df['open'].iloc[-1]:
+                return 'short'
+
         return None
 
     @staticmethod
@@ -206,15 +407,149 @@ class ForexStrategies:
 
     @staticmethod
     def strategy_ichimoku_kinko_hyo(df):
-        required = ['close', 'tenkan_sen', 'kijun_sen', 'senkou_span_a', 'senkou_span_b']
-        if not all(col in df.columns for col in required): return None
-        price = df['close'].iloc[-1]
-        is_above_kumo = price > df['senkou_span_a'].iloc[-1] and price > df['senkou_span_b'].iloc[-1]
-        is_below_kumo = price < df['senkou_span_a'].iloc[-1] and price < df['senkou_span_b'].iloc[-1]
-        tk_cross_up = df['tenkan_sen'].iloc[-1] > df['kijun_sen'].iloc[-1] and df['tenkan_sen'].iloc[-2] <= df['kijun_sen'].iloc[-2]
-        tk_cross_down = df['tenkan_sen'].iloc[-1] < df['kijun_sen'].iloc[-1] and df['tenkan_sen'].iloc[-2] >= df['kijun_sen'].iloc[-2]
-        if is_above_kumo and tk_cross_up: return 'long'
-        if is_below_kumo and tk_cross_down: return 'short'
+        """
+        Estrategia Ichimoku OPTIMIZADA para M1.
+        Versión rápida con períodos adaptados para scalping y señales más reactivas.
+        """
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['close', 'tenkan_sen', 'kijun_sen', 'senkou_span_a', 'senkou_span_b', 'chikou_span']
+        if not all(col in df.columns for col in required) or len(df) < 30:
+            return None
+
+        # --- CONFIGURACIÓN ICHIMOKU RÁPIDO M1 ---
+        # Para M1 usamos períodos más cortos del Ichimoku estándar
+        current_price = df['close'].iloc[-1]
+        tenkan = df['tenkan_sen'].iloc[-1]      # Línea de conversión (9)
+        kijun = df['kijun_sen'].iloc[-1]        # Línea base (26) 
+        senkou_a = df['senkou_span_a'].iloc[-1] # Leading Span A
+        senkou_b = df['senkou_span_b'].iloc[-1] # Leading Span B
+        chikou = df['chikou_span'].iloc[-1]     # Línea retrasada
+
+        # Valores anteriores para detectar cruces
+        tenkan_prev = df['tenkan_sen'].iloc[-2]
+        kijun_prev = df['kijun_sen'].iloc[-2]
+        price_prev = df['close'].iloc[-2]
+
+        # --- 1. ANÁLISIS DE LA NUBE (KUMO) MEJORADO M1 ---
+        kumo_top = max(senkou_a, senkou_b)
+        kumo_bottom = min(senkou_a, senkou_b)
+        kumo_thickness = abs(senkou_a - senkou_b)
+        
+        # Posición relativa respecto a la nube
+        is_above_kumo = current_price > kumo_top
+        is_below_kumo = current_price < kumo_bottom
+        is_inside_kumo = kumo_bottom <= current_price <= kumo_top
+        
+        # Fuerza de la nube
+        is_kumo_bullish = senkou_a > senkou_b  # Nube alcista
+        is_kumo_bearish = senkou_a < senkou_b  # Nube bajista
+        is_kumo_thick = kumo_thickness > (current_price * 0.0005)  # Nube significativa
+
+        # --- 2. SEÑALES DE CRUCE RÁPIDAS M1 ---
+        # TK Cross (Tenkan/Kijun) - Señal principal
+        tk_cross_up = tenkan > kijun and tenkan_prev <= kijun_prev
+        tk_cross_down = tenkan < kijun and tenkan_prev >= kijun_prev
+        
+        # Price/Kijun Cross - Señal secundaria
+        pk_cross_up = current_price > kijun and price_prev <= kijun_prev
+        pk_cross_down = current_price < kijun and price_prev >= kijun_prev
+
+        # --- 3. ANÁLISIS CHIKOU SPAN (LÍNEA RETRASADA) M1 ---
+        # Chikou span debería estar por encima/del precio de hace 26 periodos
+        chikou_position = "neutral"
+        if len(df) > 26:
+            price_26_periods_ago = df['close'].iloc[-26]
+            if chikou > price_26_periods_ago:
+                chikou_position = "bullish"
+            elif chikou < price_26_periods_ago:
+                chikou_position = "bearish"
+
+        # --- 4. SEÑALES KUMO BREAKOUT M1 ---
+        # Rompimiento de nube reciente
+        kumo_breakout_up = (current_price > kumo_top and 
+                        df['high'].iloc[-2] <= kumo_top and
+                        is_kumo_thick)
+        
+        kumo_breakout_down = (current_price < kumo_bottom and 
+                            df['low'].iloc[-2] >= kumo_bottom and
+                            is_kumo_thick)
+
+        # --- 5. CONFIRMACIÓN CON INDICADORES ADICIONALES M1 ---
+        # RSI para filtrar señales extremas
+        rsi_filter = True
+        if 'rsi' in df.columns:
+            rsi = df['rsi'].iloc[-1]
+            rsi_filter = 30 < rsi < 70  # Evitar sobrecompra/venta extrema
+
+        # Volumen para confirmación (si disponible)
+        volume_confirmation = True
+        if 'tick_volume' in df.columns and len(df) > 10:
+            current_volume = df['tick_volume'].iloc[-1]
+            avg_volume = df['tick_volume'].iloc[-10:].mean()
+            volume_confirmation = current_volume > avg_volume * 0.7
+
+        # --- 6. SISTEMA DE PUNTUACIÓN ICHIMOKU M1 ---
+        
+        # CONDICIONES LONG
+        long_conditions = [
+            is_above_kumo or kumo_breakout_up,          # 2 pts: Precio sobre nube
+            tk_cross_up or pk_cross_up,                 # 2 pts: Cruce alcista
+            is_kumo_bullish,                            # 1 pt:  Nube alcista
+            chikou_position == "bullish",               # 1 pt:  Chikou alcista
+            rsi_filter and volume_confirmation,         # 1 pt:  Confirmación adicional
+        ]
+        
+        long_score = sum([2 if i in [0, 1] else 1 for i, condition in enumerate(long_conditions) if condition])
+
+        # CONDICIONES SHORT
+        short_conditions = [
+            is_below_kumo or kumo_breakout_down,        # 2 pts: Precio bajo nube
+            tk_cross_down or pk_cross_down,             # 2 pts: Cruce bajista
+            is_kumo_bearish,                            # 1 pt:  Nube bajista
+            chikou_position == "bearish",               # 1 pt:  Chikou bajista
+            rsi_filter and volume_confirmation,         # 1 pt:  Confirmación adicional
+        ]
+        
+        short_score = sum([2 if i in [0, 1] else 1 for i, condition in enumerate(short_conditions) if condition])
+
+        # --- 7. LÓGICA DE SEÑALES MEJORADA M1 ---
+        min_score = 4  # Puntuación mínima para señal válida
+
+        # SEÑAL LONG FUERTE
+        if (long_score >= min_score and 
+            long_score > short_score and
+            # Filtros adicionales para calidad de señal
+            not is_inside_kumo and  # Evitar señales dentro de la nube
+            current_price > tenkan):  # Precio sobre Tenkan
+            return 'long'
+
+        # SEÑAL SHORT FUERTE
+        if (short_score >= min_score and 
+            short_score > long_score and
+            # Filtros adicionales para calidad de señal
+            not is_inside_kumo and  # Evitar señales dentro de la nube
+            current_price < tenkan):  # Precio bajo Tenkan
+            return 'short'
+
+        # --- 8. SEÑALES DE KUMO TWIST (CAMBIO DE NUBE) M1 ---
+        # Señal adicional: cambio de color de la nube
+        if len(df) > 2:
+            senkou_a_prev = df['senkou_span_a'].iloc[-2]
+            senkou_b_prev = df['senkou_span_b'].iloc[-2]
+            
+            kumo_twist_bullish = (senkou_a > senkou_b and 
+                                senkou_a_prev <= senkou_b_prev and
+                                current_price > kumo_top)
+            
+            kumo_twist_bearish = (senkou_a < senkou_b and 
+                                senkou_a_prev >= senkou_b_prev and
+                                current_price < kumo_bottom)
+            
+            if kumo_twist_bullish and long_score >= 3:
+                return 'long'
+            if kumo_twist_bearish and short_score >= 3:
+                return 'short'
+
         return None
 
     @staticmethod
@@ -488,82 +823,414 @@ class ForexStrategies:
     @staticmethod
     def strategy_scalping_stochrsi_ema(df):
         """
-        Estrategia de Scalping con doble filtro de tendencia (EMA) y confirmación de momentum (StochRSI).
+        Estrategia de Scalping OPTIMIZADA para M1.
+        Combina StochRSI rápido con EMA, volumen y filtros S/R básicos.
         """
-        required = ['close', 'stochrsi_k', 'stochrsi_d', 'ema_20', 'ema_50']
-        if not all(col in df.columns for col in required):
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['close', 'stochrsi_k', 'stochrsi_d', 'ema_9', 'ema_20', 'atr']
+        if not all(col in df.columns for col in required) or len(df) < 15:
             return None
 
-        # Obtener valores actuales
+        # --- FILTRO DE VOLATILIDAD M1 ---
+        current_atr = df['atr'].iloc[-1]
+        avg_atr = df['atr'].rolling(20).mean().iloc[-1]
+        
+        # Evitar volatilidad demasiado baja (mercado plano) o demasiado alta
+        if current_atr < avg_atr * 0.3 or current_atr > avg_atr * 2.5:
+            return None
+
+        # --- 1. INDICADORES PRINCIPALES M1 ---
         close = df['close'].iloc[-1]
         stoch_k = df['stochrsi_k'].iloc[-1]
         stoch_d = df['stochrsi_d'].iloc[-1]
+        stoch_k_prev = df['stochrsi_k'].iloc[-2]
+        stoch_d_prev = df['stochrsi_d'].iloc[-2]
+        
+        # EMA más rápidas para M1
+        ema_9 = df['ema_9'].iloc[-1]
         ema_20 = df['ema_20'].iloc[-1]
-        ema_50 = df['ema_50'].iloc[-1]
+        ema_9_prev = df['ema_9'].iloc[-2]
 
-        # Condiciones para LONG
-        if (close > ema_20 > ema_50 and  # Tendencia alcista
-            stoch_k > stoch_d and  # Cruce alcista en StochRSI
-            stoch_k < 80):  # No sobrecomprado
+        # --- 2. DETECCIÓN S/R RÁPIDA M1 ---
+        # Soportes y resistencias de las últimas 15 velas
+        recent_high = df['high'].iloc[-15:].max()
+        recent_low = df['low'].iloc[-15:].min()
+        recent_range = recent_high - recent_low
+        
+        # Niveles dinámicos basados en rango reciente
+        dynamic_resistance = recent_high - (recent_range * 0.1)
+        dynamic_support = recent_low + (recent_range * 0.1)
+
+        # --- 3. ANÁLISIS DE MOMENTUM M1 ---
+        # StochRSI mejorado para M1
+        stoch_bullish_cross = stoch_k > stoch_d and stoch_k_prev <= stoch_d_prev
+        stoch_bearish_cross = stoch_k < stoch_d and stoch_k_prev >= stoch_d_prev
+        
+        # Fuerza del momentum
+        stoch_oversold = stoch_k < 25 and stoch_k > stoch_k_prev
+        stoch_overbought = stoch_k > 75 and stoch_k < stoch_k_prev
+        
+        # --- 4. TENDENCIA MEJORADA M1 ---
+        ema_bullish_alignment = ema_9 > ema_20 and close > ema_9
+        ema_bearish_alignment = ema_9 < ema_20 and close < ema_9
+        
+        # Tendencia de corto plazo (últimas 5 velas)
+        price_trend_bullish = df['close'].iloc[-1] > df['close'].iloc[-3]
+        price_trend_bearish = df['close'].iloc[-1] < df['close'].iloc[-3]
+
+        # --- 5. CONFIRMACIÓN DE VOLUMEN (si disponible) ---
+        volume_confirmation = True
+        if 'tick_volume' in df.columns and len(df) > 10:
+            current_volume = df['tick_volume'].iloc[-1]
+            avg_volume = df['tick_volume'].iloc[-10:].mean()
+            volume_confirmation = current_volume > avg_volume * 0.8
+
+        # --- 6. LÓGICA DE SEÑALES MEJORADA M1 ---
+
+        # SEÑAL LONG FUERTE
+        long_conditions = [
+            ema_bullish_alignment,
+            stoch_bullish_cross or stoch_oversold,
+            price_trend_bullish,
+            volume_confirmation,
+            close > dynamic_support,  # No cerca de soporte (evitar breakdown)
+            stoch_k < 80  # No sobrecomprado extremo
+        ]
+        
+        # SEÑAL SHORT FUERTE
+        short_conditions = [
+            ema_bearish_alignment, 
+            stoch_bearish_cross or stoch_overbought,
+            price_trend_bearish,
+            volume_confirmation,
+            close < dynamic_resistance,  # No cerca de resistencia (evitar breakout)
+            stoch_k > 20  # No sobrevendido extremo
+        ]
+
+        # --- 7. SISTEMA DE PUNTUACIÓN M1 ---
+        long_score = sum(long_conditions)
+        short_score = sum(short_conditions)
+        
+        # Umbral mínimo de confirmaciones
+        min_confirmations = 4
+
+        # --- 8. DECISIÓN FINAL CON FILTROS ADICIONALES ---
+        
+        # LONG: Alto score y mejor que short
+        if (long_score >= min_confirmations and 
+            long_score > short_score and
+            # Filtro adicional: evitar señales en medio del rango sin dirección
+            (abs(close - dynamic_support) < current_atr * 0.5 or 
+            abs(close - dynamic_resistance) > current_atr * 1.0)):
             return 'long'
-
-        # Condiciones para SHORT
-        if (close < ema_20 < ema_50 and  # Tendencia bajista
-            stoch_k < stoch_d and  # Cruce bajista en StochRSI
-            stoch_k > 20):  # No sobrevendido
+        
+        # SHORT: Alto score y mejor que long  
+        if (short_score >= min_confirmations and
+            short_score > long_score and
+            # Filtro adicional: evitar señales en medio del rango sin dirección
+            (abs(close - dynamic_resistance) < current_atr * 0.5 or
+            abs(close - dynamic_support) > current_atr * 1.0)):
             return 'short'
 
         return None
 
     @staticmethod
-    def strategy_fibonacci_reversal(df, lookback=100):
-        required = ['high', 'low', 'close']
-        if not all(col in df.columns for col in required): return None
-        swing_high = df['high'].iloc[-lookback:-1].max()
-        swing_low = df['low'].iloc[-lookback:-1].min()
+    def strategy_fibonacci_reversal(df, lookback=35):
+        """
+        Estrategia Fibonacci OPTIMIZADA para M1.
+        Focus en retrocesos shallow y extensiones rápidas con confirmación de momentum.
+        """
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['high', 'low', 'close', 'atr', 'rsi']
+        if not all(col in df.columns for col in required) or len(df) < lookback:
+            return None
+
+        # --- FILTRO DE VOLATILIDAD M1 ---
+        current_atr = df['atr'].iloc[-1]
+        avg_atr = df['atr'].rolling(25).mean().iloc[-1]
+        
+        # Fibonacci funciona mejor en volatilidad moderada
+        if current_atr < avg_atr * 0.4 or current_atr > avg_atr * 2.0:
+            return None
+
+        # --- 1. IDENTIFICACIÓN DE SWING M1 MEJORADA ---
+        recent_data = df.iloc[-lookback:]
+        
+        # Encontrar swing high y swing low más significativos
+        swing_high = recent_data['high'].max()
+        swing_low = recent_data['low'].min()
+        
+        # Verificar que el swing es reciente (últimas 15 velas)
+        recent_swing_high = recent_data['high'].iloc[-15:].max()
+        recent_swing_low = recent_data['low'].iloc[-15:].min()
+        
+        # Usar swings más recientes para M1
+        swing_high = recent_swing_high
+        swing_low = recent_swing_low
+        
         price_range = swing_high - swing_low
-        if price_range == 0: return None
-        fib_levels = {'level_0.618': swing_high - 0.618 * price_range}
+        if price_range == 0:
+            return None
+
+        # --- 2. NIVELES FIBONACCI OPTIMIZADOS M1 ---
+        # Niveles principales para M1 (más sensibles)
+        fib_levels = {
+            'shallow_38': swing_high - 0.382 * price_range,  # Más reactivo para M1
+            'deep_50': swing_high - 0.50 * price_range,      # Nivel clave
+            'deep_61': swing_high - 0.618 * price_range,     # Máximo retroceso aceptable
+        }
+        
+        fib_extensions = {
+            'ext_127': swing_low + 1.272 * price_range,      # Extensión alcista
+            'ext_161': swing_low + 1.618 * price_range,      # Objetivo fuerte
+        }
+
+        current_price = df['close'].iloc[-1]
+        current_low = df['low'].iloc[-1]
+        current_high = df['high'].iloc[-1]
+
+        # --- 3. TOLERANCIA DINÁMICA M1 ---
+        tolerance = current_atr * 0.6  # Más ajustado para M1
+
+        # --- 4. DETERMINAR DIRECCIÓN DEL MOVIMIENTO ---
+        # Identificar si es movimiento alcista o bajista
+        is_uptrend_move = swing_high > swing_low and (
+            abs(swing_high - recent_data['high'].iloc[-1]) < 
+            abs(swing_low - recent_data['low'].iloc[-1])
+        )
+        
+        is_downtrend_move = swing_high > swing_low and not is_uptrend_move
+
+        # --- 5. ANÁLISIS DE MOMENTUM PARA CONFIRMACIÓN ---
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        
+        # Momentum alcista: RSI subiendo desde zonas bajas
+        momentum_bullish = (rsi > 35 and rsi < 65 and 
+                        rsi > rsi_prev and 
+                        df['close'].iloc[-1] > df['close'].iloc[-2])
+        
+        # Momentum bajista: RSI bajando desde zonas altas
+        momentum_bearish = (rsi > 35 and rsi < 65 and 
+                        rsi < rsi_prev and 
+                        df['close'].iloc[-1] < df['close'].iloc[-2])
+
+        # --- 6. DETECCIÓN DE PATRONES DE VELAS EN NIVELES FIB ---
         candle_data = df.to_dict('records')
-        signals = CandlePatterns.detect_all_patterns(candle_data)
-        for level in fib_levels.values():
-            # Aumentamos la tolerancia a 1% y añadimos más patrones
-            if abs(df['low'].iloc[-1] - level) / level < 0.01 and ('hammer' in signals['long'] or 'engulfing' in signals['long'] or 'doji' in signals['neutral']):
-                return 'long'
-        fib_levels_short = {'level_0.618': swing_low + 0.618 * price_range}
-        for level in fib_levels_short.values():
-            if abs(df['high'].iloc[-1] - level) / level < 0.01 and ('shooting_star' in signals['short'] or 'engulfing' in signals['short'] or 'doji' in signals['neutral']):
-                return 'short'
+        current_index = len(candle_data) - 1
+        signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+        
+        # Patrones específicos para Fibonacci en M1
+        fib_bullish_patterns = ['hammer', 'bullish_engulfing', 'piercing_line', 'doji']
+        fib_bearish_patterns = ['shooting_star', 'bearish_engulfing', 'dark_cloud_cover', 'doji']
+        
+        has_fib_bullish_pattern = any(p in signals['long'] for p in fib_bullish_patterns)
+        has_fib_bearish_pattern = any(p in signals['short'] for p in fib_bearish_patterns)
+
+        # --- 7. LÓGICA DE SEÑALES FIBONACCI M1 ---
+
+        # SEÑAL LONG: Retroceso en tendencia alcista + rebote en Fib
+        if is_uptrend_move:
+            # Verificar niveles Fibonacci para long
+            for level_name, level_price in fib_levels.items():
+                distance_to_level = abs(current_low - level_price)
+                
+                # En nivel Fibonacci con patrón alcista
+                if (distance_to_level <= tolerance and
+                    has_fib_bullish_pattern and
+                    momentum_bullish):
+                    
+                    # Confirmación adicional: precio debe mostrar reversión
+                    if (df['close'].iloc[-1] > df['open'].iloc[-1] and  # Vela alcista
+                        df['close'].iloc[-1] > df['low'].iloc[-1] + (current_atr * 0.3)):  # Fuerza
+                        
+                        # Filtro: evitar señales en el nivel 61.8% (muy profundo)
+                        if level_name != 'deep_61' or rsi < 40:
+                            return 'long'
+
+            # SEÑAL LONG: Extensión Fibonacci alcista
+            for ext_name, ext_price in fib_extensions.items():
+                if (current_price >= ext_price and
+                    abs(current_price - ext_price) <= tolerance and
+                    has_fib_bearish_pattern and  # Posible reversión en extensión
+                    rsi > 60):  # Sobrecompra en extensión
+                    return 'short'  # Reversión desde extensión
+
+        # SEÑAL SHORT: Retroceso en tendencia bajista + rebote en Fib
+        if is_downtrend_move:
+            # Para short, invertimos la lógica de niveles
+            fib_levels_short = {
+                'shallow_38': swing_low + 0.382 * price_range,
+                'deep_50': swing_low + 0.50 * price_range,
+                'deep_61': swing_low + 0.618 * price_range,
+            }
+            
+            for level_name, level_price in fib_levels_short.items():
+                distance_to_level = abs(current_high - level_price)
+                
+                # En nivel Fibonacci con patrón bajista
+                if (distance_to_level <= tolerance and
+                    has_fib_bearish_pattern and
+                    momentum_bearish):
+                    
+                    # Confirmación adicional: precio debe mostrar reversión
+                    if (df['close'].iloc[-1] < df['open'].iloc[-1] and  # Vela bajista
+                        df['close'].iloc[-1] < df['high'].iloc[-1] - (current_atr * 0.3)):  # Fuerza
+                        
+                        # Filtro: evitar señales en el nivel 61.8% (muy profundo)
+                        if level_name != 'deep_61' or rsi > 60:
+                            return 'short'
+
+            # SEÑAL SHORT: Extensión Fibonacci bajista
+            fib_extensions_short = {
+                'ext_127': swing_high - 1.272 * price_range,
+                'ext_161': swing_high - 1.618 * price_range,
+            }
+            
+            for ext_name, ext_price in fib_extensions_short.items():
+                if (current_price <= ext_price and
+                    abs(current_price - ext_price) <= tolerance and
+                    has_fib_bullish_pattern and  # Posible reversión en extensión
+                    rsi < 40):  # Sobreventa en extensión
+                    return 'long'  # Reversión desde extensión
+
         return None
 
     @staticmethod
-    def strategy_chart_pattern_breakout(df, lookback=60):
-        if len(df) < lookback or 'atr' not in df.columns:
+    def strategy_chart_pattern_breakout(df, lookback=30):
+        """
+        Estrategia de Breakout OPTIMIZADA para M1.
+        Focus en rangos laterales y rompimientos con alta probabilidad.
+        """
+        # --- VERIFICACIONES INICIALES M1 ---
+        required = ['high', 'low', 'close', 'atr', 'volume']
+        if not all(col in df.columns for col in required) or len(df) < lookback:
             return None
 
-        df_lookback = df.iloc[-lookback:]
-        prominence = df_lookback['atr'].iloc[-1] * 1.5
+        # --- FILTRO DE VOLUMEN Y VOLATILIDAD M1 ---
+        current_atr = df['atr'].iloc[-1]
+        avg_atr = df['atr'].rolling(20).mean().iloc[-1]
+        current_volume = df['volume'].iloc[-1]
+        avg_volume = df['volume'].rolling(20).mean().iloc[-1]
 
-        peaks, _ = find_peaks(df_lookback['high'], prominence=prominence)
-        valleys, _ = find_peaks(-df_lookback['low'], prominence=prominence)
+        # Evitar condiciones desfavorables
+        if (current_atr < avg_atr * 0.4 or  # Volatilidad muy baja
+            current_atr > avg_atr * 3.0 or  # Volatilidad muy alta
+            current_volume < avg_volume * 0.7):  # Volumen insuficiente
+            return None
 
-        if len(peaks) >= 2:
-            p1_idx, p2_idx = peaks[-2], peaks[-1]
-            p1_high, p2_high = df_lookback['high'].iloc[p1_idx], df_lookback['high'].iloc[p2_idx]
+        # --- 1. DETECCIÓN DE RANGO LATERAL M1 ---
+        recent_data = df.iloc[-lookback:]
+        
+        # Calcular el rango de trading reciente
+        recent_high = recent_data['high'].max()
+        recent_low = recent_data['low'].min()
+        recent_range = recent_high - recent_low
+        current_close = df['close'].iloc[-1]
+        
+        # Verificar si estamos en un rango lateral (condición para breakout)
+        range_threshold = current_atr * 0.3  # Umbral para considerar rango
+        is_ranging = recent_range < (avg_atr * lookback * 0.15)  # Rango estrecho
+        
+        if not is_ranging:
+            return None  # Solo operar en rangos identificados
 
-            if abs(p1_high - p2_high) / p1_high < 0.03:
-                neckline = df_lookback['low'].iloc[p1_idx:p2_idx].min()
-                if df_lookback['close'].iloc[-1] < neckline and df_lookback['close'].iloc[-2] >= neckline:
-                    return 'short'
+        # --- 2. IDENTIFICACIÓN DE NIVELES CLAVE M1 ---
+        # Encontrar niveles de soporte y resistencia del rango
+        support_level = recent_low
+        resistance_level = recent_high
+        
+        # Niveles de breakout (con buffer)
+        breakout_bullish_level = resistance_level + (current_atr * 0.2)
+        breakout_bearish_level = support_level - (current_atr * 0.2)
 
-        if len(valleys) >= 2:
-            v1_idx, v2_idx = valleys[-2], valleys[-1]
-            v1_low, v2_low = df_lookback['low'].iloc[v1_idx], df_lookback['low'].iloc[v2_idx]
+        # --- 3. ANÁLISIS DE CONSOLIDACIÓN M1 ---
+        # Verificar consolidación previa al breakout
+        consolidation_period = 0
+        for i in range(2, min(10, len(recent_data))):
+            if (abs(recent_data['high'].iloc[-i] - resistance_level) < range_threshold and
+                abs(recent_data['low'].iloc[-i] - support_level) < range_threshold):
+                consolidation_period += 1
+        
+        # Mínimo 3 velas de consolidación
+        if consolidation_period < 3:
+            return None
 
-            if abs(v1_low - v2_low) / v1_low < 0.03:
-                neckline = df_lookback['high'].iloc[v1_idx:v2_idx].max()
-                if df_lookback['close'].iloc[-1] > neckline and df_lookback['close'].iloc[-2] <= neckline:
-                    return 'long'
+        # --- 4. DETECCIÓN DE ROMpIMIENTO M1 ---
+        current_high = df['high'].iloc[-1]
+        current_low = df['low'].iloc[-1]
+        prev_high = df['high'].iloc[-2]
+        prev_low = df['low'].iloc[-2]
+        
+        # ROMpIMIENTO ALCISTA
+        bullish_breakout = (
+            current_high > breakout_bullish_level and  # Rompe resistencia
+            current_close > resistance_level and       # Cierra por encima
+            prev_high <= resistance_level and          # Anterior no rompió
+            current_volume > avg_volume * 1.2         # Volumen confirmatorio
+        )
+        
+        # ROMpIMIENTO BAJISTA  
+        bearish_breakout = (
+            current_low < breakout_bearish_level and   # Rompe soporte
+            current_close < support_level and          # Cierra por debajo
+            prev_low >= support_level and              # Anterior no rompió
+            current_volume > avg_volume * 1.2         # Volumen confirmatorio
+        )
+
+        # --- 5. CONFIRMACIÓN CON INDICADORES M1 ---
+        # RSI para confirmar momentum (si disponible)
+        rsi_confirmation = True
+        if 'rsi' in df.columns:
+            rsi = df['rsi'].iloc[-1]
+            rsi_prev = df['rsi'].iloc[-2]
+            
+            rsi_bullish_confirmation = rsi > 45 and rsi > rsi_prev
+            rsi_bearish_confirmation = rsi < 55 and rsi < rsi_prev
+        else:
+            rsi_bullish_confirmation = rsi_bearish_confirmation = True
+
+        # --- 6. PATRONES DE VELAS DE CONFIRMACIÓN ---
+        candle_data = df.to_dict('records')
+        current_index = len(candle_data) - 1
+        candle_signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
+        
+        # Patrones que confirman breakout
+        bullish_confirmation_patterns = ['bullish_engulfing', 'marubozu', 'three_white_soldiers']
+        bearish_confirmation_patterns = ['bearish_engulfing', 'marubozu', 'three_black_crows']
+        
+        has_bullish_candle = any(p in candle_signals['long'] for p in bullish_confirmation_patterns)
+        has_bearish_candle = any(p in candle_signals['short'] for p in bearish_confirmation_patterns)
+
+        # --- 7. LÓGICA FINAL DE SEÑALES M1 ---
+
+        # SEÑAL LONG: Breakout alcista confirmado
+        if (bullish_breakout and 
+            rsi_bullish_confirmation and
+            (has_bullish_candle or current_volume > avg_volume * 1.5) and
+            # Filtro adicional: el rompimiento debe ser significativo
+            (current_high - resistance_level) > (current_atr * 0.15)):
+            
+            # Verificar que no es un falso breakout (wick largo)
+            body_size = abs(current_close - df['open'].iloc[-1])
+            upper_wick = current_high - max(current_close, df['open'].iloc[-1])
+            
+            if body_size > upper_wick * 1.5:  # Cuerpo mayor que wick superior
+                return 'long'
+
+        # SEÑAL SHORT: Breakout bajista confirmado
+        if (bearish_breakout and
+            rsi_bearish_confirmation and
+            (has_bearish_candle or current_volume > avg_volume * 1.5) and
+            # Filtro adicional: el rompimiento debe ser significativo
+            (support_level - current_low) > (current_atr * 0.15)):
+            
+            # Verificar que no es un falso breakout (wick largo)
+            body_size = abs(current_close - df['open'].iloc[-1])
+            lower_wick = min(current_close, df['open'].iloc[-1]) - current_low
+            
+            if body_size > lower_wick * 1.5:  # Cuerpo mayor que wick inferior
+                return 'short'
 
         return None
 
