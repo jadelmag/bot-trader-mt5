@@ -1,0 +1,31 @@
+{"timestamp": "2025-10-03T19:34:33.949279", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-03T19:34:33.953892", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66725.5"}}
+{"timestamp": "2025-10-03T19:34:33.955779", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-03T19:35:01.140338", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:35:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:35:01.140804", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:35:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:36:01.546411", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:36:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:36:01.546780", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:36:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:37:01.867642", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:37:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:37:01.868045", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:37:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:38:01.233513", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:38:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:38:01.233855", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:38:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:39:05.745517", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:39:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:39:05.745873", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:39:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:40:01.204106", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:40:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:40:01.204384", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:40:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:41:01.740411", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:41:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:41:01.740731", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:41:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:42:01.443776", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:42:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:42:01.444127", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:42:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:43:02.077406", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:43:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:43:02.077733", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:43:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:44:01.700670", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:44:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:44:01.701005", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:44:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:45:01.099233", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:45:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:45:01.099558", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:45:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:46:01.482727", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:46:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:46:01.483066", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:46:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:47:00.879598", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:47:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:47:00.879963", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:47:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:48:05.257940", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:48:00 | Balance: $66725.50"}}
+{"timestamp": "2025-10-03T19:48:05.258272", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:48:00 | Balance: $66725.50"}}

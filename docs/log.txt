@@ -4,3 +4,9 @@ TODO
 1. Comprobar limite de dinero a ganar por dia.
 2. Generar simulaciones para ver si las estrategias y los patrones de velas cumplen con el objetivo.
 
+1. Añadir Filtros de Tendencia y Momentum
+2. Implementar Cierre Temporal a 2 Velas
+3. Mejorar las Reglas de Detección de Patrones
+4. Personalizar SL/TP por Patrón
+5. Combinar Patrones con Otros Indicadores Técnicos
+6. Implementar Análisis Multi-timeframe
