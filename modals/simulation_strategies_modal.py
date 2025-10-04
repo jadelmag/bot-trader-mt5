@@ -49,12 +49,14 @@ class SimulationStrategiesModal(tk.Toplevel):
             "strategy_bollinger_bands_breakout": {"percent_ratio": 1.0, "rr_ratio": 1.5, "sl": 25.0},
             "strategy_candle_pattern_reversal": {"percent_ratio": 1.0, "rr_ratio": 2.5, "sl": 30.0},
             "strategy_chart_pattern_breakout": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_ma_crossover": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_ma_crossover": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 15.0},
             "strategy_ichimoku_kinko_hyo": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 30.0},
-            "strategy_price_action_sr": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_price_action_sr": {"percent_ratio": 1.2, "rr_ratio": 2.5, "sl": 12.0},
             "strategy_momentum_rsi_macd": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.5, "rr_ratio": 1.5, "sl": 30.0},
+            "strategy_fibonacci_reversal": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.8, "rr_ratio": 1.8, "sl": 10.0},
             "strategy_swing_trading_multi_indicator": {"percent_ratio": 1.5, "rr_ratio": 3.0, "sl": 30.0},
+            "strategy_hybrid_optimizer": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
         }
 
         # --- UI Components ---
@@ -155,7 +157,18 @@ class SimulationStrategiesModal(tk.Toplevel):
     def _build_forex_tab(self, tab):
         """Construye el contenido de la pestaña de estrategias Forex."""
         # --- Estrategias a excluir de la selección por defecto ---
-        excluded_strategies = []
+        excluded_strategies = [
+            "strategy_bollinger_bands_breakout",
+            "strategy_candle_pattern_reversal",
+            "strategy_chart_pattern_breakout",
+            "strategy_ichimoku_kinko_hyo",
+            "strategy_momentum_rsi_macd",
+            "strategy_fibonacci_reversal",
+            "strategy_swing_trading_multi_indicator",
+            "strategy_hybrid_optimizer",
+            "strategy_piercing_line",
+            "strategy_three_outside_up_down"
+        ]
 
         # --- Frame Superior para botones de selección ---
         top_frame = ttk.Frame(tab)
@@ -231,16 +244,11 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de patrones de velas."""
         # --- Patrones de velas a seleccionar por defecto ---
         default_selected_candles = [
-            'is_dark_cloud_cover',
-            'is_doji_reversal',
             'is_engulfing',
-            'is_evening_star',
             'is_hammer',
-            'is_hanging_man',
-            'is_harami',
-            'is_long_legged_doji',
-            'is_marubozu',
-            'is_shooting_star'
+            'is_doji_reversal',
+            'is_three_white_soldiers',
+            'is_inverted_hammer'
         ]
 
         # --- Frame Superior para botones de selección ---
@@ -309,6 +317,60 @@ class SimulationStrategiesModal(tk.Toplevel):
             
             # Comprobar estado inicial del botón Cargar
             self._update_load_button_state(pattern_name)
+
+            # Config predeterminada para patrones
+            pattern_config = {
+                'is_engulfing': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                },
+                'is_hammer': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                },
+                'is_doji_reversal': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.0, 'atr_trailing_multiplier': 1.5
+                },
+                'is_three_white_soldiers': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 2.8, 'atr_trailing_multiplier': 1.5
+                },
+                'is_piercing_line': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                },
+                'is_inverted_hammer': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                },
+                'is_three_outside_up_down': {
+                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
+                    'use_trailing_stop': False, 'use_pattern_reversal': False,
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                },
+            }
+
+            # Para cada patrón seleccionado por defecto, establecer modo "Custom" y guardar su config
+            for pattern_name in default_selected_candles:
+                if pattern_name in pattern_config:
+                    # Guardar la config en un archivo
+                    config_path = os.path.join(self.strategies_dir, f"{pattern_name.replace('is_', '')}.json")
+                    try:
+                        with open(config_path, 'w') as f:
+                            json.dump(pattern_config[pattern_name], f, indent=4)
+                        # Establecer como Custom ya que ahora hay un archivo
+                        if pattern_name in self.candle_widgets:
+                            self.candle_widgets[pattern_name]['strategy_var'].set("Custom")
+                    except Exception as e:
+                        self.logger.error(f"Error al guardar configuración para {pattern_name}: {e}")
+
 
         self.candle_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
