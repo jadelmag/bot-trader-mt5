@@ -92,6 +92,7 @@ class Simulation:
         self.atr = None # Añadir para ATR
 
         self.tracked_tickets = set()  # Set para trackear tickets abiertos
+        self.candle_pattern_configs = {}  # Diccionario para guardar configs de patrones activos
         self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
     
         # --- Inicializar MetaTrader 5 ---
@@ -438,6 +439,9 @@ class Simulation:
         # --- 3. Lógica de Cierre de Operaciones ---
         self._check_for_closing_signals(ma_signal, candle_signal)
 
+        # --- 3.5. Aplicar Trailing Stop ---
+        self._apply_trailing_stop()
+
         # --- 4. Lógica de Apertura de Operaciones (Forex/Candle) ---
         self._execute_forex_strategies(ma_signal, candle_signal)
 
@@ -471,25 +475,49 @@ class Simulation:
             if candle_signal in ['long', 'short'] and 'candle' not in self.trade_types_in_current_candle:
                 self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Intentando abrir operación.")
                 
-                # Cargar configuración específica para este patrón
-                pattern_config = self._load_candle_pattern_config(pattern_name)
+                # Obtener el strategy_mode del patrón desde strategies.json
+                pattern_strategy_config = candle_strategies.get(pattern_name, {})
+                strategy_mode = pattern_strategy_config.get('strategy_mode', 'Default')
+                
+                # Cargar configuración según el modo
+                if strategy_mode == 'Custom':
+                    # Modo Custom: cargar configuración del JSON individual
+                    pattern_config = self._load_candle_pattern_config(pattern_name)
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Usando configuración CUSTOM para '{pattern_name}'")
+                else:
+                    # Modo Default: usar valores por defecto
+                    pattern_config = {
+                        'use_atr_for_sl_tp': False,
+                        'fixed_sl_pips': 30.0,
+                        'fixed_tp_pips': 60.0,
+                        'percent_ratio': 1.0
+                    }
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Usando configuración DEFAULT para '{pattern_name}'")
+                
                 sl_pips, tp_pips = self._get_sl_tp_for_candle_pattern(pattern_config)
 
+                # Obtener el percent_ratio del patrón de vela
+                risk_multiplier = pattern_config.get('percent_ratio', 1.0)
+
                 if sl_pips > 0:
-                    volume = self._calculate_volume(sl_pips=sl_pips)
+                    volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
                     if volume > 0:
+                        # Abrimos operación de vela
+                        self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Abriendo operación.")
                         self.open_trade(
                             trade_type=candle_signal,
                             symbol=self.symbol,
                             volume=volume,
                             sl_pips=sl_pips,
                             tp_pips=tp_pips,
-                            strategy_name=f"candle_{pattern_name}"
+                            strategy_name=f"candle_{pattern_name}",
+                            pattern_config=pattern_config
                         )
                         self.trade_types_in_current_candle.append('candle')
                 else:
                     self._log(f"[SIM-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
-
 
         forex_strategies = self.strategies_config.get('forex_strategies', {})
         selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
@@ -520,6 +548,7 @@ class Simulation:
 
                 if volume > 0:
                     self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Abriendo operación.")
+                    # Abrimos operación forex
                     self.open_trade(
                         trade_type=trade_type,
                         symbol=self.symbol,
@@ -685,27 +714,29 @@ class Simulation:
                 self._log("[SIM-ERROR] No se pudo obtener información de la cuenta o del símbolo para calcular el volumen.", 'error')
                 return 0.0
 
-            equity = account_info.equity
-            risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
-            risk_percent = float(risk_percent_str)
+            # equity = account_info.equity
+            # risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
+            # risk_percent = float(risk_percent_str)
             
-            final_risk_percent = risk_percent * risk_multiplier
+            # final_risk_percent = risk_percent * risk_multiplier
+            # money_to_risk = equity * (final_risk_percent / 100.0)
 
-            money_to_risk = equity * (final_risk_percent / 100.0)
+            # # sl_in_points = sl_pips 
+            # # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
+            # sl_in_points = sl_pips * symbol_info.point
+            # contract_size = symbol_info.trade_contract_size  # Típicamente 100,000 para Forex
+            # loss_per_lot = sl_in_points * contract_size
 
-            # sl_in_points = sl_pips 
-            # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-            sl_in_points = sl_pips * symbol_info.point
-            contract_size = symbol_info.trade_contract_size  # Típicamente 100,000 para Forex
-            loss_per_lot = sl_in_points * contract_size
+            # volume = money_to_risk / loss_per_lot
 
-            volume = money_to_risk / loss_per_lot
+            # volume_step = symbol_info.volume_step
+            # volume = round(volume / volume_step) * volume_step
 
-            volume_step = symbol_info.volume_step
-            volume = round(volume / volume_step) * volume_step
+            risk_per_trade_percent = float(self.config.get('risk_per_trade_percent', 1.0))
+            volume = risk_per_trade_percent * (risk_multiplier / 100.0)
 
             if volume < symbol_info.volume_min:
-                self._log(f"[SIM-WARN] Volumen calculado ({volume:.2f}) es menor que el mínimo ({symbol_info.volume_min}). No se abrirá operación.", 'warn')
+                self._log(f"[SIM-WARN] Volumen calculado ({volume}) es menor que el mínimo ({symbol_info.volume_min}). No se abrirá operación.", 'warn')
                 return 0.0
             if volume > symbol_info.volume_max:
                 volume = symbol_info.volume_max
@@ -718,57 +749,64 @@ class Simulation:
             return 0.0
 
     def _check_for_closing_signals(self, ma_signal, candle_signal):
-        """Cierra posiciones según el tipo de operación:
-        - Trades de velas: solo por señales de velas contrarias o SL/TP
-        - Trades forex: por MA o velas contrarias
-        """
-        if not mt5 or not mt5.terminal_info():
-            self._log("[SIM-ERROR] No hay conexión con MT5", 'error')
+        """Cierra operaciones según configuración y señales de mercado."""
+        if not self._init_mt5():
             return
 
         open_positions = mt5.positions_get(symbol=self.symbol)
-        if open_positions is None:
-            self._log("[SIM-ERROR] No se pudieron obtener las posiciones abiertas", 'error')
-            return
-
-        if len(open_positions) == 0:
+        if not open_positions:
             return
 
         for position in open_positions:
-            # Obtener el precio actual
-            current_price = (mt5.symbol_info_tick(self.symbol).bid if position.type == mt5.POSITION_TYPE_BUY 
-                            else mt5.symbol_info_tick(self.symbol).ask)
-
-            # Verificar TP y SL
-            if position.sl > 0 or position.tp > 0:
-                sl_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price <= position.sl) or \
-                        (position.type == mt5.POSITION_TYPE_SELL and current_price >= position.sl)
-                tp_hit = (position.type == mt5.POSITION_TYPE_BUY and current_price >= position.tp) or \
-                        (position.type == mt5.POSITION_TYPE_SELL and current_price <= position.tp)
-
-                if sl_hit or tp_hit:
-                    reason = "TP" if tp_hit else "SL"
-                    self._log(f"[SIM] {reason} alcanzado para posición #{position.ticket} ({'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'}). Precio: {current_price:.5f}", 'warn')
-                    self.close_trade(position.ticket, position.volume, 
-                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
-                    continue
-
-            # Determinar tipo de operación por comentario
-            position_comment = position.comment if hasattr(position, 'comment') else ""
-            is_candle_trade = "candle" in position_comment.lower() or "key-" in position_comment.lower()
+            ticket = position.ticket
             
-            # Lógica diferenciada según tipo
-            if is_candle_trade:
-                # SOLO cerrar por señal de vela contraria (NO por MA)
-                close_long = (position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short')
-                close_short = (position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long')
+            # Verificar si es una operación de patrón de vela con configuración
+            if ticket in self.candle_pattern_configs:
+                config_data = self.candle_pattern_configs[ticket]
+                pattern_config = config_data['config']
+                pattern_name = config_data['pattern_name']
                 
-                if close_long or close_short:
-                    self._log(f"[SIM] Señal de VELA contraria. Cerrando trade de velas {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
-                    self.close_trade(position.ticket, position.volume, 
-                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                # Verificar use_signal_change
+                if pattern_config.get('use_signal_change', False):
+                    close_long = (position.type == mt5.POSITION_TYPE_BUY and 
+                                (ma_signal == 'short' or candle_signal == 'short'))
+                    close_short = (position.type == mt5.POSITION_TYPE_SELL and 
+                                (ma_signal == 'long' or candle_signal == 'long'))
+                    
+                    if close_long or close_short:
+                        signal_type = []
+                        if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
+                            signal_type.append("MA")
+                        if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
+                            signal_type.append("Vela")
+                        if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
+                            signal_type.append("MA")
+                        if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
+                            signal_type.append("Vela")
+                        
+                        self._log(f"[SIM] Señal contraria ({' y '.join(signal_type)}) detectada. Cerrando {pattern_name} {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{ticket}.")
+                        self.close_trade(ticket, position.volume, 
+                                    'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                        continue
+                
+                # Verificar use_pattern_reversal
+                if pattern_config.get('use_pattern_reversal', False):
+                    # Detectar si hay un patrón reverso
+                    current_signal, detected_pattern = self._get_candle_signal(self.candles_df)
+                    if detected_pattern:
+                        is_reversal = False
+                        if position.type == mt5.POSITION_TYPE_BUY and current_signal == 'short':
+                            is_reversal = True
+                        elif position.type == mt5.POSITION_TYPE_SELL and current_signal == 'long':
+                            is_reversal = True
+                        
+                        if is_reversal:
+                            self._log(f"[SIM] Patrón reverso '{detected_pattern}' detectado. Cerrando {pattern_name} {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{ticket}.")
+                            self.close_trade(ticket, position.volume, 
+                                        'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                            continue
             else:
-                # Forex: cerrar por MA o velas (lógica original)
+                # Lógica original para estrategias Forex (sin configuración de patrón)
                 close_long = (position.type == mt5.POSITION_TYPE_BUY and 
                             (ma_signal == 'short' or candle_signal == 'short'))
                 close_short = (position.type == mt5.POSITION_TYPE_SELL and 
@@ -789,9 +827,93 @@ class Simulation:
                     self.close_trade(position.ticket, position.volume, 
                                 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
 
-    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None):
+    def _apply_trailing_stop(self):
+        """Aplica trailing stop a operaciones de patrones de velas que lo tengan configurado."""
+        if not self._init_mt5():
+            return
+        
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        if not open_positions:
+            return
+        
+        point = mt5.symbol_info(self.symbol).point
+        digits = mt5.symbol_info(self.symbol).digits
+        
+        for position in open_positions:
+            ticket = position.ticket
+            
+            # Verificar si esta operación tiene configuración de trailing stop
+            if ticket not in self.candle_pattern_configs:
+                continue
+            
+            config_data = self.candle_pattern_configs[ticket]
+            pattern_config = config_data['config']
+            
+            if not pattern_config.get('use_trailing_stop', False):
+                continue
+            
+            # Calcular nuevo SL basado en ATR
+            if self.atr is None or self.atr <= 0:
+                continue
+            
+            atr_trailing_multiplier = pattern_config.get('atr_trailing_multiplier', 1.5)
+            trailing_distance_pips = (self.atr * atr_trailing_multiplier) / point
+            
+            current_price = mt5.symbol_info_tick(self.symbol).bid if position.type == mt5.POSITION_TYPE_BUY else mt5.symbol_info_tick(self.symbol).ask
+            
+            if position.type == mt5.POSITION_TYPE_BUY:
+                # Long: mover SL hacia arriba si el precio sube
+                new_sl = round(current_price - trailing_distance_pips * point, digits)
+                if new_sl > position.sl and new_sl < current_price:
+                    self._modify_position_sl(ticket, new_sl)
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Trailing Stop aplicado a #{ticket}: nuevo SL={new_sl:.{digits}f}")
+            else:
+                # Short: mover SL hacia abajo si el precio baja
+                new_sl = round(current_price + trailing_distance_pips * point, digits)
+                if (position.sl == 0 or new_sl < position.sl) and new_sl > current_price:
+                    self._modify_position_sl(ticket, new_sl)
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Trailing Stop aplicado a #{ticket}: nuevo SL={new_sl:.{digits}f}")
+    
+    def _modify_position_sl(self, ticket: int, new_sl: float):
+        """Modifica el SL de una posición existente."""
+        position = None
+        positions = mt5.positions_get(ticket=ticket)
+        if positions and len(positions) > 0:
+            position = positions[0]
+        
+        if not position:
+            return False
+        
+        request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": position.symbol,
+            "position": ticket,
+            "sl": new_sl,
+            "tp": position.tp,
+        }
+        
+        result = mt5.order_send(request)
+        if result and result.retcode == mt5.TRADE_RETCODE_DONE:
+            return True
+        else:
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] Error al modificar SL de #{ticket}: {result.retcode if result else 'None'}", 'warn')
+            return False
+
+    def open_trade(self, trade_type: str, symbol: str, volume: float, sl_pips: float = 0, tp_pips: float = 0, strategy_name: str = None, pattern_config: dict = None):
         """
         Abre una operación en MT5 asegurando la conexión antes de enviar la orden.
+        
+        Args:
+            trade_type: 'long' o 'short'
+            symbol: Símbolo a operar
+            volume: Volumen en lotes
+            sl_pips: Stop Loss en pips
+            tp_pips: Take Profit en pips
+            strategy_name: Nombre de la estrategia
+            pattern_config: Configuración del patrón (use_stop_loss, use_take_profit, etc.)
         """
         if not self._init_mt5():
             return None
@@ -801,14 +923,26 @@ class Simulation:
         point = mt5.symbol_info(symbol).point
         digits = mt5.symbol_info(symbol).digits
 
-        # SL/TP
+        # Aplicar configuración de SL/TP según pattern_config
         sl, tp = 0.0, 0.0
-        if trade_type == 'long':
-            if sl_pips > 0: sl = round(price - sl_pips * point, digits)
-            if tp_pips > 0: tp = round(price + tp_pips * point, digits)
+        
+        if pattern_config:
+            use_sl = pattern_config.get('use_stop_loss', True)
+            use_tp = pattern_config.get('use_take_profit', True)
         else:
-            if sl_pips > 0: sl = round(price + sl_pips * point, digits)
-            if tp_pips > 0: tp = round(price - tp_pips * point, digits)
+            use_sl = True
+            use_tp = True
+        
+        if trade_type == 'long':
+            if use_sl and sl_pips > 0: 
+                sl = round(price - sl_pips * point, digits)
+            if use_tp and tp_pips > 0: 
+                tp = round(price + tp_pips * point, digits)
+        else:
+            if use_sl and sl_pips > 0: 
+                sl = round(price + sl_pips * point, digits)
+            if use_tp and tp_pips > 0: 
+                tp = round(price - tp_pips * point, digits)
 
        
         id_patron = get_id_for_name(strategy_name)
@@ -875,6 +1009,17 @@ class Simulation:
             )
             self._log(log_message, 'success')
             self.trades_in_current_candle += 1
+            
+            # Guardar configuración del patrón para esta operación
+            if pattern_config and result.order:
+                self.candle_pattern_configs[result.order] = {
+                    'config': pattern_config,
+                    'pattern_name': strategy_name,
+                    'entry_price': price,
+                    'sl_pips': sl_pips,
+                    'tp_pips': tp_pips
+                }
+            
             # Añadir ticket al set de tracking
             if hasattr(self, 'tracked_tickets') and result.order:
                 self.tracked_tickets.add(result.order)
@@ -959,6 +1104,10 @@ class Simulation:
                 close_price=position_info.price_current,
                 profit=deal[-1].profit
             )
+
+        # Limpiar configuración guardada si existe
+        if ticket in self.candle_pattern_configs:
+            del self.candle_pattern_configs[ticket]
 
         return True
 

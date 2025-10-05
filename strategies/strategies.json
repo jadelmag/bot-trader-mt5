@@ -1,168 +1,97 @@
 {
     "slots": {
         "forex": 2,
-        "candle": 2
+        "candle": 2,
+        "custom": 0
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_doji": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_doji_reversal": {
             "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.5,
-                "atr_tp_multiplier": 2.0,
-                "atr_trailing_multiplier": 1.5,
-                "percent_ratio": 1.0
-            }
+            "strategy_mode": "Custom"
         },
         "is_dragonfly_doji": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_engulfing": {
             "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.5,
-                "atr_tp_multiplier": 2.5,
-                "atr_trailing_multiplier": 1.5,
-                "percent_ratio": 1.0
-            }
+            "strategy_mode": "Custom"
         },
         "is_evening_star": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_falling_three_methods": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_gravestone_doji": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_hammer": {
             "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.2,
-                "atr_tp_multiplier": 3.0,
-                "atr_trailing_multiplier": 1.5,
-                "percent_ratio": 1.0
-            }
+            "strategy_mode": "Custom"
         },
         "is_hanging_man": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_harami": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_inverted_hammer": {
             "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.3,
-                "atr_tp_multiplier": 3.0,
-                "atr_trailing_multiplier": 1.5,
-                "percent_ratio": 1.0
-            }
+            "strategy_mode": "Custom"
         },
         "is_long_legged_doji": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_marubozu": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_morning_star": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_piercing_line": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_rising_three_methods": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_shooting_star": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_three_black_crows": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_three_inside_up_down": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_three_outside_up_down": {
             "selected": false,
-            "strategy_mode": "Default",
-            "config": {}
+            "strategy_mode": "Default"
         },
         "is_three_white_soldiers": {
             "selected": true,
-            "strategy_mode": "Custom",
-            "config": {
-                "use_signal_change": true,
-                "use_stop_loss": true,
-                "use_take_profit": true,
-                "use_trailing_stop": false,
-                "use_pattern_reversal": false,
-                "atr_sl_multiplier": 1.3,
-                "atr_tp_multiplier": 2.8,
-                "atr_trailing_multiplier": 1.5,
-                "percent_ratio": 1.0
-            }
+            "strategy_mode": "Custom"
         }
     },
     "forex_strategies": {
@@ -231,6 +160,11 @@
             "percent_ratio": 1.5,
             "rr_ratio": 3.0,
             "stop_loss_pips": 30.0
+        }
+    },
+    "custom_strategies": {
+        "run_pico_y_pala": {
+            "selected": false
         }
     }
 }

@@ -480,7 +480,6 @@ class SimulationStrategiesModal(tk.Toplevel):
             except (json.JSONDecodeError, IOError) as e:
                 messagebox.showerror("Error de Configuración", f"No se pudo cargar la estrategia para '{pattern_name}'.\nEl archivo podría estar corrupto.\n\nError: {e}")
     
-
     def _apply_and_run_simulation(self):
         """Recopila la config, la guarda, la devuelve y cierra el modal."""
         config_to_save = {
