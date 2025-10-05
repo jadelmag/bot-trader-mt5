@@ -76,6 +76,14 @@ class CandleConfigModal(tk.Toplevel):
             self.config_vars[key] = tk.BooleanVar()
             chk = ttk.Checkbutton(tab, text=text, variable=self.config_vars[key])
             chk.pack(anchor='w', pady=5, padx=5)
+        
+        # Añadir campo para % ratio
+        percent_ratio_frame = ttk.Frame(tab)
+        percent_ratio_frame.pack(fill='x', pady=10, padx=5, anchor='w')
+        ttk.Label(percent_ratio_frame, text="% Ratio:").pack(side='left')
+        self.config_vars["percent_ratio"] = tk.DoubleVar(value=1.0)
+        percent_entry = ttk.Entry(percent_ratio_frame, textvariable=self.config_vars["percent_ratio"], width=10)
+        percent_entry.pack(side='left', padx=5)
 
     def _populate_atr_tab(self, tab):
         """Llena la pestaña 'Parámetros ATR' con los campos de entrada numérica."""
@@ -97,7 +105,8 @@ class CandleConfigModal(tk.Toplevel):
         default_config = {
             "use_signal_change": True, "use_stop_loss": True, "use_take_profit": True,
             "use_trailing_stop": False, "use_pattern_reversal": False,
-            "atr_sl_multiplier": 1.5, "atr_tp_multiplier": 3.0, "atr_trailing_multiplier": 1.5
+            "atr_sl_multiplier": 1.5, "atr_tp_multiplier": 3.0, "atr_trailing_multiplier": 1.5,
+            "percent_ratio": 1.0
         }
 
         config = default_config
