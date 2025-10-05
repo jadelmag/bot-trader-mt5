@@ -128,12 +128,12 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         # Fila para Slots
         ttk.Label(config_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5), pady=(5,0))
-        self.slots_forex_var = tk.IntVar(value=1)
+        self.slots_forex_var = tk.IntVar(value=2)
         forex_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_forex_var, width=5)
         forex_slots_entry.grid(row=0, column=2, sticky='w', pady=(5,0))
 
         ttk.Label(config_frame, text="Slots Candle:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
-        self.slots_candles_var = tk.IntVar(value=1)
+        self.slots_candles_var = tk.IntVar(value=2)
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
         candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
 
@@ -323,37 +323,44 @@ class SimulationStrategiesModal(tk.Toplevel):
                 'is_engulfing': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_hammer': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_doji_reversal': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.0, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.0, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_three_white_soldiers': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 2.8, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 2.8, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_piercing_line': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_inverted_hammer': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
                 'is_three_outside_up_down': {
                     'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                     'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                    'percent_ratio': 1.0
                 },
             }
 
