@@ -94,7 +94,8 @@ class Simulation:
         self.tracked_tickets = set()  # Set para trackear tickets abiertos
         self.candle_pattern_configs = {}  # Diccionario para guardar configs de patrones activos
         self.queue = None # <<<< AÑADIDO PARA EVITAR AttributeError
-    
+        self.positions_sl_tp = {}  # Diccionario para trackear SL/TP de todas las operaciones {ticket: {'sl': float, 'tp': float, 'trade_type': str, 'entry_price': float}}
+
         # --- Inicializar MetaTrader 5 ---
         self._init_mt5()
         self._fetch_initial_candles() # Cargar velas históricas
@@ -313,6 +314,57 @@ class Simulation:
             # Actualizar set de tickets trackeados
             self.tracked_tickets = current_tickets
 
+    def _check_sl_tp_on_tick(self, current_price: float):
+        """Verifica si alguna posición ha alcanzado SL o TP en el tick actual y la cierra."""
+        if not mt5 or not mt5.terminal_info():
+            return
+        
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        if not open_positions:
+            return
+        
+        for position in open_positions:
+            ticket = position.ticket
+            
+            # Obtener SL y TP de la posición
+            sl = position.sl
+            tp = position.tp
+            
+            if sl == 0 and tp == 0:
+                continue  # Sin SL/TP configurado
+            
+            trade_type = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
+            should_close = False
+            reason = ""
+            
+            # Verificar SL/TP para operaciones LONG
+            if trade_type == 'long':
+                if sl > 0 and current_price <= sl:
+                    should_close = True
+                    reason = "SL"
+                elif tp > 0 and current_price >= tp:
+                    should_close = True
+                    reason = "TP"
+            
+            # Verificar SL/TP para operaciones SHORT
+            else:  # short
+                if sl > 0 and current_price >= sl:
+                    should_close = True
+                    reason = "SL"
+                elif tp > 0 and current_price <= tp:
+                    should_close = True
+                    reason = "TP"
+            
+            # Cerrar operación si se alcanzó SL o TP
+            if should_close:
+                if self.debug_mode:
+                    self._log(f"[SIM-DEBUG] {reason} alcanzado para #{ticket} ({trade_type.upper()}) | Precio: {current_price:.5f} | {reason}: {sl if reason == 'SL' else tp:.5f}")
+                
+                self._log(f"[SIM] 🎯 {reason} alcanzado: #{ticket} ({trade_type.upper()}) | Cerrando operación...", 'warn' if reason == 'SL' else 'success')
+                self.close_trade(ticket, position.volume, trade_type, f"{reason}_reached")
+
+
+
     def on_tick(self, timestamp, price):
         """
         Processes a new market tick, aggregating it into candles.
@@ -368,6 +420,9 @@ class Simulation:
 
         # Update floating P/L for open trades based on the latest price
         self.update_trades({self.symbol: price})
+
+        # Verificar SL/TP en cada tick
+        self._check_sl_tp_on_tick(price)
 
     def _calculate_indicators(self):
         """Calcula los indicadores técnicos necesarios para las estrategias."""
@@ -1023,6 +1078,15 @@ class Simulation:
             # Añadir ticket al set de tracking
             if hasattr(self, 'tracked_tickets') and result.order:
                 self.tracked_tickets.add(result.order)
+            
+            # Guardar SL/TP para verificación en cada tick
+            if result.order:
+                self.positions_sl_tp[result.order] = {
+                    'sl': sl,
+                    'tp': tp,
+                    'trade_type': trade_type,
+                    'entry_price': price
+                }
 
         return result
 
@@ -1108,6 +1172,10 @@ class Simulation:
         # Limpiar configuración guardada si existe
         if ticket in self.candle_pattern_configs:
             del self.candle_pattern_configs[ticket]
+
+        # Limpiar SL/TP guardado si existe
+        if position_ticket in self.positions_sl_tp:
+            del self.positions_sl_tp[position_ticket]
 
         return True
 

@@ -1,97 +1,118 @@
 {
     "slots": {
         "forex": 2,
-        "candle": 2,
-        "custom": 0
+        "candle": 0
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_doji": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_doji_reversal": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Custom",
+            "config": {}
         },
         "is_dragonfly_doji": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_engulfing": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Custom",
+            "config": {}
         },
         "is_evening_star": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_falling_three_methods": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_gravestone_doji": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_hammer": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Custom",
+            "config": {}
         },
         "is_hanging_man": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_harami": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_inverted_hammer": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Custom",
+            "config": {}
         },
         "is_long_legged_doji": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_marubozu": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_morning_star": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_piercing_line": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_rising_three_methods": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_shooting_star": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_three_black_crows": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_three_inside_up_down": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_three_outside_up_down": {
             "selected": false,
-            "strategy_mode": "Default"
+            "strategy_mode": "Default",
+            "config": {}
         },
         "is_three_white_soldiers": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Custom",
+            "config": {}
         }
     },
     "forex_strategies": {
@@ -144,13 +165,13 @@
             "stop_loss_pips": 20.0
         },
         "strategy_price_action_sr": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 1.2,
             "rr_ratio": 2.5,
             "stop_loss_pips": 12.0
         },
         "strategy_scalping_stochrsi_ema": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 0.8,
             "rr_ratio": 1.8,
             "stop_loss_pips": 10.0
@@ -160,11 +181,6 @@
             "percent_ratio": 1.5,
             "rr_ratio": 3.0,
             "stop_loss_pips": 30.0
-        }
-    },
-    "custom_strategies": {
-        "run_pico_y_pala": {
-            "selected": false
         }
     }
 }
