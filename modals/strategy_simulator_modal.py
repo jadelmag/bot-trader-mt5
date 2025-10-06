@@ -316,37 +316,44 @@ class StrategySimulatorModal(tk.Toplevel):
             'is_engulfing': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_hammer': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_doji_reversal': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.0, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 2.0, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_three_white_soldiers': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 2.8, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 2.8, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_piercing_line': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 2.5, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_inverted_hammer': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
             'is_three_outside_up_down': {
                 'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
                 'use_trailing_stop': False, 'use_pattern_reversal': False,
-                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5
+                'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
+                'percent_ratio': 1.0
             },
         }
 

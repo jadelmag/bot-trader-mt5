@@ -188,7 +188,7 @@ class CerrarOperacionesWindow:
         row1.pack(fill=tk.X, pady=(0, 5))
         
         ttk.Label(row1, text=f"Ticket: {ticket}", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 20))
-        ttk.Label(row1, text=f"Volumen: {operation.volume:.2f}", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 20))
+        ttk.Label(row1, text=f"Volumen: {operation.volume}", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 20))
         
         if op_type == 'position':
             pl_text = f"P/L: {operation.profit:.2f} $"

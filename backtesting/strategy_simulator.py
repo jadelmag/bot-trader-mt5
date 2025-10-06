@@ -29,6 +29,19 @@ class StrategySimulator:
         self.current_balance = initial_capital
         self.open_trades = []
         self.closed_trades = []
+
+        # Cargar valores de config.json
+        try:
+            config_path = os.path.join(PROJECT_ROOT, 'strategies', 'config.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    global_config = json.load(f)
+                    # Añadir o reemplazar valores del config global
+                    for key, value in global_config.items():
+                        self.config[key] = value
+        except Exception as e:
+            # Si hay error, continuar con la configuración actual
+            pass
         
         # --- Constantes de Trading --- 
         self.pip_value = 0.0001 # Valor de 1 pip para un par como EUR/USD
@@ -151,17 +164,25 @@ class StrategySimulator:
         """Calcula el tamaño del lote basado en el capital actual, el riesgo y el SL."""
         if stop_loss_pips <= 0:
             return 0.01 # Retornar un lote mínimo si el SL es inválido
-
-        capital_at_risk = self.current_balance * (risk_percent / 100.0)
-        sl_value_per_lot = stop_loss_pips * self.pip_value_per_lot
         
-        if sl_value_per_lot <= 0:
-            return 0.01 # Evitar división por cero
-
-        lot_size = capital_at_risk / sl_value_per_lot
-        
-        # Redondear al tamaño de lote más cercano (ej. 0.01)
+        # Obtenemos risk_per_trade_percent de la configuración (o usamos 1.0 por defecto)
+        risk_per_trade_percent = float(self.config.get('risk_per_trade_percent', 1.0))
+        lot_size = risk_per_trade_percent * (risk_percent / 100.0)
+        print(f"Tamaño del lote: {lot_size}")
         return max(0.01, round(lot_size, 2))
+        # print(f"Capital actual: {self.current_balance}, Riesgo: {risk_percent}, SL: {stop_loss_pips}")
+        # # Calcular el capital a riesgo usando risk_per_trade_percent y risk_percent
+        # capital_at_risk = self.current_balance * risk_per_trade_percent * (risk_percent / 100.0)
+        # sl_value_per_lot = stop_loss_pips * self.pip_value_per_lot
+        
+        # if sl_value_per_lot <= 0:
+        #     return 0.01 # Evitar división por cero
+
+        # lot_size = capital_at_risk / sl_value_per_lot
+        # print(f"Capital a riesgo: {capital_at_risk}, SL por lote: {sl_value_per_lot}, Tamaño del lote: {lot_size}")
+
+        # # Redondear al tamaño de lote más cercano (ej. 0.01)
+        # return max(0.01, round(lot_size, 2))
 
     def run_simulation(self):
         """
@@ -262,6 +283,7 @@ class StrategySimulator:
             atr = self.candles_df.iloc[entry_index]['atr']
             atr_sl_multiplier = pattern_config.get('atr_sl_multiplier', 1.5)
             atr_tp_multiplier = pattern_config.get('atr_tp_multiplier', 2.0)
+            risk_percent = pattern_config.get('percent_ratio', 1.0)
             
             # Convertir el SL basado en ATR a pips
             stop_loss_pips = (atr * atr_sl_multiplier) / self.pip_value
@@ -271,7 +293,9 @@ class StrategySimulator:
             self.logger.error(f"    -> Trade RECHAZADO: Stop loss inválido ({stop_loss_pips} pips) para {strategy_name}")
             return
 
-        lot_size = self._calculate_lot_size(stop_loss_pips, risk_percent)
+        risk_per_trade_percent = float(self.config.get('risk_per_trade_percent', 1.0))
+        lot_size = risk_per_trade_percent * (risk_percent / 100.0)
+        # lot_size = self._calculate_lot_size(stop_loss_pips, risk_percent)
         if self.current_balance < (lot_size * stop_loss_pips * self.pip_value_per_lot):
             self.logger.log(f"    -> Trade RECHAZADO: Balance insuficiente para cubrir el riesgo.")
             return
@@ -301,7 +325,7 @@ class StrategySimulator:
             'risked_amount': risked_amount
         }
         self.open_trades.append(trade)
-        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f} | TP: {take_profit:.5f} | Lote: {lot_size:.2f} | Riesgo: ${risked_amount:.2f}")
+        self.logger.log(f"    -> Trade ABIERTO: {signal} a {entry_price:.5f} | SL: {stop_loss:.5f} | TP: {take_profit:.5f} | Lote: {lot_size} | Riesgo: ${risked_amount:.2f}")
 
     def _manage_open_trades(self, current_index, current_candle):
         """Gestiona las operaciones abiertas, comprobando si se deben cerrar."""

@@ -4,6 +4,7 @@
     "use_take_profit": true,
     "use_trailing_stop": false,
     "use_pattern_reversal": false,
+    "percent_ratio": 1.0,
     "atr_sl_multiplier": 1.6,
     "atr_tp_multiplier": 2.8,
     "atr_trailing_multiplier": 1.5
