@@ -472,7 +472,7 @@ class CustomStrategies:
                                 logger.log(f"[MARKET M1] OPERACIÓN CERRADA (Ticket: {ticket})")
                                 logger.log(f"[MARKET M1] Motivo: {motivo_cierre}")
                                 logger.log(f"[MARKET M1] Dirección: {direction.upper()}")
-                                logger.log(f"[MARKET M1] Volumen: {volume:.2f} lotes")
+                                logger.log(f"[MARKET M1] Volumen: {volume} lotes")
                                 logger.log(f"[MARKET M1] SL configurado: {sl_pips:.1f} pips")
                                 logger.log(f"[MARKET M1] TP configurado: {tp_pips:.1f} pips")
                                 

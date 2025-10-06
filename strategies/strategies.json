@@ -1,8 +1,8 @@
 {
     "slots": {
-        "forex": 0,
-        "candle": 0,
-        "custom": 4
+        "forex": 2,
+        "candle": 2,
+        "custom": 0
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
@@ -14,7 +14,7 @@
             "strategy_mode": "Default"
         },
         "is_doji_reversal": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_dragonfly_doji": {
@@ -22,7 +22,7 @@
             "strategy_mode": "Default"
         },
         "is_engulfing": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_evening_star": {
@@ -38,7 +38,7 @@
             "strategy_mode": "Default"
         },
         "is_hammer": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_hanging_man": {
@@ -50,7 +50,7 @@
             "strategy_mode": "Default"
         },
         "is_inverted_hammer": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_long_legged_doji": {
@@ -90,7 +90,7 @@
             "strategy_mode": "Default"
         },
         "is_three_white_soldiers": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         }
     },
@@ -132,7 +132,7 @@
             "stop_loss_pips": 30.0
         },
         "strategy_ma_crossover": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.0,
             "rr_ratio": 2.0,
             "stop_loss_pips": 15.0
@@ -144,13 +144,13 @@
             "stop_loss_pips": 20.0
         },
         "strategy_price_action_sr": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 1.2,
             "rr_ratio": 2.5,
             "stop_loss_pips": 12.0
         },
         "strategy_scalping_stochrsi_ema": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.8,
             "rr_ratio": 1.8,
             "stop_loss_pips": 10.0
@@ -164,7 +164,7 @@
     },
     "custom_strategies": {
         "run_market_m1": {
-            "selected": true
+            "selected": false
         },
         "run_pico_y_pala": {
             "selected": false

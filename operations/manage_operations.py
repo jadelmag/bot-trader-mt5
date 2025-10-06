@@ -71,7 +71,7 @@ def cancel_pending_order(ticket, logger=None):
             if logger:
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 logger.success(f"[{timestamp}] ✅ Orden cancelada - Ticket: {ticket} | "
-                              f"Símbolo: {order.symbol} | Volumen: {order.volume:.2f}")
+                              f"Símbolo: {order.symbol} | Volumen: {order.volume}")
             return True
         else:
             if logger:
