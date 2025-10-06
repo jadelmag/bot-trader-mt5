@@ -787,7 +787,7 @@ class Simulation:
             # volume_step = symbol_info.volume_step
             # volume = round(volume / volume_step) * volume_step
 
-            risk_per_trade_percent = float(self.config.get('risk_per_trade_percent', 1.0))
+            risk_per_trade_percent = float(self.general_config.get('risk_per_trade_percent', 1.0))
             volume = risk_per_trade_percent * (risk_multiplier / 100.0)
 
             if volume < symbol_info.volume_min:
