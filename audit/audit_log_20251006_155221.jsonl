@@ -788,3 +788,21 @@
 {"timestamp": "2025-10-06T18:35:03.797628", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:35:00 | Balance: $66859.04"}}
 {"timestamp": "2025-10-06T18:35:03.810094", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
 {"timestamp": "2025-10-06T18:35:03.815032", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:36:15.636647", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:36:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:36:15.636961", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:36:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:36:15.649263", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:36:15.653745", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:37:01.088500", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:37:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:37:01.088872", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:37:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:37:01.100911", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:37:01.104545", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:38:04.792730", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:38:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:38:04.793043", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:38:00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:38:04.806111", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:38:04.810715", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:38:35.902014", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66859.04"}}
+{"timestamp": "2025-10-06T18:38:35.902424", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 🔄 Cerrando #53523784404 (LONG) | P/L flotante: $0.00 | Balance: $66859.04"}}
+{"timestamp": "2025-10-06T18:38:35.958613", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Estrategia | candle_doji_reversal | LONG | SIN CAMBIO"}}
+{"timestamp": "2025-10-06T18:38:35.958900", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Balance: $66859.04 | Ganancias: $303.10 | Pérdidas: $179.37"}}
+{"timestamp": "2025-10-06T18:38:35.959199", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $66859.04 | Estrategia | candle_doji_reversal | LONG | SIN CAMBIO | Ganancias: $303.10 | Pérdidas: $179.37"}}
+{"timestamp": "2025-10-06T18:38:35.959359", "event": "trade_close", "data": {"ticket": 53523784404, "symbol": "EURUSD", "close_price": 1.17049, "profit": 0.0}}
