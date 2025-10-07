@@ -46,17 +46,17 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         # --- Valores por defecto para estrategias Forex ---
         self.strategy_defaults = {
-            "strategy_bollinger_bands_breakout": {"percent_ratio": 1.0, "rr_ratio": 1.5, "sl": 25.0},
-            "strategy_candle_pattern_reversal": {"percent_ratio": 1.0, "rr_ratio": 2.5, "sl": 30.0},
-            "strategy_chart_pattern_breakout": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_ma_crossover": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 15.0},
-            "strategy_ichimoku_kinko_hyo": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 30.0},
-            "strategy_price_action_sr": {"percent_ratio": 1.2, "rr_ratio": 2.5, "sl": 12.0},
-            "strategy_momentum_rsi_macd": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_fibonacci_reversal": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.8, "rr_ratio": 1.8, "sl": 10.0},
-            "strategy_swing_trading_multi_indicator": {"percent_ratio": 1.5, "rr_ratio": 3.0, "sl": 30.0},
-            "strategy_hybrid_optimizer": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_bollinger_bands_breakout": {"percent_ratio": 0.8, "rr_ratio": 1.3, "sl": 12.0},
+            "strategy_candle_pattern_reversal": {"percent_ratio": 0.8, "rr_ratio": 1.5, "sl": 10.0},
+            "strategy_chart_pattern_breakout": {"percent_ratio": 0.7, "rr_ratio": 1.6, "sl": 12.0},
+            "strategy_ma_crossover": {"percent_ratio": 0.7, "rr_ratio": 1.4, "sl": 10.0},
+            "strategy_ichimoku_kinko_hyo": {"percent_ratio": 0.6, "rr_ratio": 1.8, "sl": 15.0},
+            "strategy_price_action_sr": {"percent_ratio": 1.0, "rr_ratio": 2.0, "sl": 8.0},
+            "strategy_momentum_rsi_macd": {"percent_ratio": 0.9, "rr_ratio": 1.6, "sl": 10.0},
+            "strategy_fibonacci_reversal": {"percent_ratio": 0.8, "rr_ratio": 1.6, "sl": 10.0},
+            "strategy_scalping_stochrsi_ema": {"percent_ratio": 1.0, "rr_ratio": 1.4, "sl": 8.0},
+            "strategy_swing_trading_multi_indicator": {"percent_ratio": 0.8, "rr_ratio": 2.2, "sl": 20.0},
+            "strategy_hybrid_optimizer": {"percent_ratio": 0.9, "rr_ratio": 1.8, "sl": 12.0},
         }
 
         # --- UI Components ---
