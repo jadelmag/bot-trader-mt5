@@ -1170,8 +1170,8 @@ class Simulation:
             )
 
         # Limpiar configuración guardada si existe
-        if ticket in self.candle_pattern_configs:
-            del self.candle_pattern_configs[ticket]
+        if position_ticket in self.candle_pattern_configs:
+            del self.candle_pattern_configs[position_ticket]
 
         # Limpiar SL/TP guardado si existe
         if position_ticket in self.positions_sl_tp:
