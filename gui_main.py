@@ -724,6 +724,7 @@ class App:
                 self.simulation_menu.entryconfig("Modo agresivo", state="normal")
                 # Habilitar botones de gestión de operaciones
                 self.simulation_menu.entryconfig("Ver operaciones abiertas", state="normal")
+                self.simulation_menu.entryconfig("Abrir operación manual", state="normal")
                 self.simulation_menu.entryconfig("Cerrar operaciones", state="normal") 
                 self.simulation_menu.entryconfig("Detener simulación", state="normal")
 
@@ -757,6 +758,7 @@ class App:
 
             # Deshabilitar botones de gestión de operaciones
             self.simulation_menu.entryconfig("Ver operaciones abiertas", state="disabled")
+            self.simulation_menu.entryconfig("Abrir operación manual", state="disabled")
             self.simulation_menu.entryconfig("Cerrar operaciones", state="disabled") 
             self.simulation_menu.entryconfig("Detener simulación", state="disabled")
 
@@ -911,6 +913,52 @@ class App:
                 # Las actualizaciones en vivo se reinician automáticamente después de 'refresh' a través de la cola
 
             self._log_success("Actualizaciones reanudadas. Herramientas de análisis deshabilitadas.")
+
+    def _abrir_operacion_manual(self):
+        """Abre el modal para crear una operación manual."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        try:
+            from modals.open_manual_operation import OpenManualOperationModal
+            
+            # Abrir el modal
+            modal = OpenManualOperationModal(
+                parent=self.root,
+                symbol=self.symbol_var.get(),
+                logger=self.logger
+            )
+            self.root.wait_window(modal)
+            
+            # Si el usuario creó la operación, ejecutarla
+            if hasattr(modal, 'result') and modal.result:
+                trade_data = modal.result
+                self._log_info(f"Creando operación manual: {trade_data['order_type'].upper()} {trade_data['volume']} lotes de {trade_data['symbol']}")
+                
+                # Ejecutar la operación usando el gestor de operaciones manuales
+                success, message = self.simulation_instance.manual_trade_manager.open_manual_trade(trade_data)
+                
+                if success:
+                    self._log_success(f"✅ Operación manual creada exitosamente: {message}")
+                    # Actualizar UI
+                    if hasattr(self.action_handler, '_update_ui_account_info'):
+                        self.root.after(100, self.action_handler._update_ui_account_info)
+                else:
+                    self._log_error(f"❌ Error al crear operación manual: {message}")
+            else:
+                self._log_info("Creación de operación manual cancelada por el usuario.")
+                
+        except ImportError as e:
+            self._log_error(f"Error al importar modal de operación manual: {e}")
+            messagebox.showerror("Error", "No se pudo abrir el modal de operación manual")
+        except Exception as e:
+            self._log_error(f"Error al abrir modal de operación manual: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
 
     def _start_simulation_loop(self):
         """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""

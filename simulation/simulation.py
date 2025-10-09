@@ -18,6 +18,7 @@ from simulation.position_monitor import PositionMonitor
 from simulation.trade_manager import TradeManager
 from simulation.signal_analyzer import SignalAnalyzer
 from loggin.audit_log import audit_logger
+from simulation.manual_simulation import ManualTradeManager
 
 try:
     import MetaTrader5 as mt5
@@ -58,6 +59,9 @@ class Simulation:
         self.debug_mode = debug_mode
         self.strategies_config = strategies_config if strategies_config is not None else {}
         
+        # Inicializar gestor de operaciones manuales
+        self.manual_trade_manager = ManualTradeManager(self, logger)
+
         # --- Inicializar módulos refactorizados ---
         self.config_loader = ConfigLoader(logger)
         self.general_config = self.config_loader.load_general_config()
