@@ -363,8 +363,6 @@ class Simulation:
                 self._log(f"[SIM] 🎯 {reason} alcanzado: #{ticket} ({trade_type.upper()}) | Cerrando operación...", 'warn' if reason == 'SL' else 'success')
                 self.close_trade(ticket, position.volume, trade_type, f"{reason}_reached")
 
-
-
     def on_tick(self, timestamp, price):
         """
         Processes a new market tick, aggregating it into candles.

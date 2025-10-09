@@ -26,6 +26,7 @@ try:
     from gui.body_rsi import BodyRSI
     from gui.body_atr import BodyATR
     from gui.body_macd import BodyMACD
+    from gui.body_momentum import BodyMomentum
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
@@ -183,6 +184,9 @@ class App:
                     # Actualizar MACD con los mismos datos
                     if hasattr(self, 'macd_chart'):
                         self.macd_chart.update_macd_data(data)
+                    # Actualizar Momentum con los mismos datos
+                    if hasattr(self, 'momentum_chart'):
+                        self.momentum_chart.update_momentum_data(data)
                     try:
                         self.simulation_btn.state(["!disabled"])
                     except tk.TclError:
@@ -205,6 +209,9 @@ class App:
                         # Actualizar MACD solo cuando se cierra una nueva vela
                         if is_new_candle and hasattr(self, 'macd_chart') and hasattr(self.graphic, 'candles_df'):
                             self.macd_chart.update_macd_data(self.graphic.candles_df)
+                        # Actualizar Momentum solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'momentum_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.momentum_chart.update_momentum_data(self.graphic.candles_df)
                 elif message_type == "trade_closed":
                     self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
