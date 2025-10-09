@@ -74,7 +74,7 @@ class App:
         self.root.title("Bot Trader MT5")
         self.root.geometry("1500x1500")
         self.root.minsize(1500, 1000)
-        self.root.resizable(False, False)
+        # self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
 
         # --- Threading and Queue for background tasks ---
