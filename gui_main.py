@@ -25,6 +25,7 @@ try:
     from gui.body_logger import BodyLogger
     from gui.body_rsi import BodyRSI
     from gui.body_atr import BodyATR
+    from gui.body_macd import BodyMACD
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
@@ -70,8 +71,8 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Bot Trader MT5")
-        self.root.geometry("1500x800")
-        self.root.minsize(900, 600)
+        self.root.geometry("1500x1500")
+        self.root.minsize(1500, 1000)
         self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
 
@@ -179,7 +180,9 @@ class App:
                     # Actualizar ATR con los mismos datos
                     if hasattr(self, 'atr_chart'):
                         self.atr_chart.update_atr_data(data)
-                    # Habilitar solo el botón de simulación una vez que el gráfico está listo
+                    # Actualizar MACD con los mismos datos
+                    if hasattr(self, 'macd_chart'):
+                        self.macd_chart.update_macd_data(data)
                     try:
                         self.simulation_btn.state(["!disabled"])
                     except tk.TclError:
@@ -199,6 +202,9 @@ class App:
                         # Actualizar ATR solo cuando se cierra una nueva vela
                         if is_new_candle and hasattr(self, 'atr_chart') and hasattr(self.graphic, 'candles_df'):
                             self.atr_chart.update_atr_data(self.graphic.candles_df)
+                        # Actualizar MACD solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'macd_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.macd_chart.update_macd_data(self.graphic.candles_df)
                 elif message_type == "trade_closed":
                     self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
