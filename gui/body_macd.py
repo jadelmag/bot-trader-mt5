@@ -92,11 +92,12 @@ class MACDTooltipHandler:
             self._hide_tooltip()
             return
         
-        # Verificar si está cerca de alguna línea
+        # Verificar si está cerca de alguna línea o barra
         macd_value = self.macd_data[idx]
         signal_value = self.signal_data[idx]
+        histogram_value = self.histogram_data[idx]
         
-        if np.isnan(macd_value) and np.isnan(signal_value):
+        if np.isnan(macd_value) and np.isnan(signal_value) and np.isnan(histogram_value):
             self._hide_tooltip()
             return
         
@@ -104,12 +105,17 @@ class MACDTooltipHandler:
         y_range = self.ax.get_ylim()
         tolerance = 0.05 * (y_range[1] - y_range[0])
         
-        # Verificar cercanía a línea MACD o señal
+        # Verificar cercanía a línea MACD, señal o histograma
         show_tooltip = False
         if not np.isnan(macd_value) and abs(y - macd_value) <= tolerance:
             show_tooltip = True
         elif not np.isnan(signal_value) and abs(y - signal_value) <= tolerance:
             show_tooltip = True
+        elif not np.isnan(histogram_value):
+            # Para el histograma, verificar si está dentro de la barra
+            if (histogram_value >= 0 and 0 <= y <= histogram_value) or \
+               (histogram_value < 0 and histogram_value <= y <= 0):
+                show_tooltip = True
         
         if show_tooltip:
             timestamp = self.timestamps[idx]
@@ -119,7 +125,7 @@ class MACDTooltipHandler:
             self._show_tooltip((x, tooltip_y), text)
         else:
             self._hide_tooltip()
-    
+
     def _format_macd_tooltip(self, macd_value, signal_value, timestamp):
         """Formatea el texto del tooltip del MACD"""
         return (
