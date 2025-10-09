@@ -18,7 +18,7 @@ class BodyLogger(ttk.Frame):
             background="#0f0f0f",
             foreground="#e6e6e6",
             insertbackground="#e6e6e6",
-            height=12,
+            height=15,
             padx=8,
             pady=6,
         )

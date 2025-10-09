@@ -1,23 +1,97 @@
 from tkinter import ttk
 from gui.body_graphic import BodyGraphic
 from gui.body_logger import BodyLogger
+from gui.body_rsi import BodyRSI
+from gui.body_atr import BodyATR
+from gui.body_macd import BodyMACD
+from gui.body_momentum import BodyMomentum
 
 def create_body(app):
     """Crea y configura el frame del cuerpo principal y sus componentes."""
     container = ttk.Frame(app.root, padding=(12, 10))
     container.grid(row=1, column=0, sticky="nsew")
     container.columnconfigure(0, weight=1)
-    # Split rows: top chart (3x), bottom logger (1x)
-    container.rowconfigure(0, weight=3)
-    container.rowconfigure(1, weight=1)
+    
+    # Split rows: top chart (3x), RSI (1x), ATR (1x), MACD (1x), Momentum (1x), logger (1x)
+    container.rowconfigure(0, weight=3)  # BodyGraphic
+    container.rowconfigure(1, weight=1)  # BodyRSI
+    container.rowconfigure(2, weight=1)  # BodyATR
+    container.rowconfigure(3, weight=1)  # BodyMACD
+    container.rowconfigure(4, weight=1)  # BodyMomentum
+    container.rowconfigure(5, weight=1)  # BodyLogger
 
-    # Bottom: Logger (create it first)
+    # Bottom: Logger
     if BodyLogger is None:
         app.logger = ttk.Frame(container)
         ttk.Label(app.logger, text="Logger no disponible").pack(expand=True, fill="both")
     else:
         app.logger = BodyLogger(container)
-    app.logger.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+    app.logger.grid(row=5, column=0, sticky="nsew", pady=(10, 0))
+
+    # Middle: RSI Chart
+    if BodyRSI is None:
+        app.rsi_chart = ttk.Frame(container)
+        ttk.Label(app.rsi_chart, text="RSI no disponible").pack(expand=True, fill="both")
+    else:
+        app.rsi_chart = BodyRSI(
+            container,
+            app=app,
+            symbol=app.symbol_var.get(),
+            timeframe=app.timeframe_var.get(),
+            bars=300,
+            logger=app.logger,
+            debug_mode_var=app.debug_mode_var
+        )
+    app.rsi_chart.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+    
+    # Middle 2: ATR Chart
+    if BodyATR is None:
+        app.atr_chart = ttk.Frame(container)
+        ttk.Label(app.atr_chart, text="ATR no disponible").pack(expand=True, fill="both")
+    else:
+        app.atr_chart = BodyATR(
+            container,
+            app=app,
+            symbol=app.symbol_var.get(),
+            timeframe=app.timeframe_var.get(),
+            bars=300,
+            logger=app.logger,
+            debug_mode_var=app.debug_mode_var
+        )
+    app.atr_chart.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
+
+    # Middle 3: MACD Chart
+    if BodyMACD is None:
+        app.macd_chart = ttk.Frame(container)
+        ttk.Label(app.macd_chart, text="MACD no disponible").pack(expand=True, fill="both")
+    else:
+        app.macd_chart = BodyMACD(
+            container,
+            app=app,
+            symbol=app.symbol_var.get(),
+            timeframe=app.timeframe_var.get(),
+            bars=300,
+            logger=app.logger,
+            debug_mode_var=app.debug_mode_var
+        )
+    app.macd_chart.grid(row=3, column=0, sticky="nsew", pady=(10, 0))
+
+    # Middle 4: Momentum Chart
+    if BodyMomentum is None:
+        app.momentum_chart = ttk.Frame(container)
+        ttk.Label(app.momentum_chart, text="Momentum no disponible").pack(expand=True, fill="both")
+    else:
+        app.momentum_chart = BodyMomentum(
+            container,
+            app=app,
+            symbol=app.symbol_var.get(),
+            timeframe=app.timeframe_var.get(),
+            bars=300,
+            logger=app.logger,
+            debug_mode_var=app.debug_mode_var,
+            period=10  # Periodo por defecto del Momentum
+        )
+    app.momentum_chart.grid(row=4, column=0, sticky="nsew", pady=(10, 0))
 
     # Top: Graphic placeholder (shown until Start MT5 is pressed)
     app.graphic_placeholder = ttk.Frame(container)

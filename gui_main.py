@@ -23,6 +23,10 @@ try:
     from loggin.audit_log import AuditLogger # Importar la clase
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
+    from gui.body_rsi import BodyRSI
+    from gui.body_atr import BodyATR
+    from gui.body_macd import BodyMACD
+    from gui.body_momentum import BodyMomentum
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
@@ -68,9 +72,9 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Bot Trader MT5")
-        self.root.geometry("1500x800")
-        self.root.minsize(900, 600)
-        self.root.resizable(False, False)
+        self.root.geometry("1500x1500")
+        self.root.minsize(1500, 1000)
+        # self.root.resizable(False, False)
         self._center_on_screen(1500, 800)
 
         # --- Threading and Queue for background tasks ---
@@ -85,6 +89,12 @@ class App:
 
         # State for aggressive mode
         self.modo_agresivo_activo = tk.BooleanVar(value=False)
+
+        # State for chart visibility (all visible by default)
+        self.show_rsi_var = tk.BooleanVar(value=True)
+        self.show_atr_var = tk.BooleanVar(value=True)
+        self.show_macd_var = tk.BooleanVar(value=True)
+        self.show_momentum_var = tk.BooleanVar(value=True)
 
         # State for chart selectors (defaults)
         self.symbol_var = tk.StringVar(value="EURUSD")
@@ -144,6 +154,28 @@ class App:
         y = int((screen_h / 2) - (h / 2))
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
+    def _adjust_window_height(self):
+        """Ajusta dinámicamente la altura de la ventana según las gráficas visibles."""
+        base_height = 400  # Altura base (header + gráfico principal + logger)
+        chart_height = 150  # Altura aproximada de cada gráfica indicadora
+        
+        visible_charts = 0
+        if self.show_rsi_var.get():
+            visible_charts += 1
+        if self.show_atr_var.get():
+            visible_charts += 1
+        if self.show_macd_var.get():
+            visible_charts += 1
+        if self.show_momentum_var.get():
+            visible_charts += 1
+        
+        total_height = base_height + (visible_charts * chart_height)
+        total_height = max(800, min(total_height, 1500))  # Entre 800 y 1500 píxeles
+        
+        current_geometry = self.root.geometry()
+        width = current_geometry.split('x')[0]
+        self.root.geometry(f"{width}x{total_height}")
+
     def _build_header(self):
         self.header = create_header(self)
 
@@ -171,7 +203,18 @@ class App:
                     self._handle_login_failure(data)
                 elif message_type == "chart_data_ready":
                     self.graphic.render_chart_data(data)
-                    # Habilitar solo el botón de simulación una vez que el gráfico está listo
+                    # Actualizar RSI con los mismos datos
+                    if hasattr(self, 'rsi_chart'):
+                        self.rsi_chart.update_rsi_data(data)
+                    # Actualizar ATR con los mismos datos
+                    if hasattr(self, 'atr_chart'):
+                        self.atr_chart.update_atr_data(data)
+                    # Actualizar MACD con los mismos datos
+                    if hasattr(self, 'macd_chart'):
+                        self.macd_chart.update_macd_data(data)
+                    # Actualizar Momentum con los mismos datos
+                    if hasattr(self, 'momentum_chart'):
+                        self.momentum_chart.update_momentum_data(data)
                     try:
                         self.simulation_btn.state(["!disabled"])
                     except tk.TclError:
@@ -184,7 +227,19 @@ class App:
                     self._display_strategy_summary(data)
                 elif message_type == "realtime_candle_update":
                     if hasattr(self, 'graphic') and self.simulation_running:
-                        self.graphic.update_simulation_chart(data)
+                        is_new_candle = self.graphic.update_simulation_chart(data)
+                        # Actualizar RSI solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'rsi_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.rsi_chart.update_rsi_data(self.graphic.candles_df)
+                        # Actualizar ATR solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'atr_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.atr_chart.update_atr_data(self.graphic.candles_df)
+                        # Actualizar MACD solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'macd_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.macd_chart.update_macd_data(self.graphic.candles_df)
+                        # Actualizar Momentum solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'momentum_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.momentum_chart.update_momentum_data(self.graphic.candles_df)
                 elif message_type == "trade_closed":
                     self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
@@ -669,6 +724,7 @@ class App:
                 self.simulation_menu.entryconfig("Modo agresivo", state="normal")
                 # Habilitar botones de gestión de operaciones
                 self.simulation_menu.entryconfig("Ver operaciones abiertas", state="normal")
+                self.simulation_menu.entryconfig("Abrir operación manual", state="normal")
                 self.simulation_menu.entryconfig("Cerrar operaciones", state="normal") 
                 self.simulation_menu.entryconfig("Detener simulación", state="normal")
 
@@ -702,6 +758,7 @@ class App:
 
             # Deshabilitar botones de gestión de operaciones
             self.simulation_menu.entryconfig("Ver operaciones abiertas", state="disabled")
+            self.simulation_menu.entryconfig("Abrir operación manual", state="disabled")
             self.simulation_menu.entryconfig("Cerrar operaciones", state="disabled") 
             self.simulation_menu.entryconfig("Detener simulación", state="disabled")
 
@@ -856,6 +913,52 @@ class App:
                 # Las actualizaciones en vivo se reinician automáticamente después de 'refresh' a través de la cola
 
             self._log_success("Actualizaciones reanudadas. Herramientas de análisis deshabilitadas.")
+
+    def _abrir_operacion_manual(self):
+        """Abre el modal para crear una operación manual."""
+        if not self.simulation_instance:
+            messagebox.showinfo("Información", "No hay ninguna simulación en curso.")
+            return
+
+        if not self.simulation_running:
+            messagebox.showinfo("Información", "La simulación no está en ejecución.")
+            return
+
+        try:
+            from modals.open_manual_operation import OpenManualOperationModal
+            
+            # Abrir el modal
+            modal = OpenManualOperationModal(
+                parent=self.root,
+                symbol=self.symbol_var.get(),
+                logger=self.logger
+            )
+            self.root.wait_window(modal)
+            
+            # Si el usuario creó la operación, ejecutarla
+            if hasattr(modal, 'result') and modal.result:
+                trade_data = modal.result
+                self._log_info(f"Creando operación manual: {trade_data['order_type'].upper()} {trade_data['volume']} lotes de {trade_data['symbol']}")
+                
+                # Ejecutar la operación usando el gestor de operaciones manuales
+                success, message = self.simulation_instance.manual_trade_manager.open_manual_trade(trade_data)
+                
+                if success:
+                    self._log_success(f"✅ Operación manual creada exitosamente: {message}")
+                    # Actualizar UI
+                    if hasattr(self.action_handler, '_update_ui_account_info'):
+                        self.root.after(100, self.action_handler._update_ui_account_info)
+                else:
+                    self._log_error(f"❌ Error al crear operación manual: {message}")
+            else:
+                self._log_info("Creación de operación manual cancelada por el usuario.")
+                
+        except ImportError as e:
+            self._log_error(f"Error al importar modal de operación manual: {e}")
+            messagebox.showerror("Error", "No se pudo abrir el modal de operación manual")
+        except Exception as e:
+            self._log_error(f"Error al abrir modal de operación manual: {e}")
+            messagebox.showerror("Error", f"Error inesperado: {e}")
 
     def _start_simulation_loop(self):
         """Bucle principal que se ejecuta cada segundo para actualizar la simulación."""

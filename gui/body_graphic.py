@@ -217,9 +217,10 @@ class BodyGraphic(ttk.Frame):
         self._schedule_live_update(delay_ms=interval_ms)
 
     def update_simulation_chart(self, candle_data):
-        """Procesa y dibuja los datos de una vela de la simulación."""
+        """Procesa y dibuja los datos de una vela de la simulación.
+        Retorna True si es una nueva vela, False si solo se actualiza la vela actual."""
         if not candle_data:
-            return
+            return False
 
         # Convertir el diccionario de la vela a un formato compatible con el DataFrame
         candle_data['time'] = pd.to_datetime(candle_data['time'])
@@ -228,14 +229,18 @@ class BodyGraphic(ttk.Frame):
             'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'
         }, inplace=True)
 
+        is_new_candle = False
         if self.candles_df is None or self.candles_df.empty:
             self.candles_df = new_candle
+            is_new_candle = True
         else:
             # Si la vela es nueva, la añadimos. Si ya existe, la actualizamos.
             if new_candle.index[0] > self.candles_df.index[-1]:
                 self.candles_df = pd.concat([self.candles_df, new_candle])
+                is_new_candle = True
             else:
                 self.candles_df.loc[new_candle.index[0]] = new_candle.iloc[0]
+                is_new_candle = False
         
         # Mantenemos solo las últimas 'self.bars' velas para que el gráfico no se sature
         if len(self.candles_df) > self.bars:
@@ -244,6 +249,8 @@ class BodyGraphic(ttk.Frame):
         # Re-renderizar el gráfico con los datos actualizados
         # No reseteamos el zoom aquí, la propia función render se encarga
         self.render_chart_data(self.candles_df)
+        
+        return is_new_candle
 
     def update_realtime_candle(self, candle_data):
         """Callback para ser llamado desde la simulación. Pone los datos en la cola de la app."""

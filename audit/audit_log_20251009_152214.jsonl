@@ -1,0 +1,7 @@
+{"timestamp": "2025-10-09T15:22:29.783519", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-09T15:22:29.788769", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66862.18"}}
+{"timestamp": "2025-10-09T15:22:29.791126", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-09T15:23:02.087925", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:23:00 | Balance: $66862.18"}}
+{"timestamp": "2025-10-09T15:23:02.088582", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:23:00 | Balance: $66862.18"}}
+{"timestamp": "2025-10-09T15:23:02.196411", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.1, "open_price": 1.16062, "stop_loss": 1.16092, "take_profit": 1.16002, "comment": "key-13-Bot-Simulation"}}
+{"timestamp": "2025-10-09T15:23:02.251807", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.05, "open_price": 1.16062, "stop_loss": 1.16076, "take_profit": 1.16045, "comment": "key-3-Bot-Simulation"}}

@@ -30,6 +30,11 @@ def create_header(app):
     options_menu.add_separator()
     options_menu.add_command(label="Configuración", command=app.action_handler.open_config_modal)
     options_menu.add_separator()
+    options_menu.add_checkbutton(label="Mostrar Gráfica RSI", variable=app.show_rsi_var, command=app.action_handler.toggle_rsi_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica ATR", variable=app.show_atr_var, command=app.action_handler.toggle_atr_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica MACD", variable=app.show_macd_var, command=app.action_handler.toggle_macd_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica Momentum", variable=app.show_momentum_var, command=app.action_handler.toggle_momentum_chart)
+    options_menu.add_separator()
     options_menu.add_command(label="Limpiar log", command=app.action_handler.clear_log)
 
     # --- Botón de Simulación (Columna 2) ---
@@ -39,6 +44,7 @@ def create_header(app):
     app.simulation_btn["menu"] = simulation_menu
     app.simulation_menu = simulation_menu
     simulation_menu.add_command(label="Iniciar simulación", command=app._iniciar_simulacion_action)
+    simulation_menu.add_command(label="Abrir operación manual", command=app._abrir_operacion_manual, state="disabled")
     simulation_menu.add_command(label="Ver operaciones abiertas", command=app._ver_operaciones_abiertas_action, state="disabled")
     simulation_menu.add_command(label="Cerrar operaciones", command=app._cerrar_operaciones_action, state="disabled")
     simulation_menu.add_command(label="Detener simulación", command=app._detener_simulacion_action, state="disabled")
