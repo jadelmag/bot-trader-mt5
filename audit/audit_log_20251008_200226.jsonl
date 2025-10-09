@@ -1,0 +1,47 @@
+{"timestamp": "2025-10-08T20:03:06.259298", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-08T20:03:06.264228", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:03:06.266298", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-08T20:04:03.797986", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:04:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:04:03.798453", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:04:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:04:03.810088", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:04:03.814379", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:05:01.356674", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:05:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:05:01.357023", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:05:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:05:01.368163", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:05:01.372172", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:06:00.872186", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:06:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:06:00.872649", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:06:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:06:00.885194", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:06:00.888984", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:07:00.372293", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:07:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:07:00.372619", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:07:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:07:00.383171", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:07:00.386933", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:07:59.865774", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:08:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:07:59.866091", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:08:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:07:59.877401", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:07:59.881972", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:09:00.400656", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:09:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:09:00.401018", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:09:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:09:00.411786", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:09:00.415664", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:10:00.907366", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:10:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:10:00.907722", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:10:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:10:00.918865", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:10:00.922726", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:11:00.398131", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:11:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:11:00.398478", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:11:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:11:00.409064", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:11:00.412732", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:11:59.869693", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:12:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:11:59.870005", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:12:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:11:59.882266", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:11:59.886951", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:13:01.380414", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:13:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:13:01.380771", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:13:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:13:01.391943", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:13:01.395667", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:13:59.860399", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:14:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:13:59.860802", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:14:00 | Balance: $66871.41"}}
+{"timestamp": "2025-10-08T20:13:59.871808", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}
+{"timestamp": "2025-10-08T20:13:59.876374", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 66871.41"}}

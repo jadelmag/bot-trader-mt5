@@ -1,93 +1,93 @@
 {
     "slots": {
-        "forex": 10,
-        "candle": 10,
+        "forex": 2,
+        "candle": 2,
         "custom": 0
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_doji": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_doji_reversal": {
             "selected": true,
             "strategy_mode": "Custom"
         },
         "is_dragonfly_doji": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_engulfing": {
             "selected": true,
             "strategy_mode": "Custom"
         },
         "is_evening_star": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_falling_three_methods": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_gravestone_doji": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_hammer": {
             "selected": true,
             "strategy_mode": "Custom"
         },
         "is_hanging_man": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_harami": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_inverted_hammer": {
             "selected": true,
             "strategy_mode": "Custom"
         },
         "is_long_legged_doji": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_marubozu": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_morning_star": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_piercing_line": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_rising_three_methods": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_shooting_star": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_three_black_crows": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_three_inside_up_down": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_three_outside_up_down": {
-            "selected": true,
-            "strategy_mode": "Custom"
+            "selected": false,
+            "strategy_mode": "Default"
         },
         "is_three_white_soldiers": {
             "selected": true,
@@ -96,67 +96,67 @@
     },
     "forex_strategies": {
         "strategy_bollinger_bands_breakout": {
-            "selected": true,
-            "percent_ratio": 0.8,
+            "selected": false,
+            "percent_ratio": 0.55,
+            "rr_ratio": 1.2,
+            "stop_loss_pips": 14.0
+        },
+        "strategy_candle_pattern_reversal": {
+            "selected": false,
+            "percent_ratio": 0.45,
             "rr_ratio": 1.3,
             "stop_loss_pips": 12.0
         },
-        "strategy_candle_pattern_reversal": {
-            "selected": true,
-            "percent_ratio": 0.8,
-            "rr_ratio": 1.5,
-            "stop_loss_pips": 10.0
-        },
         "strategy_chart_pattern_breakout": {
-            "selected": true,
-            "percent_ratio": 0.7,
-            "rr_ratio": 1.6,
-            "stop_loss_pips": 12.0
+            "selected": false,
+            "percent_ratio": 0.5,
+            "rr_ratio": 1.4,
+            "stop_loss_pips": 15.0
         },
         "strategy_fibonacci_reversal": {
-            "selected": true,
-            "percent_ratio": 0.8,
-            "rr_ratio": 1.6,
-            "stop_loss_pips": 10.0
+            "selected": false,
+            "percent_ratio": 0.6,
+            "rr_ratio": 1.5,
+            "stop_loss_pips": 16.0
         },
         "strategy_hybrid_optimizer": {
-            "selected": true,
-            "percent_ratio": 0.9,
-            "rr_ratio": 1.8,
-            "stop_loss_pips": 12.0
+            "selected": false,
+            "percent_ratio": 0.65,
+            "rr_ratio": 1.3,
+            "stop_loss_pips": 13.0
         },
         "strategy_ichimoku_kinko_hyo": {
-            "selected": true,
-            "percent_ratio": 0.6,
-            "rr_ratio": 1.8,
-            "stop_loss_pips": 15.0
+            "selected": false,
+            "percent_ratio": 0.55,
+            "rr_ratio": 1.6,
+            "stop_loss_pips": 18.0
         },
         "strategy_ma_crossover": {
             "selected": true,
-            "percent_ratio": 0.7,
-            "rr_ratio": 1.4,
-            "stop_loss_pips": 10.0
+            "percent_ratio": 0.5,
+            "rr_ratio": 1.2,
+            "stop_loss_pips": 12.0
         },
         "strategy_momentum_rsi_macd": {
-            "selected": true,
-            "percent_ratio": 0.9,
-            "rr_ratio": 1.6,
-            "stop_loss_pips": 10.0
+            "selected": false,
+            "percent_ratio": 0.6,
+            "rr_ratio": 1.4,
+            "stop_loss_pips": 11.0
         },
         "strategy_price_action_sr": {
             "selected": true,
-            "percent_ratio": 1.0,
-            "rr_ratio": 2.0,
-            "stop_loss_pips": 8.0
+            "percent_ratio": 0.7,
+            "rr_ratio": 1.5,
+            "stop_loss_pips": 10.0
         },
         "strategy_scalping_stochrsi_ema": {
             "selected": true,
-            "percent_ratio": 1.0,
-            "rr_ratio": 1.4,
-            "stop_loss_pips": 8.0
+            "percent_ratio": 0.45,
+            "rr_ratio": 1.1,
+            "stop_loss_pips": 9.0
         },
         "strategy_swing_trading_multi_indicator": {
-            "selected": true,
+            "selected": false,
             "percent_ratio": 0.8,
             "rr_ratio": 2.2,
             "stop_loss_pips": 20.0

@@ -23,6 +23,7 @@ try:
     from loggin.audit_log import AuditLogger # Importar la clase
     from gui.body_graphic import BodyGraphic
     from gui.body_logger import BodyLogger
+    from gui.body_rsi import BodyRSI
     from backtesting.detect_candles import CandleDetector
     from backtesting.apply_strategies import StrategyAnalyzer
     from backtesting.backtesting import PerfectBacktester
@@ -171,6 +172,9 @@ class App:
                     self._handle_login_failure(data)
                 elif message_type == "chart_data_ready":
                     self.graphic.render_chart_data(data)
+                     # Actualizar RSI con los mismos datos
+                    if hasattr(self, 'rsi_chart'):
+                        self.rsi_chart.update_rsi_data(data)
                     # Habilitar solo el botón de simulación una vez que el gráfico está listo
                     try:
                         self.simulation_btn.state(["!disabled"])
@@ -184,7 +188,10 @@ class App:
                     self._display_strategy_summary(data)
                 elif message_type == "realtime_candle_update":
                     if hasattr(self, 'graphic') and self.simulation_running:
-                        self.graphic.update_simulation_chart(data)
+                        is_new_candle = self.graphic.update_simulation_chart(data)
+                        # Actualizar RSI solo cuando se cierra una nueva vela
+                        if is_new_candle and hasattr(self, 'rsi_chart') and hasattr(self.graphic, 'candles_df'):
+                            self.rsi_chart.update_rsi_data(self.graphic.candles_df)
                 elif message_type == "trade_closed":
                     self._handle_trade_closed(data)
                 # Añade aquí más tipos de mensajes según sea necesario
