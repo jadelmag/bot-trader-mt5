@@ -855,18 +855,6 @@ class Simulation:
         
         return 'neutral', None
 
-    def _get_active_forex_params(self):
-        """Encuentra la primera estrategia de forex activa y devuelve sus parámetros."""
-        forex_strategies = self.strategies_config.get('forex_strategies', {})
-        for name, config in forex_strategies.items():
-            if config.get('selected'):
-                return {
-                    'percent_ratio': config.get('percent_ratio', 1.0),
-                    'rr_ratio': config.get('rr_ratio', 2.0),
-                    'stop_loss_pips': config.get('stop_loss_pips', 20.0)
-                }
-        return {'percent_ratio': 1.0, 'rr_ratio': 2.0, 'stop_loss_pips': 20.0}
-
     def _load_candle_pattern_config(self, pattern_name):
         """Carga la configuración JSON para un patrón de vela específico."""
         config_filename = f"{pattern_name.replace('is_', '')}.json"
