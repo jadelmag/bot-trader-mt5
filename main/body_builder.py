@@ -2,6 +2,7 @@ from tkinter import ttk
 from gui.body_graphic import BodyGraphic
 from gui.body_logger import BodyLogger
 from gui.body_rsi import BodyRSI
+from gui.body_atr import BodyATR
 
 def create_body(app):
     """Crea y configura el frame del cuerpo principal y sus componentes."""
@@ -9,10 +10,11 @@ def create_body(app):
     container.grid(row=1, column=0, sticky="nsew")
     container.columnconfigure(0, weight=1)
     
-    # Split rows: top chart (3x), middle RSI (1x), bottom logger (1x)
+    # Split rows: top chart (3x), RSI (1x), ATR (1x), logger (1x)
     container.rowconfigure(0, weight=3)  # BodyGraphic
     container.rowconfigure(1, weight=1)  # BodyRSI
-    container.rowconfigure(2, weight=1)  # BodyLogger
+    container.rowconfigure(2, weight=1)  # BodyATR
+    container.rowconfigure(3, weight=1)  # BodyLogger
 
     # Bottom: Logger
     if BodyLogger is None:
@@ -20,7 +22,7 @@ def create_body(app):
         ttk.Label(app.logger, text="Logger no disponible").pack(expand=True, fill="both")
     else:
         app.logger = BodyLogger(container)
-    app.logger.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
+    app.logger.grid(row=3, column=0, sticky="nsew", pady=(10, 0))
 
     # Middle: RSI Chart
     if BodyRSI is None:
@@ -37,6 +39,22 @@ def create_body(app):
             debug_mode_var=app.debug_mode_var
         )
     app.rsi_chart.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+    
+    # Middle 2: ATR Chart
+    if BodyATR is None:
+        app.atr_chart = ttk.Frame(container)
+        ttk.Label(app.atr_chart, text="ATR no disponible").pack(expand=True, fill="both")
+    else:
+        app.atr_chart = BodyATR(
+            container,
+            app=app,
+            symbol=app.symbol_var.get(),
+            timeframe=app.timeframe_var.get(),
+            bars=300,
+            logger=app.logger,
+            debug_mode_var=app.debug_mode_var
+        )
+    app.atr_chart.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
 
     # Top: Graphic placeholder (shown until Start MT5 is pressed)
     app.graphic_placeholder = ttk.Frame(container)
