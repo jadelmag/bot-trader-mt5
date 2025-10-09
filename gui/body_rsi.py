@@ -11,6 +11,10 @@ try:
 except Exception:
     mt5 = None
 
+try:
+    from actions.actions import ChartActions
+except Exception:
+    ChartActions = None
 
 class RSITooltipHandler:
     """Maneja el tooltip para el indicador RSI"""
@@ -153,6 +157,7 @@ class BodyRSI(ttk.Frame):
         self.rsi_data = None
         self.timestamps = None
         self.rsi_line = None
+        self.is_zoomed = False  # Para rastrear si el usuario ha hecho zoom/pan
         
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -172,6 +177,9 @@ class BodyRSI(ttk.Frame):
         
         # Tooltip handler
         self.tooltip_handler = RSITooltipHandler(self.ax, self.canvas)
+
+        # Chart actions (zoom/pan)
+        self.actions = ChartActions(self.canvas, self.ax, on_zoom_pan=self._set_zoomed_flag) if ChartActions else None
         
         self._draw_placeholder("Cargando RSI...")
     
@@ -181,6 +189,13 @@ class BodyRSI(ttk.Frame):
             self.tooltip_handler.disconnect()
         return super().destroy()
     
+    def _set_zoomed_flag(self, is_reset=False):
+        """Callback que se activa con el zoom/pan para mantener el estado."""
+        if is_reset:
+            self.is_zoomed = False
+        else:
+            self.is_zoomed = True
+
     def update_rsi_data(self, candles_df):
         """Actualiza el gráfico RSI con nuevos datos de velas"""
         if candles_df is None or candles_df.empty:
@@ -208,6 +223,12 @@ class BodyRSI(ttk.Frame):
         """Renderiza el gráfico RSI"""
         if self.rsi_data is None or len(self.rsi_data) == 0:
             return
+         
+        # Guardar estado del zoom
+        xlim, ylim = (None, None)
+        if self.is_zoomed:
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
         
         self.ax.clear()
         self.fig.patch.set_facecolor('black')
@@ -277,6 +298,16 @@ class BodyRSI(ttk.Frame):
         
         self.fig.tight_layout()
         self.canvas.draw()
+   
+        # Restaurar estado del zoom
+        if xlim and ylim:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+            self.canvas.draw_idle()
+        
+        if self.actions:
+            if not self.is_zoomed:
+                self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
     
     def _draw_placeholder(self, text):
         """Dibuja un placeholder cuando no hay datos"""

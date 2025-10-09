@@ -11,6 +11,10 @@ try:
 except Exception:
     mt5 = None
 
+try:
+    from actions.actions import ChartActions
+except Exception:
+    ChartActions = None
 
 class ATRTooltipHandler:
     """Maneja el tooltip para el indicador ATR"""
@@ -153,6 +157,7 @@ class BodyATR(ttk.Frame):
         self.atr_data = None
         self.timestamps = None
         self.atr_line = None
+        self.is_zoomed = False  # Para rastrear si el usuario ha hecho zoom/pan
         
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -172,6 +177,9 @@ class BodyATR(ttk.Frame):
         
         # Tooltip handler
         self.tooltip_handler = ATRTooltipHandler(self.ax, self.canvas)
+                
+        # Chart actions (zoom/pan)
+        self.actions = ChartActions(self.canvas, self.ax, on_zoom_pan=self._set_zoomed_flag) if ChartActions else None
         
         self._draw_placeholder("Cargando ATR...")
     
@@ -180,7 +188,14 @@ class BodyATR(ttk.Frame):
         if self.tooltip_handler:
             self.tooltip_handler.disconnect()
         return super().destroy()
-    
+
+    def _set_zoomed_flag(self, is_reset=False):
+        """Callback que se activa con el zoom/pan para mantener el estado."""
+        if is_reset:
+            self.is_zoomed = False
+        else:
+            self.is_zoomed = True
+
     def update_atr_data(self, candles_df):
         """Actualiza el gráfico ATR con nuevos datos de velas"""
         if candles_df is None or candles_df.empty:
@@ -208,7 +223,13 @@ class BodyATR(ttk.Frame):
         """Renderiza el gráfico ATR"""
         if self.atr_data is None or len(self.atr_data) == 0:
             return
-        
+           
+        # Guardar estado del zoom
+        xlim, ylim = (None, None)
+        if self.is_zoomed:
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+
         self.ax.clear()
         self.fig.patch.set_facecolor('black')
         self.ax.set_facecolor('black')
@@ -256,6 +277,16 @@ class BodyATR(ttk.Frame):
         
         self.fig.tight_layout()
         self.canvas.draw()
+
+        # Restaurar estado del zoom
+        if xlim and ylim:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+            self.canvas.draw_idle()
+        
+        if self.actions:
+            if not self.is_zoomed:
+                self.actions.set_initial_view(self.ax.get_xlim(), self.ax.get_ylim())
     
     def _draw_placeholder(self, text):
         """Dibuja un placeholder cuando no hay datos"""
