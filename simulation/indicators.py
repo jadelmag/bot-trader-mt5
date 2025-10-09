@@ -81,11 +81,20 @@ class IndicatorCalculator:
             
             if self.debug_mode:
                 last_row = candles_df.iloc[-1]
+                
+                # Formatear valores con manejo de NaN
+                rsi_val = last_row.get('RSI', 'N/A')
+                rsi_str = f"{rsi_val:.2f}" if not pd.isna(rsi_val) else 'N/A'
+                
+                atr_val = last_row.get('ATR', 'N/A')
+                atr_str = f"{atr_val:.5f}" if not pd.isna(atr_val) else 'N/A'
+                
+                macd_val = last_row.get('MACD_line', 'N/A')
+                macd_str = f"{macd_val:.5f}" if not pd.isna(macd_val) else 'N/A'
+                
                 self._log(
                     f"[INDICATORS-DEBUG] Indicadores calculados - "
-                    f"RSI: {last_row.get('RSI', 'N/A'):.2f if not pd.isna(last_row.get('RSI')) else 'N/A'}, "
-                    f"ATR: {last_row.get('ATR', 'N/A'):.5f if not pd.isna(last_row.get('ATR')) else 'N/A'}, "
-                    f"MACD: {last_row.get('MACD_line', 'N/A'):.5f if not pd.isna(last_row.get('MACD_line')) else 'N/A'}"
+                    f"RSI: {rsi_str}, ATR: {atr_str}, MACD: {macd_str}"
                 )
                 
         except Exception as e:
@@ -100,11 +109,29 @@ class IndicatorCalculator:
         """Calcula Bollinger Bands con manejo robusto de errores."""
         bb = ta.bbands(df['Close'], length=20, std=2)
         if bb is not None and not bb.empty:
-            # Verificar que las columnas existan antes de acceder
-            if 'BBU_20_2.0' in bb.columns:
-                candles_df['BB_upper'] = bb['BBU_20_2.0']
-                candles_df['BB_middle'] = bb['BBM_20_2.0']
-                candles_df['BB_lower'] = bb['BBL_20_2.0']
+            # Buscar columnas con diferentes formatos posibles
+            # Formato antiguo: 'BBU_20_2.0'
+            # Formato nuevo: 'BBU_20_2.0_2.0'
+            
+            upper_col = None
+            middle_col = None
+            lower_col = None
+            
+            for col in bb.columns:
+                if col.startswith('BBU_'):
+                    upper_col = col
+                elif col.startswith('BBM_'):
+                    middle_col = col
+                elif col.startswith('BBL_'):
+                    lower_col = col
+            
+            if upper_col and middle_col and lower_col:
+                candles_df['BB_upper'] = bb[upper_col]
+                candles_df['BB_middle'] = bb[middle_col]
+                candles_df['BB_lower'] = bb[lower_col]
+                
+                if self.debug_mode:
+                    self._log(f"[INDICATORS-DEBUG] Bollinger Bands calculadas usando columnas: {upper_col}, {middle_col}, {lower_col}")
             else:
                 # Logging de debug para identificar columnas disponibles
                 if self.debug_mode:
@@ -120,7 +147,7 @@ class IndicatorCalculator:
             candles_df['BB_lower'] = pd.Series([float('nan')] * len(candles_df))
         
         return candles_df
-    
+
     def _create_aliases(self, candles_df):
         """Crea aliases en minúsculas para compatibilidad con forex_list.py y candle_list.py."""
         candles_df['rsi'] = candles_df['RSI']

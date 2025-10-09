@@ -25,6 +25,38 @@ class ActionHandler:
         self.app = app
         self.create_required_dirs()
 
+    def toggle_rsi_chart(self):
+        """Muestra u oculta la gráfica RSI."""
+        if self.app.show_rsi_var.get():
+            self.app.rsi_chart.grid()
+        else:
+            self.app.rsi_chart.grid_remove()
+        self.app._adjust_window_height()
+
+    def toggle_atr_chart(self):
+        """Muestra u oculta la gráfica ATR."""
+        if self.app.show_atr_var.get():
+            self.app.atr_chart.grid()
+        else:
+            self.app.atr_chart.grid_remove()
+        self.app._adjust_window_height()
+
+    def toggle_macd_chart(self):
+        """Muestra u oculta la gráfica MACD."""
+        if self.app.show_macd_var.get():
+            self.app.macd_chart.grid()
+        else:
+            self.app.macd_chart.grid_remove()
+        self.app._adjust_window_height()
+
+    def toggle_momentum_chart(self):
+        """Muestra u oculta la gráfica Momentum."""
+        if self.app.show_momentum_var.get():
+            self.app.momentum_chart.grid()
+        else:
+            self.app.momentum_chart.grid_remove()
+        self.app._adjust_window_height()
+
     def create_required_dirs(self):
         """Crea los directorios necesarios para la aplicación si no existen."""
         dirs_to_create = ["email", "audit", "simulation_logs"]

@@ -30,6 +30,11 @@ def create_header(app):
     options_menu.add_separator()
     options_menu.add_command(label="Configuración", command=app.action_handler.open_config_modal)
     options_menu.add_separator()
+    options_menu.add_checkbutton(label="Mostrar Gráfica RSI", variable=app.show_rsi_var, command=app.action_handler.toggle_rsi_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica ATR", variable=app.show_atr_var, command=app.action_handler.toggle_atr_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica MACD", variable=app.show_macd_var, command=app.action_handler.toggle_macd_chart)
+    options_menu.add_checkbutton(label="Mostrar Gráfica Momentum", variable=app.show_momentum_var, command=app.action_handler.toggle_momentum_chart)
+    options_menu.add_separator()
     options_menu.add_command(label="Limpiar log", command=app.action_handler.clear_log)
 
     # --- Botón de Simulación (Columna 2) ---

@@ -90,6 +90,12 @@ class App:
         # State for aggressive mode
         self.modo_agresivo_activo = tk.BooleanVar(value=False)
 
+        # State for chart visibility (all visible by default)
+        self.show_rsi_var = tk.BooleanVar(value=True)
+        self.show_atr_var = tk.BooleanVar(value=True)
+        self.show_macd_var = tk.BooleanVar(value=True)
+        self.show_momentum_var = tk.BooleanVar(value=True)
+
         # State for chart selectors (defaults)
         self.symbol_var = tk.StringVar(value="EURUSD")
         self.timeframe_var = tk.StringVar(value="M5")
@@ -147,6 +153,28 @@ class App:
         x = int((screen_w / 2) - (w / 2))
         y = int((screen_h / 2) - (h / 2))
         self.root.geometry(f"{w}x{h}+{x}+{y}")
+
+    def _adjust_window_height(self):
+        """Ajusta dinámicamente la altura de la ventana según las gráficas visibles."""
+        base_height = 400  # Altura base (header + gráfico principal + logger)
+        chart_height = 150  # Altura aproximada de cada gráfica indicadora
+        
+        visible_charts = 0
+        if self.show_rsi_var.get():
+            visible_charts += 1
+        if self.show_atr_var.get():
+            visible_charts += 1
+        if self.show_macd_var.get():
+            visible_charts += 1
+        if self.show_momentum_var.get():
+            visible_charts += 1
+        
+        total_height = base_height + (visible_charts * chart_height)
+        total_height = max(800, min(total_height, 1500))  # Entre 800 y 1500 píxeles
+        
+        current_geometry = self.root.geometry()
+        width = current_geometry.split('x')[0]
+        self.root.geometry(f"{width}x{total_height}")
 
     def _build_header(self):
         self.header = create_header(self)
