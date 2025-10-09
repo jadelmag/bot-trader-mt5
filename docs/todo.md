@@ -37,6 +37,8 @@ En las vistas RSI, ATR y MACD quiero poder hacer las siguientes acciones sobre l
 - pan: mientras se mantiene el boton derecho y se mueve el raton
 - volver al estado inicial: haciendo click con el boton central del raton 2 veces 
 
+---------------------------
+
 
 He añadido las siguientes graficas: 
 - body_atr.py
@@ -51,3 +53,9 @@ Quiero que actualices el fichero simulation.py para que no trabaje con datos cre
 3. Mejorar la predicción de velas y de estrategias forex
 
 Es decir quiero que trabajes con datos reales de atr, macd, rsi y momentum y elimines los datos creados dinamicamente para obtener esos valores.
+
+
+
+
+
+

@@ -10,6 +10,12 @@ from operations.close_operations import close_operation_robust
 from metatrader.metatrader import obtener_mensaje_error
 from simulation.key_list import get_name_for_id
 
+try:
+    import pandas_ta as ta
+except ImportError:
+    ta = None
+    print("pandas_ta no está instalado. Los indicadores no se calcularán.")
+
 # --- MT5 Integration ---
 try:
     import MetaTrader5 as mt5
@@ -87,9 +93,6 @@ class Simulation:
         # --- Candle and Market Analysis Data ---
         self.candles_df = pd.DataFrame(columns=['time', 'open', 'high', 'low', 'close'])
         self.current_candle = None
-        self.ma_fast = None
-        self.ma_slow = None
-        self.atr = None # Añadir para ATR
 
         self.tracked_tickets = set()  # Set para trackear tickets abiertos
         self.candle_pattern_configs = {}  # Diccionario para guardar configs de patrones activos
@@ -423,26 +426,177 @@ class Simulation:
         self._check_sl_tp_on_tick(price)
 
     def _calculate_indicators(self):
-        """Calcula los indicadores técnicos necesarios para las estrategias."""
-        if self.candles_df.empty:
+        """
+        Calcula TODOS los indicadores técnicos usando pandas_ta (igual que las gráficas).
+        Añade columnas al DataFrame: RSI, ATR, MACD, Momentum, EMAs, Bollinger Bands.
+        """
+        if self.candles_df.empty or len(self.candles_df) < 50:
+            if self.debug_mode:
+                self._log("[SIM-DEBUG] No hay suficientes velas para calcular indicadores (mínimo 50)")
             return
-
-        # --- ATR (Average True Range) ---
-        # Se necesita para el cálculo dinámico de SL/TP en estrategias de velas
+        
+        if ta is None:
+            self._log("[SIM-ERROR] pandas_ta no está disponible. No se pueden calcular indicadores.", 'error')
+            return
+        
         try:
-            high_low = self.candles_df['high'] - self.candles_df['low']
-            high_close = (self.candles_df['high'] - self.candles_df['close'].shift()).abs()
-            low_close = (self.candles_df['low'] - self.candles_df['close'].shift()).abs()
-            tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-            # Usamos una media móvil simple para el ATR para simplicidad en tiempo real
-            atr_value = tr.rolling(window=14).mean().iloc[-1]
-            self.atr = atr_value if pd.notna(atr_value) else None
+            # Crear copia con columnas en mayúsculas (requerido por pandas_ta)
+            df = self.candles_df.copy()
+            df.columns = [col.capitalize() if col != 'time' else col for col in df.columns]
+            
+            # --- RSI (14) ---
+            rsi = ta.rsi(df['Close'], length=14)
+            self.candles_df['RSI'] = rsi
+            
+            # --- ATR (14) ---
+            atr = ta.atr(df['High'], df['Low'], df['Close'], length=14)
+            self.candles_df['ATR'] = atr
+            
+            # --- MACD (12, 26, 9) ---
+            macd_result = ta.macd(df['Close'], fast=12, slow=26, signal=9)
+            if macd_result is not None and not macd_result.empty:
+                self.candles_df['MACD_line'] = macd_result['MACD_12_26_9']
+                self.candles_df['MACD_signal'] = macd_result['MACDs_12_26_9']
+                self.candles_df['MACD_histogram'] = macd_result['MACDh_12_26_9']
+            
+            # --- Momentum (10) ---
+            momentum = ta.mom(df['Close'], length=10)
+            self.candles_df['Momentum'] = momentum
+            
+            # --- EMAs para tendencia ---
+            self.candles_df['EMA_50'] = ta.ema(df['Close'], length=50)
+            self.candles_df['EMA_200'] = ta.ema(df['Close'], length=200)
+            
+            # --- Bollinger Bands (20, 2) ---
+            bb = ta.bbands(df['Close'], length=20, std=2)
+            if bb is not None and not bb.empty:
+                self.candles_df['BB_upper'] = bb['BBU_20_2.0']
+                self.candles_df['BB_middle'] = bb['BBM_20_2.0']
+                self.candles_df['BB_lower'] = bb['BBL_20_2.0']
+            
+            # --- Crear aliases para compatibilidad con forex_list.py y candle_list.py ---
+            # Estos archivos esperan nombres en minúsculas
+            self.candles_df['rsi'] = self.candles_df['RSI']
+            self.candles_df['atr'] = self.candles_df['ATR']
+            self.candles_df['ema_50'] = self.candles_df['EMA_50']
+            self.candles_df['ema_200'] = self.candles_df['EMA_200']
+            self.candles_df['macd_line'] = self.candles_df['MACD_line']
+            self.candles_df['macd_signal'] = self.candles_df['MACD_signal']
+            self.candles_df['macd_histogram'] = self.candles_df['MACD_histogram']
+            self.candles_df['momentum'] = self.candles_df['Momentum']
+            self.candles_df['bb_upper'] = self.candles_df['BB_upper']
+            self.candles_df['bb_middle'] = self.candles_df['BB_middle']
+            self.candles_df['bb_lower'] = self.candles_df['BB_lower']
+                        
+            # --- EMAs adicionales para strategy_ma_crossover ---
+            self.candles_df['ema_fast'] = ta.ema(df['Close'], length=10)
+            self.candles_df['ema_slow'] = ta.ema(df['Close'], length=50)
+            
             if self.debug_mode:
-                self._log(f"[SIM-DEBUG] ATR calculado: {self.atr}") # <-- Línea corregida
+                last_row = self.candles_df.iloc[-1]
+                self._log(
+                    f"[SIM-DEBUG] Indicadores calculados - "
+                    f"RSI: {last_row.get('RSI', 'N/A'):.2f if not pd.isna(last_row.get('RSI')) else 'N/A'}, "
+                    f"ATR: {last_row.get('ATR', 'N/A'):.5f if not pd.isna(last_row.get('ATR')) else 'N/A'}, "
+                    f"MACD: {last_row.get('MACD_line', 'N/A'):.5f if not pd.isna(last_row.get('MACD_line')) else 'N/A'}"
+                )
+                
         except Exception as e:
-            self.atr = None # Resetear si hay un error
+            self._log(f"[SIM-ERROR] Error al calcular indicadores con pandas_ta: {e}", 'error')
+            import traceback
             if self.debug_mode:
-                self._log(f"[SIM-DEBUG] No se pudo calcular el ATR: {e}", 'warn')
+                self._log(f"[SIM-DEBUG] Traceback: {traceback.format_exc()}", 'error')
+
+    def _confirm_signal_with_indicators(self, signal_type, strategy_name=None):
+        """
+        Confirma señales usando múltiples indicadores para reducir false signals en M1.
+        Requiere al menos 3 de 4 confirmaciones para aprobar una señal.
+        
+        Args:
+            signal_type (str): 'long' o 'short'
+            strategy_name (str, optional): Nombre de la estrategia para logs
+            
+        Returns:
+            bool: True si la señal está confirmada, False si no
+        """
+        if self.candles_df.empty or len(self.candles_df) < 50:
+            return False
+        
+        last_row = self.candles_df.iloc[-1]
+        
+        # Obtener indicadores
+        rsi = last_row.get('RSI')
+        macd_line = last_row.get('MACD_line')
+        macd_signal = last_row.get('MACD_signal')
+        momentum = last_row.get('Momentum')
+        ema_50 = last_row.get('EMA_50')
+        close = last_row['close']
+        
+        # Verificar que tengamos datos válidos
+        if pd.isna(rsi) or pd.isna(macd_line) or pd.isna(ema_50):
+            if self.debug_mode:
+                self._log(f"[SIM-DEBUG] Indicadores no disponibles para confirmación")
+            return False
+        
+        # CONFIRMACIÓN PARA LONG
+        if signal_type == 'long':
+            # 1. Tendencia alcista (precio sobre EMA 50)
+            trend_ok = close > ema_50
+            
+            # 2. RSI no sobrecomprado (< 70) y saliendo de sobreventa
+            rsi_ok = 30 < rsi < 70
+            
+            # 3. MACD alcista
+            macd_ok = macd_line > macd_signal
+            
+            # 4. Momentum positivo
+            momentum_ok = momentum > 0 if not pd.isna(momentum) else True
+            
+            # Contar confirmaciones
+            confirmations = [trend_ok, rsi_ok, macd_ok, momentum_ok]
+            confirmed_count = sum(confirmations)
+            
+            if self.debug_mode:
+                self._log(
+                    f"[SIM-DEBUG] Confirmación LONG para '{strategy_name}': "
+                    f"Tendencia={trend_ok}, RSI={rsi_ok}({rsi:.1f}), "
+                    f"MACD={macd_ok}, Momentum={momentum_ok} | "
+                    f"Total: {confirmed_count}/4"
+                )
+            
+            # Requiere al menos 3 de 4 confirmaciones
+            return confirmed_count >= 3
+        
+        # CONFIRMACIÓN PARA SHORT
+        elif signal_type == 'short':
+            # 1. Tendencia bajista (precio bajo EMA 50)
+            trend_ok = close < ema_50
+            
+            # 2. RSI no sobrevendido (> 30) y saliendo de sobrecompra
+            rsi_ok = 30 < rsi < 70
+            
+            # 3. MACD bajista
+            macd_ok = macd_line < macd_signal
+            
+            # 4. Momentum negativo
+            momentum_ok = momentum < 0 if not pd.isna(momentum) else True
+            
+            # Contar confirmaciones
+            confirmations = [trend_ok, rsi_ok, macd_ok, momentum_ok]
+            confirmed_count = sum(confirmations)
+            
+            if self.debug_mode:
+                self._log(
+                    f"[SIM-DEBUG] Confirmación SHORT para '{strategy_name}': "
+                    f"Tendencia={trend_ok}, RSI={rsi_ok}({rsi:.1f}), "
+                    f"MACD={macd_ok}, Momentum={momentum_ok} | "
+                    f"Total: {confirmed_count}/4"
+                )
+            
+            # Requiere al menos 3 de 4 confirmaciones
+            return confirmed_count >= 3
+        
+        return False
 
     def _analyze_market_and_execute_strategy(self):
         """
@@ -486,22 +640,21 @@ class Simulation:
                 self._log(f"[SIM-DEBUG] Última vela - O:{last_candle['open']} H:{last_candle['high']} L:{last_candle['low']} C:{last_candle['close']}", 'debug')
 
         # --- 2. Obtener señales de mercado ---
-        ma_signal = self._get_ma_signal(analysis_df)
         candle_signal, pattern_name = self._get_candle_signal(analysis_df)
 
         # --- 3. Lógica de Cierre de Operaciones ---
-        self._check_for_closing_signals(ma_signal, candle_signal)
+        self._check_for_closing_signals(candle_signal)
 
         # --- 3.5. Aplicar Trailing Stop ---
         self._apply_trailing_stop()
 
         # --- 4. Lógica de Apertura de Operaciones (Forex/Candle) ---
-        self._execute_forex_strategies(ma_signal, candle_signal)
+        self._execute_forex_strategies(candle_signal)
 
         # --- 5. Lógica de Apertura de Estrategias Personalizadas ---
         self._execute_custom_strategies()
 
-    def _execute_forex_strategies(self, ma_signal, candle_signal):
+    def _execute_forex_strategies(self, candle_signal):
         """Maneja la lógica de apertura para estrategias Forex y de Velas estándar."""
         open_positions = mt5.positions_get(symbol=self.symbol)
         if open_positions is None:
@@ -526,7 +679,13 @@ class Simulation:
         if selected_candle_patterns:
             candle_signal, pattern_name = self._get_candle_signal(self.candles_df)
             if candle_signal in ['long', 'short'] and 'candle' not in self.trade_types_in_current_candle:
-                self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Intentando abrir operación.")
+                self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Verificando con indicadores...")
+                
+                # ✅ CONFIRMACIÓN CON INDICADORES
+                if not self._confirm_signal_with_indicators(candle_signal, pattern_name):
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Señal de VELA '{pattern_name}' RECHAZADA por filtros de indicadores")
+                    return  # Salir sin abrir operación
                 
                 # Obtener el strategy_mode del patrón desde strategies.json
                 pattern_strategy_config = candle_strategies.get(pattern_name, {})
@@ -555,10 +714,10 @@ class Simulation:
                 risk_multiplier = pattern_config.get('percent_ratio', 1.0)
 
                 if sl_pips > 0:
-                    volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
+                    volume = self._calculate_volume(risk_multiplier=risk_multiplier)
                     if volume > 0:
                         # Abrimos operación de vela
-                        self._log(f"[SIM] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Abriendo operación.")
+                        self._log(f"[SIM] ✅ Señal de VELA '{pattern_name}' CONFIRMADA. Abriendo operación {candle_signal.upper()}.")
                         self.open_trade(
                             trade_type=candle_signal,
                             symbol=self.symbol,
@@ -590,17 +749,25 @@ class Simulation:
             trade_type = strategy_func(df_copy)
 
             if trade_type in ['long', 'short'] and 'forex' not in self.trade_types_in_current_candle:
+                self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Verificando con indicadores...")
+                
+                # ✅ CONFIRMACIÓN CON INDICADORES
+                if not self._confirm_signal_with_indicators(trade_type, strategy_name):
+                    if self.debug_mode:
+                        self._log(f"[SIM-DEBUG] Señal de FOREX '{strategy_name}' RECHAZADA por filtros de indicadores")
+                    continue  # Saltar a la siguiente estrategia
+                
                 sl_pips = params.get('stop_loss_pips', 20.0)
                 rr_ratio = params.get('rr_ratio', 2.0)
                 risk_multiplier = params.get('percent_ratio', 1.0)
 
-                volume = self._calculate_volume(sl_pips=sl_pips, risk_multiplier=risk_multiplier)
+                volume = self._calculate_volume(risk_multiplier=risk_multiplier)
 
                 if self.debug_mode:
                     self._log(f"[SIM-DEBUG] Parámetros para Forex: SL Pips={sl_pips}, RR Ratio={rr_ratio}, Volumen Calculado={volume}")
 
                 if volume > 0:
-                    self._log(f"[SIM] Señal de FOREX '{strategy_name}' -> '{trade_type.upper()}' detectada. Abriendo operación.")
+                    self._log(f"[SIM] ✅ Señal de FOREX '{strategy_name}' CONFIRMADA. Abriendo operación {trade_type.upper()}.")
                     # Abrimos operación forex
                     self.open_trade(
                         trade_type=trade_type,
@@ -633,7 +800,7 @@ class Simulation:
                 if strategy_name == 'run_pico_y_pala':
                     # Para Pico y Pala, el volumen se calcula con un SL nocional para el riesgo
                     # La estrategia en sí no usa SL para el cierre, pero lo necesitamos para el cálculo de riesgo.
-                    volume = self._calculate_volume(sl_pips=50.0) 
+                    volume = self._calculate_volume(risk_multiplier=1.0)
                     self._log(f"[SIM-DEBUG] Volumen calculado para Pico y Pala: {volume:.4f} lots")
                     if volume > 0:
                         self._log(f"[SIM] Lanzando estrategia personalizada '{strategy_name}' en un nuevo hilo.")
@@ -644,25 +811,6 @@ class Simulation:
                         )
                         thread.daemon = True # El hilo se cerrará si el programa principal termina
                         thread.start()
-
-    def _get_ma_signal(self, df):
-        """Calculates moving averages and returns a 'long', 'short', or 'neutral' signal."""
-        if len(df) < 50: # Need enough data for slow MA
-            return 'neutral'
-        
-        fast_ma = df['close'].rolling(window=10).mean().iloc[-1]
-        slow_ma = df['close'].rolling(window=50).mean().iloc[-1]
-        
-        signal = 'neutral'
-        if fast_ma > slow_ma:
-            signal = 'long'
-        elif fast_ma < slow_ma:
-            signal = 'short'
-
-        if self.debug_mode:
-            self._log(f"[SIM-DEBUG] Señal de Medias Móviles (Forex) evaluada: {signal}")
-
-        return signal
 
     def _get_candle_signal(self, df):
         """Analyzes the last candle for patterns selected in the strategy config."""
@@ -733,28 +881,43 @@ class Simulation:
         return {}
 
     def _get_sl_tp_for_candle_pattern(self, config):
-        """Calcula SL y TP en pips para una estrategia de vela, usando ATR si está disponible."""
+        """
+        Calcula SL y TP en pips para una estrategia de vela, usando ATR del DataFrame.
+        Ya no usa self.atr (obsoleto), ahora usa self.candles_df['ATR'].
+        """
         use_atr = config.get('use_atr_for_sl_tp', False)
         point = mt5.symbol_info(self.symbol).point
-
-        if use_atr and self.atr is not None and self.atr > 0:
-            # --- Lógica basada en ATR ---
-            atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
-            atr_tp_multiplier = config.get('atr_tp_multiplier', 2.0)
+        
+        if use_atr and not self.candles_df.empty:
+            # Obtener ATR del DataFrame (calculado con pandas_ta)
+            atr_value = self.candles_df['ATR'].iloc[-1] if 'ATR' in self.candles_df.columns else None
             
-            sl_pips = (self.atr * atr_sl_multiplier) / point
-            tp_pips = (self.atr * atr_tp_multiplier) / point
-            self._log(f"[SIM-DEBUG] SL/TP calculado con ATR: SL={sl_pips:.1f} pips, TP={tp_pips:.1f} pips")
-            return sl_pips, tp_pips
-        else:
-            # --- Lógica basada en Pips Fijos (Fallback) ---
-            sl_pips = config.get('fixed_sl_pips', 30.0)
-            tp_pips = config.get('fixed_tp_pips', 60.0)
-            if use_atr: # Si se quería usar ATR pero no se pudo
-                self._log("[SIM-WARN] No se pudo usar ATR para SL/TP. Usando pips fijos como fallback.", 'warn')
-            return sl_pips, tp_pips
+            if atr_value is not None and not pd.isna(atr_value) and atr_value > 0:
+                # --- Lógica basada en ATR ---
+                atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
+                atr_tp_multiplier = config.get('atr_tp_multiplier', 2.0)
+                
+                sl_pips = (atr_value * atr_sl_multiplier) / point
+                tp_pips = (atr_value * atr_tp_multiplier) / point
+                
+                if self.debug_mode:
+                    self._log(f"[SIM-DEBUG] SL/TP calculado con ATR del DataFrame: ATR={atr_value:.5f}, SL={sl_pips:.1f} pips, TP={tp_pips:.1f} pips")
+                
+                return sl_pips, tp_pips
+            else:
+                if self.debug_mode:
+                    self._log("[SIM-DEBUG] ATR no disponible en DataFrame. Usando pips fijos.", 'warn')
+        
+        # --- Lógica basada en Pips Fijos (Fallback) ---
+        sl_pips = config.get('fixed_sl_pips', 30.0)
+        tp_pips = config.get('fixed_tp_pips', 60.0)
+        
+        if use_atr and self.debug_mode:
+            self._log("[SIM-WARN] No se pudo usar ATR para SL/TP. Usando pips fijos como fallback.", 'warn')
+        
+        return sl_pips, tp_pips
 
-    def _calculate_volume(self, sl_pips: float, risk_multiplier: float = 1.0):
+    def _calculate_volume(self, risk_multiplier: float = 1.0):
         """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
         if not mt5 or not mt5.terminal_info():
             return 0.0
@@ -766,24 +929,6 @@ class Simulation:
             if not account_info or not symbol_info:
                 self._log("[SIM-ERROR] No se pudo obtener información de la cuenta o del símbolo para calcular el volumen.", 'error')
                 return 0.0
-
-            # equity = account_info.equity
-            # risk_percent_str = self.general_config.get('risk_per_trade_percent', "1.0")
-            # risk_percent = float(risk_percent_str)
-            
-            # final_risk_percent = risk_percent * risk_multiplier
-            # money_to_risk = equity * (final_risk_percent / 100.0)
-
-            # # sl_in_points = sl_pips 
-            # # loss_per_lot = sl_in_points * symbol_info.trade_tick_value
-            # sl_in_points = sl_pips * symbol_info.point
-            # contract_size = symbol_info.trade_contract_size  # Típicamente 100,000 para Forex
-            # loss_per_lot = sl_in_points * contract_size
-
-            # volume = money_to_risk / loss_per_lot
-
-            # volume_step = symbol_info.volume_step
-            # volume = round(volume / volume_step) * volume_step
 
             risk_per_trade_percent = float(self.general_config.get('risk_per_trade_percent', 1.0))
             volume = risk_per_trade_percent * (risk_multiplier / 100.0)
@@ -801,15 +946,18 @@ class Simulation:
             self._log(f"[SIM-ERROR] Error al calcular el volumen: {str(e)}", 'error')
             return 0.0
 
-    def _check_for_closing_signals(self, ma_signal, candle_signal):
-        """Cierra operaciones según configuración y señales de mercado."""
+    def _check_for_closing_signals(self, candle_signal):
+        """
+        Cierra operaciones según configuración y señales de mercado.
+        Ahora usa solo candle_signal y confirmación con indicadores del DataFrame.
+        """
         if not self._init_mt5():
             return
-
+        
         open_positions = mt5.positions_get(symbol=self.symbol)
         if not open_positions:
             return
-
+        
         for position in open_positions:
             ticket = position.ticket
             
@@ -818,67 +966,73 @@ class Simulation:
                 config_data = self.candle_pattern_configs[ticket]
                 pattern_config = config_data['config']
                 pattern_name = config_data['pattern_name']
+                trade_type = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
                 
-                # Verificar use_signal_change
+                # Verificar use_trailing_stop (ya se maneja en _apply_trailing_stop)
+                
+                # Verificar use_signal_change (cierre por señal contraria)
                 if pattern_config.get('use_signal_change', False):
-                    close_long = (position.type == mt5.POSITION_TYPE_BUY and 
-                                (ma_signal == 'short' or candle_signal == 'short'))
-                    close_short = (position.type == mt5.POSITION_TYPE_SELL and 
-                                (ma_signal == 'long' or candle_signal == 'long'))
+                    # Detectar señal contraria usando indicadores
+                    opposite_signal = 'short' if trade_type == 'long' else 'long'
                     
-                    if close_long or close_short:
-                        signal_type = []
-                        if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
-                            signal_type.append("MA")
-                        if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
-                            signal_type.append("Vela")
-                        if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
-                            signal_type.append("MA")
-                        if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
-                            signal_type.append("Vela")
-                        
-                        self._log(f"[SIM] Señal contraria ({' y '.join(signal_type)}) detectada. Cerrando {pattern_name} {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{ticket}.")
-                        self.close_trade(ticket, position.volume, 
-                                    'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                    # Verificar si hay confirmación de señal contraria con indicadores
+                    if self._confirm_signal_with_indicators(opposite_signal, f"cierre_{pattern_name}"):
+                        signal_type = "Indicadores + Vela"
+                        self._log(
+                            f"[SIM] 🔄 Señal contraria confirmada para #{ticket} ({pattern_name}). "
+                            f"Cerrando operación {trade_type.upper()}.",
+                            'warn'
+                        )
+                        self.close_trade(ticket, position.volume, trade_type, f"signal_change_{signal_type}")
                         continue
                 
-                # Verificar use_pattern_reversal
+                # Verificar use_pattern_reversal (cierre por patrón de reversión)
                 if pattern_config.get('use_pattern_reversal', False):
                     # Detectar si hay un patrón reverso
                     current_signal, detected_pattern = self._get_candle_signal(self.candles_df)
                     if detected_pattern:
                         is_reversal = False
-                        if position.type == mt5.POSITION_TYPE_BUY and current_signal == 'short':
+                        if trade_type == 'long' and current_signal == 'short':
                             is_reversal = True
-                        elif position.type == mt5.POSITION_TYPE_SELL and current_signal == 'long':
+                        elif trade_type == 'short' and current_signal == 'long':
                             is_reversal = True
                         
                         if is_reversal:
-                            self._log(f"[SIM] Patrón reverso '{detected_pattern}' detectado. Cerrando {pattern_name} {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{ticket}.")
-                            self.close_trade(ticket, position.volume, 
-                                        'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                            self._log(
+                                f"[SIM] 🔄 Patrón de reversión '{detected_pattern}' detectado para #{ticket}. "
+                                f"Cerrando operación {trade_type.upper()}.",
+                                'warn'
+                            )
+                            self.close_trade(ticket, position.volume, trade_type, f"pattern_reversal_{detected_pattern}")
                             continue
+            
             else:
-                # Lógica original para estrategias Forex (sin configuración de patrón)
-                close_long = (position.type == mt5.POSITION_TYPE_BUY and 
-                            (ma_signal == 'short' or candle_signal == 'short'))
-                close_short = (position.type == mt5.POSITION_TYPE_SELL and 
-                            (ma_signal == 'long' or candle_signal == 'long'))
-
-                if close_long or close_short:
-                    signal_type = []
-                    if position.type == mt5.POSITION_TYPE_BUY and ma_signal == 'short':
-                        signal_type.append("MA")
-                    if position.type == mt5.POSITION_TYPE_BUY and candle_signal == 'short':
-                        signal_type.append("Vela")
-                    if position.type == mt5.POSITION_TYPE_SELL and ma_signal == 'long':
-                        signal_type.append("MA")
-                    if position.type == mt5.POSITION_TYPE_SELL and candle_signal == 'long':
-                        signal_type.append("Vela")
-                        
-                    self._log(f"[SIM] Señal contraria ({' y '.join(signal_type)}). Cerrando FOREX {'LONG' if position.type == mt5.POSITION_TYPE_BUY else 'SHORT'} #{position.ticket}.")
-                    self.close_trade(position.ticket, position.volume, 
-                                'long' if position.type == mt5.POSITION_TYPE_BUY else 'short')
+                # Lógica para estrategias Forex (sin configuración de patrón)
+                trade_type = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
+                opposite_signal = 'short' if trade_type == 'long' else 'long'
+                
+                # Verificar señal contraria con candle_signal O confirmación de indicadores
+                close_position = False
+                signal_source = []
+                
+                # Opción 1: Señal de vela contraria
+                if candle_signal == opposite_signal:
+                    signal_source.append("Vela")
+                    close_position = True
+                
+                # Opción 2: Confirmación de indicadores para señal contraria
+                if self._confirm_signal_with_indicators(opposite_signal, "cierre_forex"):
+                    signal_source.append("Indicadores")
+                    close_position = True
+                
+                if close_position:
+                    signal_type_str = " + ".join(signal_source)
+                    self._log(
+                        f"[SIM] 🔄 Señal contraria ({signal_type_str}) detectada para #{ticket}. "
+                        f"Cerrando operación {trade_type.upper()}.",
+                        'warn'
+                    )
+                    self.close_trade(ticket, position.volume, trade_type, f"signal_change_{signal_type_str}")
 
     def _apply_trailing_stop(self):
         """Aplica trailing stop a operaciones de patrones de velas que lo tengan configurado."""
