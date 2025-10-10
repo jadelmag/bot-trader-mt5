@@ -6,5 +6,6 @@
     "money_limit": 0.0,
     "audit_log_enabled": true,
     "risk_per_trade_percent": "100.00000000",
-    "daily_profit_limit": 0.0
+    "daily_profit_limit": 0.0,
+    "close_candle_limit": 0.0
 }

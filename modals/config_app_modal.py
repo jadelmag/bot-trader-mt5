@@ -23,6 +23,7 @@ class ConfigAppModal(tk.Toplevel):
         self.audit_log_var = tk.BooleanVar()
         self.risk_per_trade_var = tk.StringVar(value="1.0") # Default 1%
         self.daily_profit_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
+        self.close_candle_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
 
         # --- Layout --- #
         main_frame = ttk.Frame(self, padding="15")
@@ -76,10 +77,17 @@ class ConfigAppModal(tk.Toplevel):
         general_frame = ttk.LabelFrame(parent, text="Configuración General", padding="10")
         general_frame.pack(fill="x", pady=(0, 15))
 
+
+        # Limite Auto Close Candle
+        close_candle_frame = ttk.Frame(general_frame)
+        close_candle_frame.pack(fill="x", pady=5)
+        ttk.Label(close_candle_frame, text="Precio (P/L) de autocierre vela:").pack(side="left", padx=5)
+        ttk.Entry(close_candle_frame, textvariable=self.close_candle_limit_var, width=15).pack(side="left")
+
         # Daily Profit Limit
         daily_limit_frame = ttk.Frame(general_frame)
         daily_limit_frame.pack(fill="x", pady=5)
-        ttk.Label(daily_limit_frame, text="Límite de Ganancia Diaria (€):").pack(side="left", padx=5)
+        ttk.Label(daily_limit_frame, text="Límite de Ganancia Diaria:").pack(side="left", padx=5)
         ttk.Entry(daily_limit_frame, textvariable=self.daily_profit_limit_var, width=15).pack(side="left")
 
         # Money Limit
@@ -142,6 +150,7 @@ class ConfigAppModal(tk.Toplevel):
             money_limit = float(self.money_limit_var.get()) if self.money_limit_var.get() else 0.0
             risk_percent = float(self.risk_per_trade_var.get()) if self.risk_per_trade_var.get() else 1.0
             daily_profit_limit = float(self.daily_profit_limit_var.get()) if self.daily_profit_limit_var.get() else 0.0
+            close_candle_limit = float(self.close_candle_limit_var.get()) if self.close_candle_limit_var.get() else 0.0
 
             # Validar que el límite de ganancia diaria no sea negativo
             if daily_profit_limit < 0:
@@ -162,7 +171,8 @@ class ConfigAppModal(tk.Toplevel):
                 "audit_log_enabled": self.audit_log_var.get(),
                 # Guardar como string formateado para evitar notación científica
                 "risk_per_trade_percent": f"{risk_percent:.8f}",
-                "daily_profit_limit": daily_profit_limit
+                "daily_profit_limit": daily_profit_limit,
+                "close_candle_limit": close_candle_limit
             }
 
             # Ensure directory exists

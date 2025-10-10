@@ -242,6 +242,9 @@ class Simulation:
         # Verificar SL/TP en cada tick
         self.position_monitor.check_sl_tp_on_tick(price)
 
+        # Verificar cierres automáticos por P/L de velas
+        self.position_monitor.check_close_candle_limit()
+
     def open_trade(self, trade_type, symbol, volume, sl_pips=0, tp_pips=0, strategy_name=None, pattern_config=None):
         """Wrapper para abrir operaciones usando TradeManager."""
         return self.trade_manager.open_trade(trade_type, symbol, volume, sl_pips, tp_pips, strategy_name, pattern_config)

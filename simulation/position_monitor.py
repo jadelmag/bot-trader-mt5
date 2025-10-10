@@ -24,6 +24,50 @@ class PositionMonitor:
         else:
             print(message)
     
+    def check_close_candle_limit(self):
+        """
+        Verifica si algún patrón de vela ha alcanzado el límite de P/L para cierre automático
+        configurado en close_candle_limit. Solo afecta a patrones de vela, no a estrategias forex.
+        """
+        if not mt5 or not mt5.terminal_info():
+            return
+        
+        # Obtener el límite configurado de close_candle_limit
+        close_candle_limit = self.simulation.general_config.get('close_candle_limit', 0.0)
+        if close_candle_limit <= 0:
+            return  # Sin límite configurado
+            
+        open_positions = mt5.positions_get(symbol=self.simulation.symbol)
+        if not open_positions:
+            return
+            
+        for position in open_positions:
+            ticket = position.ticket
+            
+            # Solo aplicar a patrones de vela (verificando si están en candle_pattern_configs)
+            if ticket not in self.simulation.candle_pattern_configs:
+                continue
+                
+            profit = position.profit
+            
+            # Si la ganancia de la operación alcanza o supera el límite configurado
+            if profit >= close_candle_limit:
+                trade_type = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
+                
+                # Obtener el nombre del patrón de vela
+                pattern_name = "desconocido"
+                if ticket in self.simulation.candle_pattern_configs:
+                    pattern_name = self.simulation.candle_pattern_configs[ticket].get('pattern_name', 'desconocido')
+                    
+                self._log(
+                    f"[MONITOR] 💰 Límite de ganancia en patrón '{pattern_name}': #{ticket} ({trade_type.upper()}) | "
+                    f"P/L: ${profit:.2f} >= ${close_candle_limit:.2f}",
+                    'success'
+                )
+                
+                # Cerrar la operación
+                self.simulation.close_trade(ticket, position.volume, trade_type, "candle_profit_limit_reached")
+
     def check_auto_closed_positions(self):
         """Detecta y registra operaciones cerradas automáticamente por MT5 (SL/TP)."""
         if not mt5 or not mt5.terminal_info() or not hasattr(self.simulation, 'tracked_tickets'):
