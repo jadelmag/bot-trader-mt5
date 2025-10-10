@@ -337,11 +337,26 @@ class OperacionesAbiertasWindow:
     def close_operation(self, ticket):
         """Cierra una operación específica y muestra el resultado."""
         try:
+            # 1. Guardar el P/L flotante antes de cerrar
+            floating_pl = 0.0
+            pos_info = mt5.positions_get(ticket=ticket)
+            if pos_info:
+                floating_pl = pos_info[0].profit
+                if self.logger:
+                    self.logger.log(f"P/L flotante antes de cerrar #{ticket}: {floating_pl:.2f} $")
+            
+            # 2. Cerrar la operación
             from operations.close_operations import close_single_operation
             result = close_single_operation(ticket, self.logger)
             
             if result and result.get("success"):
                 profit = result.get("profit", 0.0)
+                
+                # 3. Si profit es 0 pero teníamos P/L flotante, usar el flotante
+                if abs(profit) < 0.01 and abs(floating_pl) > 0.01:
+                    if self.logger:
+                        self.logger.log(f"Usando P/L flotante {floating_pl:.2f} $ en lugar de {profit:.2f} $")
+                    profit = floating_pl
                 
                 if self.logger:
                     self.logger.success(f"Operación {ticket} cerrada con un P/L de {profit:.2f} $")
@@ -371,7 +386,7 @@ class OperacionesAbiertasWindow:
                     self.logger.error(f"Error al cerrar la operación {ticket}")
                 messagebox.showerror(
                     "Error de Cierre",
-                    f"No se pudo cerrar la operación {ticket}.\\n\\nConsulte los logs para más detalles.",
+                    f"No se pudo cerrar la operación {ticket}.\n\nConsulte los logs para más detalles.",
                     parent=self.window
                 )
                     
@@ -382,7 +397,7 @@ class OperacionesAbiertasWindow:
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error al procesar cierre de {ticket}: {e}")
-            messagebox.showerror("Error Crítico", f"Ocurrió un error inesperado al cerrar la operación {ticket}:\\n{e}", parent=self.window)
+            messagebox.showerror("Error Crítico", f"Ocurrió un error inesperado al cerrar la operación {ticket}:\n{e}", parent=self.window)
 
     def start_real_time_updates(self):
         """Inicia las actualizaciones en tiempo real."""

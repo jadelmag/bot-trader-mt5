@@ -222,13 +222,18 @@ class TradeManager:
         
         # Obtener nombre de la estrategia
         strategy_name = "Estrategia"
+        strategy_type = "Manual"
+
         if comment:
             if "forex_" in comment:
                 strategy_name = "FOREX " + comment.split('_')[1] if '_' in comment else "FOREX"
+                strategy_type = "FOREX"
             elif "candle_" in comment:
                 strategy_name = "VELA " + comment.split('_')[1] if '_' in comment else "VELA"
+                strategy_type = "VELA"
             elif "custom" in comment:
                 strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
+                strategy_type = "CUSTOM"
 
         comment_clean = copy_comment.strip()
         
@@ -238,12 +243,9 @@ class TradeManager:
                 if len(parts) > 1:
                     keyIDComment = parts[1]
                     strategy_name = get_name_for_id(int(keyIDComment))
-                else:
-                    strategy_type = "Manual"
-            else:
-                strategy_type = "Manual"
+             
         except (ValueError, IndexError):
-            strategy_type = "Manual"
+            pass
 
         # Mostrar resultado
         if profit > 0:

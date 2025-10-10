@@ -52,15 +52,26 @@ def _get_deal_profit(ticket, logger=None):
         
         if deals:
             # Filtrar por el ticket de la posición/orden
-            for deal in reversed(deals): # Buscar desde el más reciente
-                if deal.position_id == ticket and deal.entry == 1: # 1 = deal de salida
+            for deal in reversed(deals):  # Buscar desde el más reciente
+                if deal.position_id == ticket and deal.entry == 1:  # 1 = deal de salida
                     if logger:
                         logger.log(f"Deal de cierre encontrado para ticket {ticket} con profit {deal.profit:.2f}", "info")
                     return deal.profit
         
+        # Si no encontramos el deal en el historial, intentar buscar en history_deals_get por posición
+        position_deals = mt5.history_deals_get(position=ticket)
+        if position_deals:
+            # El último deal debería ser el de cierre
+            for deal in reversed(position_deals):
+                if deal.entry == 1:  # 1 = deal de salida
+                    if logger:
+                        logger.log(f"Deal de cierre encontrado por position para {ticket} con profit {deal.profit:.2f}", "info")
+                    return deal.profit
+
+        # Si llegamos aquí, no pudimos encontrar el profit en los deals
         if logger:
             logger.warn(f"No se encontró el deal de cierre para el ticket {ticket} en el historial reciente.")
-        return 0.0 # Retornar 0 si no se encuentra
+        return 0.0  # Retornar 0 si no se encuentra
 
     except Exception as e:
         if logger:
@@ -85,6 +96,12 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
                 logger.error(f"No se encontró la posición {ticket}")
             return {"success": False, "profit": 0.0, "ticket": ticket}
         position = position[0]
+        
+        # Guardar el profit flotante para usarlo como fallback
+        floating_profit = position.profit
+        
+        if logger:
+            logger.log(f"P/L flotante antes de cerrar: {floating_profit:.2f} $")
 
         symbol_info = mt5.symbol_info(position.symbol)
         if not symbol_info:
@@ -148,7 +165,12 @@ def close_operation_robust(ticket, logger=None, max_attempts=MAX_ATTEMPTS, max_s
                         logger.success(f"✅ Orden de cierre enviada para {ticket} con {mode_name}")
                     
                     if _verify_position_closed(ticket, logger):
+                        # Intentar obtener el profit del deal, si falla usar el flotante
                         profit = _get_deal_profit(ticket, logger)
+                        if profit == 0.0 and floating_profit != 0.0:
+                            if logger:
+                                logger.log(f"Usando P/L flotante guardado ({floating_profit:.2f}) en lugar de 0.0")
+                            profit = floating_profit
                         return {"success": True, "profit": profit, "ticket": ticket}
                     else:
                         return {"success": False, "profit": 0.0, "ticket": ticket}

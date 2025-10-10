@@ -6,6 +6,6 @@
     "use_pattern_reversal": false,
     "percent_ratio": 0.5,
     "atr_sl_multiplier": 1.2,
-    "atr_tp_multiplier": 2.5,
+    "atr_tp_multiplier": 1.4,
     "atr_trailing_multiplier": 2.0
 }
