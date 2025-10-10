@@ -230,6 +230,8 @@ class TradeManager:
             elif "custom" in comment:
                 strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
 
+        comment_clean = copy_comment.strip()
+        
         try:
             if comment_clean.startswith('key-') and '-bot-' in comment_clean.lower():
                 parts = comment_clean.split('-')

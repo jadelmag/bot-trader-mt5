@@ -6,7 +6,7 @@
     },
     "candle_strategies": {
         "is_dark_cloud_cover": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_doji": {
@@ -26,7 +26,7 @@
             "strategy_mode": "Custom"
         },
         "is_evening_star": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_falling_three_methods": {
@@ -42,11 +42,11 @@
             "strategy_mode": "Custom"
         },
         "is_hanging_man": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_harami": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_inverted_hammer": {
@@ -54,11 +54,11 @@
             "strategy_mode": "Custom"
         },
         "is_long_legged_doji": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_marubozu": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_morning_star": {
@@ -74,11 +74,11 @@
             "strategy_mode": "Custom"
         },
         "is_shooting_star": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_three_black_crows": {
-            "selected": false,
+            "selected": true,
             "strategy_mode": "Custom"
         },
         "is_three_inside_up_down": {
@@ -108,7 +108,7 @@
             "stop_loss_pips": 10.0
         },
         "strategy_chart_pattern_breakout": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.45,
             "rr_ratio": 1.5,
             "stop_loss_pips": 12.0
@@ -138,7 +138,7 @@
             "stop_loss_pips": 10.0
         },
         "strategy_momentum_rsi_macd": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.7,
             "rr_ratio": 1.5,
             "stop_loss_pips": 11.0
@@ -156,7 +156,7 @@
             "stop_loss_pips": 8.0
         },
         "strategy_swing_trading_multi_indicator": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.4,
             "rr_ratio": 1.8,
             "stop_loss_pips": 15.0
