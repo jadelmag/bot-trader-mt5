@@ -224,17 +224,6 @@ class TradeManager:
         strategy_name = "Estrategia"
         strategy_type = "Manual"
 
-        if comment:
-            if "forex_" in comment:
-                strategy_name = "FOREX " + comment.split('_')[1] if '_' in comment else "FOREX"
-                strategy_type = "FOREX"
-            elif "candle_" in comment:
-                strategy_name = "VELA " + comment.split('_')[1] if '_' in comment else "VELA"
-                strategy_type = "VELA"
-            elif "custom" in comment:
-                strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
-                strategy_type = "CUSTOM"
-
         comment_clean = copy_comment.strip()
         
         try:
@@ -246,6 +235,21 @@ class TradeManager:
              
         except (ValueError, IndexError):
             pass
+
+        if strategy_name:
+            if "forex_" in strategy_name:
+                strategy_name = "FOREX " + strategy_name.split('_')[1] if '_' in strategy_name else "FOREX"
+                strategy_type = "FOREX"
+            elif "candle_" in strategy_name:
+                strategy_name = "VELA " + strategy_name.split('_')[1] if '_' in strategy_name else "VELA"
+                strategy_type = "VELA"
+            elif "custom" in strategy_name:
+                strategy_name = "CUSTOM " + strategy_name.split(' ', 1)[1] if ' ' in strategy_name else "CUSTOM"
+                strategy_type = "CUSTOM"
+            else:
+                strategy_name = "Estrategia"
+                strategy_type = "Manual"
+        
 
         # Mostrar resultado
         if profit > 0:

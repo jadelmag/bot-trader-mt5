@@ -1,0 +1,3 @@
+{"timestamp": "2025-10-10T13:55:07.484471", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-10T13:55:07.489382", "event": "log_message", "data": {"level": "ERROR", "message": "[SIM-ERROR] No se pudo inicializar MT5: (-6, 'Terminal: Authorization failed')"}}
+{"timestamp": "2025-10-10T13:55:07.489647", "event": "log_message", "data": {"level": "WARN", "message": "[SIM-WARN] No se pueden cargar velas históricas, MT5 no está conectado."}}

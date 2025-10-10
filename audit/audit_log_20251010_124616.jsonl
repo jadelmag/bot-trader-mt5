@@ -256,3 +256,5 @@
 {"timestamp": "2025-10-10T13:44:02.629059", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 14:44:00 | Balance: $67007.62"}}
 {"timestamp": "2025-10-10T13:44:02.637937", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $67002.43 | forex_strategy_bollinger_bands_breakout | Manual | LONG | PÉRDIDA: -$5.19 (-0.01%) | Ganancias: $387.31 | Pérdidas: $198.29"}}
 {"timestamp": "2025-10-10T13:44:02.638138", "event": "trade_close", "data": {"ticket": 53584602722, "symbol": "EURUSD", "close_price": 1.1568, "profit": -5.19}}
+{"timestamp": "2025-10-10T13:45:00.112808", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 14:45:00 | Balance: $67007.62"}}
+{"timestamp": "2025-10-10T13:45:00.113145", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 14:45:00 | Balance: $67007.62"}}

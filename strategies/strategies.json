@@ -1,7 +1,7 @@
 {
     "slots": {
-        "forex": 10,
-        "candle": 10,
+        "forex": 8,
+        "candle": 8,
         "custom": 0
     },
     "candle_strategies": {

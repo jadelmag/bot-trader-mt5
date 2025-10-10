@@ -246,7 +246,7 @@ class CerrarOperacionesWindow:
                   command=lambda t=ticket, ot=op_type: self.close_operation(t, ot)).pack(side=tk.LEFT, padx=(0, 10))
         
         ttk.Button(row3, text="Modificar Operación",
-                  command=lambda t=ticket, ot=op_type: self.modify_operation(t, ot)).pack(side=tk.LEFT, padx=(0, 10))
+                  command=lambda t=ticket, ot=op_type: self.show_modify_dialog(t, ot)).pack(side=tk.LEFT, padx=(0, 10))
         
         cancel_btn = None
         if op_type == 'order':
@@ -326,10 +326,84 @@ class CerrarOperacionesWindow:
             if self.logger:
                 self.logger.error(f"Error al cerrar la operación {ticket}: {e}")
     
-    def modify_operation(self, ticket, op_type):
+    def modify_operation(self, ticket, op_type, sl=None, tp=None, comment=None):
+        """
+        Modifica una operación existente en MT5.
+        
+        Args:
+            ticket: Número de ticket de la operación a modificar
+            op_type: Tipo de operación ('position' o 'order')
+            sl: Nuevo Stop Loss (None para mantener el actual)
+            tp: Nuevo Take Profit (None para mantener el actual)
+            comment: Nuevo comentario (None para mantener el actual)
+            
+        Returns:
+            bool: True si la modificación fue exitosa, False en caso contrario
+        """
+        if not mt5 or not mt5.terminal_info():
+            if self.logger:
+                self.logger.error(f"[TRADE-ERROR] MT5 no está conectado.")
+            return False
+        
+        # Obtener información de la posición
+        position = mt5.positions_get(ticket=ticket)
+        if not position:
+            if self.logger:
+                self.logger.error(f"[TRADE-ERROR] No se encontró la posición {ticket}")
+            return False
+        
+        position = position[0]
+        
+        # Preparar la solicitud de modificación
+        request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "position": ticket,
+            "symbol": position.symbol,
+            "magic": position.magic,
+        }
+        
+        # Añadir los parámetros que se quieren modificar
+        if sl is not None:
+            request["sl"] = sl
+        else:
+            request["sl"] = position.sl
+            
+        if tp is not None:
+            request["tp"] = tp
+        else:
+            request["tp"] = position.tp
+            
+        # Enviar la solicitud
+        result = mt5.order_send(request)
+        
+        if result is None:
+            if self.logger:
+                self.logger.error(f"[TRADE-ERROR] mt5.order_send devolvió None. last_error={mt5.last_error()}")
+            return False
+        
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            from metatrader.metatrader import obtener_mensaje_error
+            if self.logger:
+                self.logger.error(f"[TRADE-ERROR] Modificación falló, retcode={result.retcode} ({obtener_mensaje_error(result.retcode)})")
+            return False
+        
+        # Guardar los nuevos SL/TP en el tracking
+        if hasattr(self.simulation_instance, 'positions_sl_tp') and ticket in self.simulation_instance.positions_sl_tp:
+            self.simulation_instance.positions_sl_tp[ticket].update({
+                'sl': sl if sl is not None else position.sl,
+                'tp': tp if tp is not None else position.tp
+            })
+        
+        # Registrar la modificación
         if self.logger:
-            self.logger.log(f"Función modificar operación {ticket} - En desarrollo")
-    
+            self.logger.success(f"[TRADE] ✏️ Modificada operación #{ticket} | SL: {sl} | TP: {tp}")
+        
+        # Actualizar la operación en el widget
+        if ticket in self.operation_widgets:
+            self.operation_widgets[ticket]['operation'] = position
+            
+        return True
+
     def cancel_order(self, ticket):
         try:
             from operations.manage_operations import cancel_pending_order
@@ -383,3 +457,59 @@ class CerrarOperacionesWindow:
         # Limpiar referencias
         self.canvas = None
         self.operations_frame = None
+
+    def show_modify_dialog(self, ticket, op_type):
+        """Muestra un diálogo para modificar SL/TP y luego llama a modify_operation."""
+        operation = self.operation_widgets[ticket]['operation']
+        
+        # Crear una ventana modal
+        dialog = tk.Toplevel(self.window)
+        dialog.title(f"Modificar Operación #{ticket}")
+        dialog.grab_set()  # Hacer modal
+        dialog.transient(self.window)
+        
+        # Centro de la ventana principal
+        dialog.geometry("400x250")
+        x = self.window.winfo_x() + (self.window.winfo_width() - 400) // 2
+        y = self.window.winfo_y() + (self.window.winfo_height() - 250) // 2
+        dialog.geometry(f"+{x}+{y}")
+        
+        # Campos para SL/TP
+        frame = ttk.Frame(dialog, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+        
+        current_sl = operation.sl if hasattr(operation, 'sl') else 0
+        current_tp = operation.tp if hasattr(operation, 'tp') else 0
+        
+        # Variables para los nuevos valores
+        sl_var = tk.StringVar(value=str(current_sl) if current_sl else "")
+        tp_var = tk.StringVar(value=str(current_tp) if current_tp else "")
+        
+        # Campos de entrada
+        ttk.Label(frame, text="Stop Loss:").grid(row=0, column=0, sticky="w", pady=5)
+        sl_entry = ttk.Entry(frame, textvariable=sl_var)
+        sl_entry.grid(row=0, column=1, sticky="we", padx=5, pady=5)
+        
+        ttk.Label(frame, text="Take Profit:").grid(row=1, column=0, sticky="w", pady=5)
+        tp_entry = ttk.Entry(frame, textvariable=tp_var)
+        tp_entry.grid(row=1, column=1, sticky="we", padx=5, pady=5)
+        
+        # Botones
+        btn_frame = ttk.Frame(frame)
+        btn_frame.grid(row=2, column=0, columnspan=2, pady=20)
+        
+        def on_apply():
+            try:
+                # Convertir a float o None
+                sl = float(sl_var.get()) if sl_var.get().strip() else None
+                tp = float(tp_var.get()) if tp_var.get().strip() else None
+                
+                # Llamar a modify_operation con los nuevos valores
+                success = self.modify_operation(ticket, op_type, sl, tp)
+                if success:
+                    dialog.destroy()
+            except ValueError:
+                tk.messagebox.showerror("Error", "Por favor, introduzca valores numéricos válidos.", parent=dialog)
+        
+        ttk.Button(btn_frame, text="Aplicar", command=on_apply).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Cancelar", command=dialog.destroy).pack(side=tk.LEFT, padx=5)
