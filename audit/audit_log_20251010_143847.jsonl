@@ -1,0 +1,11 @@
+{"timestamp": "2025-10-10T14:39:27.093524", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-10-10T14:39:27.098437", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 5040311399, Balance: 67063.68"}}
+{"timestamp": "2025-10-10T14:39:27.101001", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-10-10T14:40:00.404411", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:40:00 | Balance: $67063.68"}}
+{"timestamp": "2025-10-10T14:40:00.405404", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:40:00 | Balance: $67063.68"}}
+{"timestamp": "2025-10-10T14:42:08.602077", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $67063.68 | VELA dragonfly | VELA | LONG | SIN CAMBIO | Ganancias: $0.00 | Pérdidas: $0.00"}}
+{"timestamp": "2025-10-10T14:42:08.602477", "event": "trade_close", "data": {"ticket": 53585206371, "symbol": "EURUSD", "close_price": 1.15736, "profit": 0.0}}
+{"timestamp": "2025-10-10T14:42:09.630150", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:42:00 | Balance: $67063.68"}}
+{"timestamp": "2025-10-10T14:42:09.630519", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:42:00 | Balance: $67063.68"}}
+{"timestamp": "2025-10-10T14:43:01.122234", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:43:00 | Balance: $67063.68"}}
+{"timestamp": "2025-10-10T14:43:01.122591", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 15:43:00 | Balance: $67063.68"}}

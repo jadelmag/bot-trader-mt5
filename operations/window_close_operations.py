@@ -19,7 +19,6 @@ class CerrarOperacionesWindow:
         self.canvas = None  # Referencia al canvas para el manejo del scroll
         
         self.create_window()
-        self.start_real_time_updates()
     
     def create_window(self):
         self.window = tk.Toplevel(self.parent)
@@ -35,7 +34,12 @@ class CerrarOperacionesWindow:
         self.center_window()
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
         self.create_content()
-        self.update_operations()
+        
+        if self._verify_mt5_connection():
+            self.update_operations()
+            self.start_real_time_updates()
+        else:
+            self.no_operations_label.configure(text="Error de conexión a MT5")
     
     def center_window(self):
         self.window.update_idletasks()
@@ -513,3 +517,16 @@ class CerrarOperacionesWindow:
         
         ttk.Button(btn_frame, text="Aplicar", command=on_apply).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Cancelar", command=dialog.destroy).pack(side=tk.LEFT, padx=5)
+
+    def _verify_mt5_connection(self):
+        """Verifica que hay conexión activa con MT5"""
+        try:
+            if not mt5 or not mt5.terminal_info():
+                if self.logger:
+                    self.logger.error("No hay conexión con MT5")
+                return False
+            return True
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error al verificar conexión MT5: {e}")
+            return False
