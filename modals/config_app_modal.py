@@ -140,6 +140,10 @@ class ConfigAppModal(tk.Toplevel):
             daily_profit_limit = config.get("daily_profit_limit", "0.0")
             self.daily_profit_limit_var.set(str(daily_profit_limit))
 
+            # Cargar límite de ganancia por vela
+            close_candle_limit = config.get("close_candle_limit", "0.0")
+            self.close_candle_limit_var.set(float(close_candle_limit))
+
         except (json.JSONDecodeError, TypeError):
             messagebox.showerror("Error", f"El archivo de configuración '{os.path.basename(CONFIG_PATH)}' está corrupto.", parent=self)
 
