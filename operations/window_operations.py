@@ -70,8 +70,18 @@ class OperacionesAbiertasWindow:
         
         comment_clean = comment.strip().lower()
 
-        keyIDComment = comment_clean.split('-')[1]
-        strategy_name = get_name_for_id(int(keyIDComment))
+        try:
+            if comment_clean.startswith('key-') and '-bot-' in comment_clean:
+                parts = comment_clean.split('-')
+                if len(parts) > 1:
+                    keyIDComment = parts[1]
+                    strategy_name = get_name_for_id(int(keyIDComment))
+                else:
+                    return "MANUAL", comment
+            else:
+                return "MANUAL", comment
+        except (ValueError, IndexError):
+            return "MANUAL", comment
         
         # Detectar FOREX por prefijo o palabras clave
         if (strategy_name.startswith('forex_') or 

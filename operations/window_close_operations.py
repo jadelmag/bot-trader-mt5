@@ -51,8 +51,19 @@ class CerrarOperacionesWindow:
             return "MANUAL", "Operación Manual"
         
         comment_clean = comment.strip()
-        keyIDComment = comment_clean.split('-')[1]
-        strategy_name = get_name_for_id(int(keyIDComment))
+
+        try:
+            if comment_clean.startswith('key-') and '-bot-' in comment_clean.lower():
+                parts = comment_clean.split('-')
+                if len(parts) > 1:
+                    keyIDComment = parts[1]
+                    strategy_name = get_name_for_id(int(keyIDComment))
+                else:
+                    return "MANUAL", comment
+            else:
+                return "MANUAL", comment
+        except (ValueError, IndexError):
+            return "MANUAL", comment
         
         # Determinar el tipo basado en prefijos conocidos
         if any(forex_indicator in strategy_name.lower() for forex_indicator in 

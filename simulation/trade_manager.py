@@ -230,9 +230,18 @@ class TradeManager:
             elif "custom" in comment:
                 strategy_name = "CUSTOM " + comment.split(' ', 1)[1] if ' ' in comment else "CUSTOM"
 
-        comment_clean = copy_comment.strip()
-        keyIDComment = comment_clean.split('-')[1]
-        strategy_type = get_name_for_id(int(keyIDComment))
+        try:
+            if comment_clean.startswith('key-') and '-bot-' in comment_clean.lower():
+                parts = comment_clean.split('-')
+                if len(parts) > 1:
+                    keyIDComment = parts[1]
+                    strategy_name = get_name_for_id(int(keyIDComment))
+                else:
+                    strategy_type = "Manual"
+            else:
+                strategy_type = "Manual"
+        except (ValueError, IndexError):
+            strategy_type = "Manual"
 
         # Mostrar resultado
         if profit > 0:
