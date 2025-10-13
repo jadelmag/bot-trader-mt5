@@ -227,45 +227,60 @@ class TradeManager:
         comment_clean = copy_comment.strip()
         
         try:
-            if comment_clean.startswith('key-') and '-bot-' in comment_clean.lower():
+            if comment_clean.lower().startswith('key-') and 'bot' in comment_clean.lower():
                 parts = comment_clean.split('-')
-                if len(parts) > 1:
+                if len(parts) >= 2:
                     keyIDComment = parts[1]
                     strategy_name = get_name_for_id(int(keyIDComment))
-             
-        except (ValueError, IndexError):
+
+        except (ValueError, IndexError) as e:
+            print(f"Error procesando comment: {e}")
             pass
 
-        if strategy_name:
-            if "forex_" in strategy_name:
-                strategy_name = "FOREX " + strategy_name.split('_')[1] if '_' in strategy_name else "FOREX"
+        # SOLUCIÓN MEJORADA: Procesar strategy_name de manera más robusta
+        if strategy_name and strategy_name != "Estrategia":
+            strategy_name_lower = strategy_name.lower()
+            if "forex" in strategy_name_lower:
+                # Extraer el nombre después de "forex_" manteniendo el formato original
+                if "_" in strategy_name:
+                    strategy_display_name = "FOREX " + strategy_name.split('_', 1)[1].upper()
+                else:
+                    strategy_display_name = "FOREX"
                 strategy_type = "FOREX"
-            elif "candle_" in strategy_name:
-                strategy_name = "VELA " + strategy_name.split('_')[1] if '_' in strategy_name else "VELA"
+            elif "candle" in strategy_name_lower:
+                if "_" in strategy_name:
+                    strategy_display_name = "VELA " + strategy_name.split('_', 1)[1].upper()
+                else:
+                    strategy_display_name = "VELA"
                 strategy_type = "VELA"
-            elif "custom" in strategy_name:
-                strategy_name = "CUSTOM " + strategy_name.split(' ', 1)[1] if ' ' in strategy_name else "CUSTOM"
+            elif "custom" in strategy_name_lower:
+                if ' ' in strategy_name:
+                    strategy_display_name = "CUSTOM " + strategy_name.split(' ', 1)[1]
+                else:
+                    strategy_display_name = "CUSTOM"
                 strategy_type = "CUSTOM"
             else:
-                strategy_name = "Estrategia"
-                strategy_type = "Manual"
-        
+                strategy_display_name = strategy_name.upper()
+                strategy_type = "Automated"
+        else:
+            strategy_display_name = "Estrategia"
+            strategy_type = "Manual"
 
-        # Mostrar resultado
+        # Mostrar resultado (el resto del código se mantiene igual)
         if profit > 0:
             self._log(
-                f"[TRADE] ✅ CIERRE #{ticket} | {strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"[TRADE] ✅ CIERRE #{ticket} | {strategy_display_name} | {strategy_type} | {trade_type.upper()} | "
                 f"Precio: {close_price:.5f} | GANANCIA: +${profit:.2f} (+{percent:.2f}%)", 
                 'success'
             )
         elif profit < 0:
             self._log(
-                f"[TRADE] ❌ CIERRE #{ticket} | {strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"[TRADE] ❌ CIERRE #{ticket} | {strategy_display_name} | {strategy_type} | {trade_type.upper()} | "
                 f"Precio: {close_price:.5f} | PÉRDIDA: -${abs(profit):.2f} (-{percent:.2f}%)", 
                 'error'
             )
         else:
-            self._log(f"[TRADE] {strategy_name} | {strategy_type} | {trade_type.upper()} | SIN CAMBIO", 'info')
+            self._log(f"[TRADE] {strategy_display_name} | {strategy_type} | {trade_type.upper()} | SIN CAMBIO", 'info')
 
         # Actualizar métricas
         self.simulation.balance += profit
@@ -293,12 +308,12 @@ class TradeManager:
             
             self.simulation.audit_logger.log_system_event(
                 f"Balance: ${self.simulation.balance:.2f} | "
-                f"{strategy_name} | {strategy_type} | {trade_type.upper()} | "
+                f"{strategy_display_name} | {strategy_type} | {trade_type.upper()} | "
                 f"{result_text} | "
                 f"Ganancias: ${self.simulation.total_profit:.2f} | "
                 f"Pérdidas: ${self.simulation.total_loss:.2f}"
             )
-    
+
     def update_trades(self, current_prices):
         """Actualiza el P/L flotante de todas las operaciones abiertas."""
         total_floating_pl = 0.0
