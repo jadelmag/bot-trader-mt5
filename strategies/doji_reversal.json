@@ -5,7 +5,7 @@
     "use_trailing_stop": false,
     "use_pattern_reversal": false,
     "atr_sl_multiplier": 1.5,
-    "atr_tp_multiplier": 1.4,
+    "atr_tp_multiplier": 3.0,
     "atr_trailing_multiplier": 1.5,
     "percent_ratio": 1.0
 }

@@ -1,7 +1,7 @@
 {
     "slots": {
-        "forex": 8,
-        "candle": 8,
+        "forex": 10,
+        "candle": 10,
         "custom": 0
     },
     "candle_strategies": {
@@ -97,69 +97,69 @@
     "forex_strategies": {
         "strategy_bollinger_bands_breakout": {
             "selected": true,
-            "percent_ratio": 0.5,
-            "rr_ratio": 1.3,
-            "stop_loss_pips": 12.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_candle_pattern_reversal": {
             "selected": true,
-            "percent_ratio": 0.3,
-            "rr_ratio": 1.4,
-            "stop_loss_pips": 10.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_chart_pattern_breakout": {
             "selected": true,
-            "percent_ratio": 0.45,
-            "rr_ratio": 1.5,
-            "stop_loss_pips": 12.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_fibonacci_reversal": {
             "selected": true,
-            "percent_ratio": 0.5,
-            "rr_ratio": 1.4,
-            "stop_loss_pips": 14.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_hybrid_optimizer": {
             "selected": true,
-            "percent_ratio": 0.65,
-            "rr_ratio": 1.4,
-            "stop_loss_pips": 13.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_ichimoku_kinko_hyo": {
             "selected": true,
-            "percent_ratio": 0.5,
-            "rr_ratio": 1.8,
-            "stop_loss_pips": 15.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_ma_crossover": {
             "selected": true,
-            "percent_ratio": 0.7,
-            "rr_ratio": 1.7,
-            "stop_loss_pips": 10.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_momentum_rsi_macd": {
             "selected": true,
-            "percent_ratio": 0.7,
-            "rr_ratio": 1.5,
-            "stop_loss_pips": 11.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_price_action_sr": {
             "selected": true,
-            "percent_ratio": 0.8,
-            "rr_ratio": 1.6,
-            "stop_loss_pips": 10.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_scalping_stochrsi_ema": {
             "selected": true,
-            "percent_ratio": 0.3,
-            "rr_ratio": 1.2,
-            "stop_loss_pips": 8.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         },
         "strategy_swing_trading_multi_indicator": {
             "selected": true,
-            "percent_ratio": 0.4,
-            "rr_ratio": 1.8,
-            "stop_loss_pips": 15.0
+            "percent_ratio": 1.0,
+            "rr_ratio": 2.0,
+            "stop_loss_pips": 20.0
         }
     },
     "custom_strategies": {
