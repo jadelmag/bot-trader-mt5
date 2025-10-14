@@ -28,3 +28,26 @@ En las vistas RSI, ATR y MACD quiero poder hacer las siguientes acciones sobre l
 - volver al estado inicial: haciendo click con el boton central del raton 2 veces 
 
 ---------------------------
+
+
+Analizando la grafica con el fichero csv: chart_EURUSD_M1_20251014_170948.csv y el fichero strategies.json y cada uno de la configuracion para cada patron de vela.
+
+Dime cual seria la configuracion idonea para obtener los maximos beneficios posibles con las  menores perdidas posibles.
+quiero que me des la configuracion para todas las estrategias forex y candle.
+
+
+quiero que me digas la configuracion para cada patron de vela que habria dado los maximos beneficios y las menores perdidas segun la grafica. hazme el json que tan solo tenga que copiar y pegar:
+
+por ejemplo este es el json de dark_cloud_cover.json
+
+{
+    "use_signal_change": true,
+    "use_stop_loss": true,
+    "use_take_profit": true,
+    "use_trailing_stop": false,
+    "use_pattern_reversal": false,
+    "percent_ratio": 1.0,
+    "atr_sl_multiplier": 1.5,
+    "atr_tp_multiplier": 3.0,
+    "atr_trailing_multiplier": 1.5
+}
