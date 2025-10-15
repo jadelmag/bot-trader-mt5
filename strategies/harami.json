@@ -2,7 +2,7 @@
     "use_signal_change": true,
     "use_stop_loss": true,
     "use_take_profit": true,
-    "use_trailing_stop": false,
+    "use_trailing_stop": true,
     "use_pattern_reversal": true,
     "percent_ratio": 0.2,
     "atr_sl_multiplier": 0.6,

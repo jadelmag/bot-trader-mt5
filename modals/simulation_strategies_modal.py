@@ -158,14 +158,10 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de estrategias Forex."""
         # --- Estrategias a excluir de la selección por defecto ---
         excluded_strategies = [
-            "strategy_bollinger_bands_breakout",
-            "strategy_candle_pattern_reversal",
+            "strategy_swing_trading_multi_indicator",
             "strategy_chart_pattern_breakout",
             "strategy_fibonacci_reversal",
-            "strategy_ichimoku_kinko_hyo",
-            "strategy_swing_trading_multi_indicator",
-            "strategy_piercing_line",
-            "strategy_three_outside_up_down"
+            "strategy_ichimoku_kinko_hyo"
         ]
 
         # --- Frame Superior para botones de selección ---
@@ -317,38 +313,7 @@ class SimulationStrategiesModal(tk.Toplevel):
             self._update_load_button_state(pattern_name)
 
             # Config predeterminada para patrones
-            pattern_config = {
-                'is_shooting_star': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 4.0, 'atr_trailing_multiplier': 1.0,
-                    'percent_ratio': 1.2
-                },
-                'is_engulfing': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_hammer': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 3.0, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_morning_star': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 0.6, 'atr_tp_multiplier': 4.5, 'atr_trailing_multiplier': 1.0,
-                    'percent_ratio': 0.2
-                },
-                'is_three_black_crows': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.4, 'atr_tp_multiplier': 3.5, 'atr_trailing_multiplier': 1.3,
-                    'percent_ratio': 0.9
-                }
-            }
+            pattern_config = {}
 
             # Para cada patrón seleccionado por defecto, establecer modo "Custom" y guardar su config
             for pattern_name in default_selected_candles:
