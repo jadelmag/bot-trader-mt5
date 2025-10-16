@@ -1,6 +1,6 @@
 {
     "slots": {
-        "forex": 8,
+        "forex": 6,
         "candle": 8,
         "custom": 0
     },

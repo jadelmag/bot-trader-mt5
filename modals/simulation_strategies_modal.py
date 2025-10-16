@@ -238,11 +238,15 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de patrones de velas."""
         # --- Patrones de velas a seleccionar por defecto ---
         default_selected_candles = [
-           "is_shooting_star",
+           "is_harami",
+           "is_three_inside_up_down",
+           "is_piercing_line",
+           "is_doji_reversal",
+           "is_marubozu",
+           "is_three_white_soldiers",
            "is_engulfing",
-           "is_hammer",
-           "is_morning_star",
-           "is_three_black_crows",
+           "is_shooting_star",
+           "is_hammer"
         ]
 
         # --- Frame Superior para botones de selección ---
