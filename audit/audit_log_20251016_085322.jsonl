@@ -2094,3 +2094,357 @@
 {"timestamp": "2025-10-16T17:06:01.199258", "event": "trade_close", "data": {"ticket": 53659439307, "symbol": "EURUSD", "close_price": 1.16749, "profit": -1.54}}
 {"timestamp": "2025-10-16T17:06:59.915401", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:07:00 | Balance: $63784.77"}}
 {"timestamp": "2025-10-16T17:06:59.915745", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:07:00 | Balance: $63784.77"}}
+{"timestamp": "2025-10-16T17:08:00.565926", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:08:00 | Balance: $63784.77"}}
+{"timestamp": "2025-10-16T17:08:00.566279", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:08:00 | Balance: $63784.77"}}
+{"timestamp": "2025-10-16T17:08:00.699432", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16784, "stop_loss": 1.16776, "take_profit": 1.16812, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:09:00.279718", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:09:00 | Balance: $63782.71"}}
+{"timestamp": "2025-10-16T17:09:00.280044", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:09:00 | Balance: $63782.71"}}
+{"timestamp": "2025-10-16T17:09:00.289545", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63780.65 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1765.65 | Pérdidas: $1778.03"}}
+{"timestamp": "2025-10-16T17:09:00.289763", "event": "trade_close", "data": {"ticket": 53659517274, "symbol": "EURUSD", "close_price": 1.16776, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:09:00.422839", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16764, "stop_loss": 1.16772, "take_profit": 1.16736, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:09:59.992620", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:10:00 | Balance: $63780.65"}}
+{"timestamp": "2025-10-16T17:09:59.992951", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:10:00 | Balance: $63780.65"}}
+{"timestamp": "2025-10-16T17:10:00.002787", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63778.59 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1765.65 | Pérdidas: $1780.09"}}
+{"timestamp": "2025-10-16T17:10:00.002992", "event": "trade_close", "data": {"ticket": 53659550068, "symbol": "EURUSD", "close_price": 1.16772, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:10:59.660217", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:11:00 | Balance: $63780.65"}}
+{"timestamp": "2025-10-16T17:10:59.660565", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:11:00 | Balance: $63780.65"}}
+{"timestamp": "2025-10-16T17:10:59.797299", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16773, "stop_loss": 1.16765, "take_profit": 1.16801, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:11:59.340736", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:12:00 | Balance: $63778.59"}}
+{"timestamp": "2025-10-16T17:11:59.341078", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:12:00 | Balance: $63778.59"}}
+{"timestamp": "2025-10-16T17:11:59.350851", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63776.53 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1765.65 | Pérdidas: $1782.15"}}
+{"timestamp": "2025-10-16T17:11:59.351169", "event": "trade_close", "data": {"ticket": 53659591201, "symbol": "EURUSD", "close_price": 1.16765, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:13:00.022653", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:13:00 | Balance: $63778.59"}}
+{"timestamp": "2025-10-16T17:13:00.022989", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:13:00 | Balance: $63778.59"}}
+{"timestamp": "2025-10-16T17:13:00.160603", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16771, "stop_loss": 1.16763, "take_profit": 1.16799, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:13:59.673275", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:14:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:13:59.673625", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:14:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:13:59.683611", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63774.47 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1765.65 | Pérdidas: $1784.21"}}
+{"timestamp": "2025-10-16T17:13:59.683871", "event": "trade_close", "data": {"ticket": 53659625755, "symbol": "EURUSD", "close_price": 1.16763, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:15:01.326957", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:15:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:15:01.327311", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:15:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:16:00.021541", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:16:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:16:00.021886", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:16:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:16:00.165975", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.1675, "stop_loss": 1.1678, "take_profit": 1.1669, "comment": "key-28-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:16:00.223049", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.1675, "stop_loss": 1.16758, "take_profit": 1.16722, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:16:59.702281", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:17:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:16:59.702629", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:17:00 | Balance: $63776.53"}}
+{"timestamp": "2025-10-16T17:16:59.833691", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16743, "stop_loss": 1.16751, "take_profit": 1.16715, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:18:01.384963", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:18:00 | Balance: $63774.47"}}
+{"timestamp": "2025-10-16T17:18:01.385285", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:18:00 | Balance: $63774.47"}}
+{"timestamp": "2025-10-16T17:18:01.394904", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63772.41 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1765.65 | Pérdidas: $1786.27"}}
+{"timestamp": "2025-10-16T17:18:01.395173", "event": "trade_close", "data": {"ticket": 53659702139, "symbol": "EURUSD", "close_price": 1.16751, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:18:01.481590", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63774.98 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$2.57 (+0.00%) | Ganancias: $1768.22 | Pérdidas: $1786.27"}}
+{"timestamp": "2025-10-16T17:18:01.481905", "event": "trade_close", "data": {"ticket": 53659676971, "symbol": "EURUSD", "close_price": 1.1674, "profit": 2.57}}
+{"timestamp": "2025-10-16T17:19:00.076811", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:19:00 | Balance: $63777.04"}}
+{"timestamp": "2025-10-16T17:19:00.077135", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:19:00 | Balance: $63777.04"}}
+{"timestamp": "2025-10-16T17:19:00.086902", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63779.61 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$2.57 (+0.00%) | Ganancias: $1770.79 | Pérdidas: $1786.27"}}
+{"timestamp": "2025-10-16T17:19:00.087193", "event": "trade_close", "data": {"ticket": 53659676971, "symbol": "EURUSD", "close_price": 1.1674, "profit": 2.57}}
+{"timestamp": "2025-10-16T17:19:00.211612", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.1672, "stop_loss": 1.16728, "take_profit": 1.16692, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:20:02.815709", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:20:00 | Balance: $63774.98"}}
+{"timestamp": "2025-10-16T17:20:02.816218", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:20:00 | Balance: $63774.98"}}
+{"timestamp": "2025-10-16T17:20:02.826397", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63772.92 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1788.33"}}
+{"timestamp": "2025-10-16T17:20:02.826711", "event": "trade_close", "data": {"ticket": 53659742851, "symbol": "EURUSD", "close_price": 1.16728, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:20:02.949509", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16709, "stop_loss": 1.16717, "take_profit": 1.16681, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:21:00.396477", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:21:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:21:00.396797", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:21:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:21:00.406529", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63770.86 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1790.39"}}
+{"timestamp": "2025-10-16T17:21:00.406805", "event": "trade_close", "data": {"ticket": 53659760900, "symbol": "EURUSD", "close_price": 1.16717, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:22:07.034194", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:22:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:22:07.034550", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:22:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:22:07.122337", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16718, "stop_loss": 1.16748, "take_profit": 1.16658, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:22:07.179414", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16718, "stop_loss": 1.16726, "take_profit": 1.1669, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:23:01.718278", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:23:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:23:01.718611", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:23:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:23:01.857690", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16718, "stop_loss": 1.16726, "take_profit": 1.1669, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:24:00.379734", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:24:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:24:00.380070", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:24:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:24:00.551760", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.6, "open_price": 1.16715, "stop_loss": 1.16727, "take_profit": 1.16679, "comment": "key-1-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:24:59.975857", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:25:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:24:59.976212", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:25:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:25:00.110051", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16709, "stop_loss": 1.16717, "take_profit": 1.16681, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:25:59.621244", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:26:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:25:59.621613", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:26:00 | Balance: $63772.92"}}
+{"timestamp": "2025-10-16T17:25:59.956301", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16708, "stop_loss": 1.16738, "take_profit": 1.16648, "comment": "key-28-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:26:00.049286", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16708, "stop_loss": 1.16716, "take_profit": 1.1668, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:26:59.551782", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:27:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:26:59.552159", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:27:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:26:59.562109", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63752.34 | FOREX STRATEGY_MA_CROSSOVER | FOREX | SHORT | PÉRDIDA: -$6.17 (-0.01%) | Ganancias: $1770.79 | Pérdidas: $1796.56"}}
+{"timestamp": "2025-10-16T17:26:59.562361", "event": "trade_close", "data": {"ticket": 53659821926, "symbol": "EURUSD", "close_price": 1.16727, "profit": -6.17}}
+{"timestamp": "2025-10-16T17:26:59.562695", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63750.28 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1798.62"}}
+{"timestamp": "2025-10-16T17:26:59.562867", "event": "trade_close", "data": {"ticket": 53659837709, "symbol": "EURUSD", "close_price": 1.16717, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:26:59.563132", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63748.22 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1800.68"}}
+{"timestamp": "2025-10-16T17:26:59.563307", "event": "trade_close", "data": {"ticket": 53659793525, "symbol": "EURUSD", "close_price": 1.16726, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:26:59.563600", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63746.16 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1802.74"}}
+{"timestamp": "2025-10-16T17:26:59.563796", "event": "trade_close", "data": {"ticket": 53659853463, "symbol": "EURUSD", "close_price": 1.16716, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:26:59.564069", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63744.10 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1804.80"}}
+{"timestamp": "2025-10-16T17:26:59.564247", "event": "trade_close", "data": {"ticket": 53659808733, "symbol": "EURUSD", "close_price": 1.16726, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:28:00.233783", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:28:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:28:00.234158", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:28:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:29:00.917969", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:29:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:29:00.918285", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:29:00 | Balance: $63758.51"}}
+{"timestamp": "2025-10-16T17:29:01.051184", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.1673, "stop_loss": 1.16722, "take_profit": 1.16758, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:29:59.517545", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:30:00 | Balance: $63756.45"}}
+{"timestamp": "2025-10-16T17:29:59.517900", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:30:00 | Balance: $63756.45"}}
+{"timestamp": "2025-10-16T17:29:59.527847", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63754.39 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1770.79 | Pérdidas: $1806.86"}}
+{"timestamp": "2025-10-16T17:29:59.528105", "event": "trade_close", "data": {"ticket": 53659904634, "symbol": "EURUSD", "close_price": 1.16722, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:29:59.658465", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16716, "stop_loss": 1.16724, "take_profit": 1.16688, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:31:00.198807", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:31:00 | Balance: $63756.45"}}
+{"timestamp": "2025-10-16T17:31:00.199232", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:31:00 | Balance: $63756.45"}}
+{"timestamp": "2025-10-16T17:31:00.285766", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63756.71 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$0.26 (+0.00%) | Ganancias: $1771.05 | Pérdidas: $1806.86"}}
+{"timestamp": "2025-10-16T17:31:00.286092", "event": "trade_close", "data": {"ticket": 53659920796, "symbol": "EURUSD", "close_price": 1.16715, "profit": 0.26}}
+{"timestamp": "2025-10-16T17:31:59.882218", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:32:00 | Balance: $63808.13"}}
+{"timestamp": "2025-10-16T17:31:59.882574", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:32:00 | Balance: $63808.13"}}
+{"timestamp": "2025-10-16T17:31:59.892523", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63859.55 | VELA THREE_BLACK_CROWS | VELA | SHORT | GANANCIA: +$51.42 (+0.08%) | Ganancias: $1822.47 | Pérdidas: $1806.86"}}
+{"timestamp": "2025-10-16T17:31:59.892714", "event": "trade_close", "data": {"ticket": 53659676954, "symbol": "EURUSD", "close_price": 1.1669, "profit": 51.42}}
+{"timestamp": "2025-10-16T17:31:59.893036", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63859.81 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$0.26 (+0.00%) | Ganancias: $1822.73 | Pérdidas: $1806.86"}}
+{"timestamp": "2025-10-16T17:31:59.893217", "event": "trade_close", "data": {"ticket": 53659920796, "symbol": "EURUSD", "close_price": 1.16715, "profit": 0.26}}
+{"timestamp": "2025-10-16T17:32:00.022083", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16689, "stop_loss": 1.16697, "take_profit": 1.16661, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:32:59.628053", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:33:00 | Balance: $63808.13"}}
+{"timestamp": "2025-10-16T17:32:59.628617", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:33:00 | Balance: $63808.13"}}
+{"timestamp": "2025-10-16T17:32:59.766610", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.1667399999999999, "stop_loss": 1.16682, "take_profit": 1.16646, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:34:00.293853", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:34:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:34:00.294229", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:34:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:34:00.303813", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63820.47 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$7.20 (+0.01%) | Ganancias: $1829.93 | Pérdidas: $1806.86"}}
+{"timestamp": "2025-10-16T17:34:00.304032", "event": "trade_close", "data": {"ticket": 53659957184, "symbol": "EURUSD", "close_price": 1.16661, "profit": 7.2}}
+{"timestamp": "2025-10-16T17:34:00.304326", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63818.41 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1808.92"}}
+{"timestamp": "2025-10-16T17:34:00.304530", "event": "trade_close", "data": {"ticket": 53659974281, "symbol": "EURUSD", "close_price": 1.16682, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:35:00.928195", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:35:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:35:00.928533", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:35:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:36:00.608542", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:36:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:36:00.608882", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:36:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:37:01.272204", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:37:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:37:01.272554", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:37:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:37:01.374611", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16704, "stop_loss": 1.16734, "take_profit": 1.16644, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:38:00.981636", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:38:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:38:00.982002", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:38:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:39:00.811949", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:39:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:39:00.812345", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:39:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:39:59.484521", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:40:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:39:59.485116", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:40:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:39:59.643019", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.1669, "stop_loss": 1.16698, "take_profit": 1.16662, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:40:59.216610", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:41:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:40:59.216981", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:41:00 | Balance: $63813.27"}}
+{"timestamp": "2025-10-16T17:40:59.352109", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16682, "stop_loss": 1.1669, "take_profit": 1.16654, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:42:00.850137", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:42:00 | Balance: $63811.21"}}
+{"timestamp": "2025-10-16T17:42:00.850489", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:42:00 | Balance: $63811.21"}}
+{"timestamp": "2025-10-16T17:42:00.860325", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63809.15 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1810.98"}}
+{"timestamp": "2025-10-16T17:42:00.860640", "event": "trade_close", "data": {"ticket": 53660105181, "symbol": "EURUSD", "close_price": 1.1669, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:42:00.956462", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63808.89 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$0.26 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1811.24"}}
+{"timestamp": "2025-10-16T17:42:00.956775", "event": "trade_close", "data": {"ticket": 53660085214, "symbol": "EURUSD", "close_price": 1.1669100000000001, "profit": -0.26}}
+{"timestamp": "2025-10-16T17:42:01.071730", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.1669100000000001, "stop_loss": 1.16683, "take_profit": 1.16719, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:42:59.721380", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:43:00 | Balance: $63808.89"}}
+{"timestamp": "2025-10-16T17:42:59.721754", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:43:00 | Balance: $63808.89"}}
+{"timestamp": "2025-10-16T17:42:59.732086", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63806.83 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1813.30"}}
+{"timestamp": "2025-10-16T17:42:59.732392", "event": "trade_close", "data": {"ticket": 53660130356, "symbol": "EURUSD", "close_price": 1.16683, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:42:59.732738", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63806.57 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$0.26 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1813.56"}}
+{"timestamp": "2025-10-16T17:42:59.733044", "event": "trade_close", "data": {"ticket": 53660085214, "symbol": "EURUSD", "close_price": 1.1669100000000001, "profit": -0.26}}
+{"timestamp": "2025-10-16T17:42:59.874259", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16685, "stop_loss": 1.16693, "take_profit": 1.16657, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:44:01.452813", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:44:00 | Balance: $63808.89"}}
+{"timestamp": "2025-10-16T17:44:01.453171", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:44:00 | Balance: $63808.89"}}
+{"timestamp": "2025-10-16T17:44:01.589715", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16675, "stop_loss": 1.16705, "take_profit": 1.16615, "comment": "key-29-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:44:01.649880", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16675, "stop_loss": 1.16683, "take_profit": 1.16647, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:45:00.212440", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:45:00 | Balance: $63806.83"}}
+{"timestamp": "2025-10-16T17:45:00.212802", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:45:00 | Balance: $63806.83"}}
+{"timestamp": "2025-10-16T17:45:00.222546", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63804.77 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $1829.93 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:45:00.222780", "event": "trade_close", "data": {"ticket": 53660166001, "symbol": "EURUSD", "close_price": 1.16683, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:45:00.311145", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63806.57 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$1.80 (+0.00%) | Ganancias: $1831.73 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:45:00.311472", "event": "trade_close", "data": {"ticket": 53660150625, "symbol": "EURUSD", "close_price": 1.16678, "profit": 1.8}}
+{"timestamp": "2025-10-16T17:45:59.916050", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:46:00 | Balance: $63808.63"}}
+{"timestamp": "2025-10-16T17:45:59.916438", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:46:00 | Balance: $63808.63"}}
+{"timestamp": "2025-10-16T17:45:59.925949", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63810.43 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$1.80 (+0.00%) | Ganancias: $1833.53 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:45:59.926159", "event": "trade_close", "data": {"ticket": 53660150625, "symbol": "EURUSD", "close_price": 1.16678, "profit": 1.8}}
+{"timestamp": "2025-10-16T17:46:00.142039", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16667, "stop_loss": 1.16675, "take_profit": 1.16639, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:46:15.354899", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63859.20 | VELA DOJI_REVERSAL | VELA | SHORT | GANANCIA: +$50.57 (+0.08%) | Ganancias: $1884.10 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:46:15.355223", "event": "trade_close", "data": {"ticket": 53659793510, "symbol": "EURUSD", "close_price": 1.16659, "profit": 50.57}}
+{"timestamp": "2025-10-16T17:46:59.774923", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:47:00 | Balance: $63859.20"}}
+{"timestamp": "2025-10-16T17:46:59.775376", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:47:00 | Balance: $63859.20"}}
+{"timestamp": "2025-10-16T17:46:59.785639", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63909.77 | VELA DOJI_REVERSAL | VELA | SHORT | GANANCIA: +$50.57 (+0.08%) | Ganancias: $1934.67 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:46:59.785979", "event": "trade_close", "data": {"ticket": 53659793510, "symbol": "EURUSD", "close_price": 1.16659, "profit": 50.57}}
+{"timestamp": "2025-10-16T17:46:59.931156", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16657, "stop_loss": 1.16687, "take_profit": 1.16597, "comment": "key-30-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:47:00.005775", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16659, "stop_loss": 1.16667, "take_profit": 1.16631, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:47:46.458018", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63909.78 | VELA THREE_BLACK_CROWS | VELA | SHORT | GANANCIA: +$50.58 (+0.08%) | Ganancias: $1985.25 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:47:46.458385", "event": "trade_close", "data": {"ticket": 53659853446, "symbol": "EURUSD", "close_price": 1.16649, "profit": 50.58}}
+{"timestamp": "2025-10-16T17:48:00.624640", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:48:00 | Balance: $63909.78"}}
+{"timestamp": "2025-10-16T17:48:00.625125", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:48:00 | Balance: $63909.78"}}
+{"timestamp": "2025-10-16T17:48:00.634972", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63960.36 | VELA THREE_BLACK_CROWS | VELA | SHORT | GANANCIA: +$50.58 (+0.08%) | Ganancias: $2035.83 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:48:00.635248", "event": "trade_close", "data": {"ticket": 53659853446, "symbol": "EURUSD", "close_price": 1.16649, "profit": 50.58}}
+{"timestamp": "2025-10-16T17:48:00.709159", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63962.93 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$2.57 (+0.00%) | Ganancias: $2038.40 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:48:00.709508", "event": "trade_close", "data": {"ticket": 53660194888, "symbol": "EURUSD", "close_price": 1.16657, "profit": 2.57}}
+{"timestamp": "2025-10-16T17:48:00.765974", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63963.44 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$0.51 (+0.00%) | Ganancias: $2038.91 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:48:00.766294", "event": "trade_close", "data": {"ticket": 53660209338, "symbol": "EURUSD", "close_price": 1.16657, "profit": 0.51}}
+{"timestamp": "2025-10-16T17:49:00.356314", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:49:00 | Balance: $63964.30"}}
+{"timestamp": "2025-10-16T17:49:00.356673", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:49:00 | Balance: $63964.30"}}
+{"timestamp": "2025-10-16T17:49:00.366693", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63966.87 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$2.57 (+0.00%) | Ganancias: $2041.48 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:49:00.367039", "event": "trade_close", "data": {"ticket": 53660194888, "symbol": "EURUSD", "close_price": 1.16657, "profit": 2.57}}
+{"timestamp": "2025-10-16T17:49:00.367427", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63967.38 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$0.51 (+0.00%) | Ganancias: $2041.99 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:49:00.367664", "event": "trade_close", "data": {"ticket": 53660209338, "symbol": "EURUSD", "close_price": 1.16657, "profit": 0.51}}
+{"timestamp": "2025-10-16T17:49:00.367961", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64018.82 | VELA DOJI_REVERSAL | VELA | SHORT | GANANCIA: +$51.44 (+0.08%) | Ganancias: $2093.43 | Pérdidas: $1815.62"}}
+{"timestamp": "2025-10-16T17:49:00.368141", "event": "trade_close", "data": {"ticket": 53660039037, "symbol": "EURUSD", "close_price": 1.16644, "profit": 51.44}}
+{"timestamp": "2025-10-16T17:49:00.454724", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16651, "stop_loss": 1.16681, "take_profit": 1.16591, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:49:00.526216", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16651, "stop_loss": 1.16659, "take_profit": 1.16623, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:50:00.159287", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:50:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:50:00.159637", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:50:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:50:00.169401", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63960.18 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2093.43 | Pérdidas: $1817.68"}}
+{"timestamp": "2025-10-16T17:50:00.169695", "event": "trade_close", "data": {"ticket": 53660238648, "symbol": "EURUSD", "close_price": 1.16659, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:50:59.888126", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:51:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:50:59.888468", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:51:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:51:00.024422", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16641, "stop_loss": 1.16649, "take_profit": 1.16613, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:52:00.591626", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:52:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:52:00.591982", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:52:00 | Balance: $63962.24"}}
+{"timestamp": "2025-10-16T17:52:00.726720", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16625, "stop_loss": 1.16655, "take_profit": 1.16565, "comment": "key-30-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:52:00.785287", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16625, "stop_loss": 1.16633, "take_profit": 1.16597, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:52:59.381885", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:53:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:52:59.382240", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:53:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:52:59.393441", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64016.77 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2093.43 | Pérdidas: $1819.74"}}
+{"timestamp": "2025-10-16T17:52:59.393750", "event": "trade_close", "data": {"ticket": 53660281952, "symbol": "EURUSD", "close_price": 1.16633, "profit": -2.06}}
+{"timestamp": "2025-10-16T17:52:59.394070", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64068.22 | VELA THREE_INSIDE_UP_DOWN | VELA | SHORT | GANANCIA: +$51.45 (+0.08%) | Ganancias: $2144.88 | Pérdidas: $1819.74"}}
+{"timestamp": "2025-10-16T17:52:59.394239", "event": "trade_close", "data": {"ticket": 53660165979, "symbol": "EURUSD", "close_price": 1.16615, "profit": 51.45}}
+{"timestamp": "2025-10-16T17:52:59.394551", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64075.42 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | GANANCIA: +$7.20 (+0.01%) | Ganancias: $2152.08 | Pérdidas: $1819.74"}}
+{"timestamp": "2025-10-16T17:52:59.394721", "event": "trade_close", "data": {"ticket": 53660264797, "symbol": "EURUSD", "close_price": 1.1661299999999999, "profit": 7.2}}
+{"timestamp": "2025-10-16T17:53:59.982782", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:54:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:53:59.983073", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:54:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:54:59.715496", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:55:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:54:59.715862", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:55:00 | Balance: $64018.83"}}
+{"timestamp": "2025-10-16T17:55:59.392388", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:56:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:55:59.392820", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:56:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:55:59.402718", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63967.39 | VELA THREE_OUTSIDE_UP_DOWN | VELA | SHORT | PÉRDIDA: -$25.72 (-0.04%) | Ganancias: $2152.08 | Pérdidas: $1845.46"}}
+{"timestamp": "2025-10-16T17:55:59.403031", "event": "trade_close", "data": {"ticket": 53660281941, "symbol": "EURUSD", "close_price": 1.16655, "profit": -25.72}}
+{"timestamp": "2025-10-16T17:57:43.546096", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:57:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:57:43.546470", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:57:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:58:29.125915", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:58:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:58:29.126303", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:58:00 | Balance: $63993.11"}}
+{"timestamp": "2025-10-16T17:58:29.233363", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16629, "stop_loss": 1.16659, "take_profit": 1.16569, "comment": "key-26-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:58:29.285618", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16629, "stop_loss": 1.16637, "take_profit": 1.16601, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T17:59:00.601615", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:59:00 | Balance: $63991.05"}}
+{"timestamp": "2025-10-16T17:59:00.601886", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 18:59:00 | Balance: $63991.05"}}
+{"timestamp": "2025-10-16T17:59:00.611807", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63988.99 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2152.08 | Pérdidas: $1847.52"}}
+{"timestamp": "2025-10-16T17:59:00.612119", "event": "trade_close", "data": {"ticket": 53660410380, "symbol": "EURUSD", "close_price": 1.16637, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:00:00.274629", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:00:00 | Balance: $63991.05"}}
+{"timestamp": "2025-10-16T18:00:00.275010", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:00:00 | Balance: $63991.05"}}
+{"timestamp": "2025-10-16T18:00:00.368211", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 1.0, "open_price": 1.16639, "stop_loss": 1.16669, "take_profit": 1.16579, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:00:00.462540", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.3, "open_price": 1.16639, "stop_loss": 1.16647, "take_profit": 1.16611, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:01:00.138059", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:01:00 | Balance: $63911.85"}}
+{"timestamp": "2025-10-16T18:01:00.138377", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:01:00 | Balance: $63911.85"}}
+{"timestamp": "2025-10-16T18:01:00.148959", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63886.13 | VELA EVENING_STAR | VELA | SHORT | PÉRDIDA: -$25.72 (-0.04%) | Ganancias: $2152.08 | Pérdidas: $1873.24"}}
+{"timestamp": "2025-10-16T18:01:00.149314", "event": "trade_close", "data": {"ticket": 53660410368, "symbol": "EURUSD", "close_price": 1.16659, "profit": -25.72}}
+{"timestamp": "2025-10-16T18:01:00.149668", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63860.42 | VELA DOJI_REVERSAL | VELA | SHORT | PÉRDIDA: -$25.71 (-0.04%) | Ganancias: $2152.08 | Pérdidas: $1898.95"}}
+{"timestamp": "2025-10-16T18:01:00.149864", "event": "trade_close", "data": {"ticket": 53660238625, "symbol": "EURUSD", "close_price": 1.16681, "profit": -25.71}}
+{"timestamp": "2025-10-16T18:01:00.150197", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63834.71 | VELA DOJI_REVERSAL | VELA | SHORT | PÉRDIDA: -$25.71 (-0.04%) | Ganancias: $2152.08 | Pérdidas: $1924.66"}}
+{"timestamp": "2025-10-16T18:01:00.150410", "event": "trade_close", "data": {"ticket": 53660435564, "symbol": "EURUSD", "close_price": 1.16669, "profit": -25.71}}
+{"timestamp": "2025-10-16T18:01:00.150751", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63832.65 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | SHORT | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2152.08 | Pérdidas: $1926.72"}}
+{"timestamp": "2025-10-16T18:01:00.151044", "event": "trade_close", "data": {"ticket": 53660435575, "symbol": "EURUSD", "close_price": 1.16647, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:01:00.393576", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16672, "stop_loss": 1.16664, "take_profit": 1.167, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:01:59.980170", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:02:00 | Balance: $63909.79"}}
+{"timestamp": "2025-10-16T18:01:59.980550", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:02:00 | Balance: $63909.79"}}
+{"timestamp": "2025-10-16T18:01:59.990823", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63907.73 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2152.08 | Pérdidas: $1928.78"}}
+{"timestamp": "2025-10-16T18:01:59.991131", "event": "trade_close", "data": {"ticket": 53660451760, "symbol": "EURUSD", "close_price": 1.1666400000000001, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:02:59.719111", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:03:00 | Balance: $63909.79"}}
+{"timestamp": "2025-10-16T18:02:59.719466", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:03:00 | Balance: $63909.79"}}
+{"timestamp": "2025-10-16T18:02:59.854032", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16671, "stop_loss": 1.16641, "take_profit": 1.16731, "comment": "key-24-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:02:59.910870", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16671, "stop_loss": 1.16663, "take_profit": 1.16699, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:03:19.161337", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63892.73 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$6.94 (+0.01%) | Ganancias: $2159.02 | Pérdidas: $1928.78"}}
+{"timestamp": "2025-10-16T18:03:19.161678", "event": "trade_close", "data": {"ticket": 53660489107, "symbol": "EURUSD", "close_price": 1.16698, "profit": 6.9399999999999995}}
+{"timestamp": "2025-10-16T18:04:00.551186", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:04:00 | Balance: $63892.73"}}
+{"timestamp": "2025-10-16T18:04:00.551542", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:04:00 | Balance: $63892.73"}}
+{"timestamp": "2025-10-16T18:04:00.561395", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63868.73 | VELA THREE_OUTSIDE_UP_DOWN | VELA | SHORT | PÉRDIDA: -$24.00 (-0.04%) | Ganancias: $2159.02 | Pérdidas: $1952.78"}}
+{"timestamp": "2025-10-16T18:04:00.561642", "event": "trade_close", "data": {"ticket": 53660209304, "symbol": "EURUSD", "close_price": 1.16687, "profit": -24.0}}
+{"timestamp": "2025-10-16T18:04:00.561947", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63875.67 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$6.94 (+0.01%) | Ganancias: $2165.96 | Pérdidas: $1952.78"}}
+{"timestamp": "2025-10-16T18:04:00.562124", "event": "trade_close", "data": {"ticket": 53660489107, "symbol": "EURUSD", "close_price": 1.16698, "profit": 6.9399999999999995}}
+{"timestamp": "2025-10-16T18:04:00.683823", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16702, "stop_loss": 1.16694, "take_profit": 1.1673, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:05:01.309436", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:05:00 | Balance: $63892.73"}}
+{"timestamp": "2025-10-16T18:05:01.309790", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:05:00 | Balance: $63892.73"}}
+{"timestamp": "2025-10-16T18:05:01.448819", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16709, "stop_loss": 1.16701, "take_profit": 1.16737, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:05:59.965269", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:06:00 | Balance: $63890.67"}}
+{"timestamp": "2025-10-16T18:05:59.965648", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:06:00 | Balance: $63890.67"}}
+{"timestamp": "2025-10-16T18:05:59.975894", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63888.61 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2165.96 | Pérdidas: $1954.84"}}
+{"timestamp": "2025-10-16T18:05:59.976198", "event": "trade_close", "data": {"ticket": 53660526825, "symbol": "EURUSD", "close_price": 1.1670099999999999, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:06:00.104404", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16716, "stop_loss": 1.16708, "take_profit": 1.16744, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:07:01.741496", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:07:00 | Balance: $63888.61"}}
+{"timestamp": "2025-10-16T18:07:01.741847", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:07:00 | Balance: $63888.61"}}
+{"timestamp": "2025-10-16T18:07:01.752418", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63886.55 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2165.96 | Pérdidas: $1956.90"}}
+{"timestamp": "2025-10-16T18:07:01.752732", "event": "trade_close", "data": {"ticket": 53660551024, "symbol": "EURUSD", "close_price": 1.16708, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:08:01.423706", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:08:00 | Balance: $63886.55"}}
+{"timestamp": "2025-10-16T18:08:01.424057", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:08:00 | Balance: $63886.55"}}
+{"timestamp": "2025-10-16T18:08:01.433873", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63884.49 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2165.96 | Pérdidas: $1958.96"}}
+{"timestamp": "2025-10-16T18:08:01.434185", "event": "trade_close", "data": {"ticket": 53660508433, "symbol": "EURUSD", "close_price": 1.16694, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:08:01.566575", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.167, "stop_loss": 1.16692, "take_profit": 1.16728, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:09:05.182908", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:09:00 | Balance: $63886.55"}}
+{"timestamp": "2025-10-16T18:09:05.183251", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:09:00 | Balance: $63886.55"}}
+{"timestamp": "2025-10-16T18:09:05.314450", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16709, "stop_loss": 1.16701, "take_profit": 1.16737, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:10:01.794172", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:10:00 | Balance: $63884.49"}}
+{"timestamp": "2025-10-16T18:10:01.794528", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:10:00 | Balance: $63884.49"}}
+{"timestamp": "2025-10-16T18:10:01.804801", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63882.43 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2165.96 | Pérdidas: $1961.02"}}
+{"timestamp": "2025-10-16T18:10:01.805120", "event": "trade_close", "data": {"ticket": 53660626741, "symbol": "EURUSD", "close_price": 1.1670099999999999, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:10:01.930539", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16715, "stop_loss": 1.16707, "take_profit": 1.16743, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:11:04.429455", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:11:00 | Balance: $63882.43"}}
+{"timestamp": "2025-10-16T18:11:04.429810", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:11:00 | Balance: $63882.43"}}
+{"timestamp": "2025-10-16T18:11:04.439807", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63880.37 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2165.96 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:11:04.440109", "event": "trade_close", "data": {"ticket": 53660643949, "symbol": "EURUSD", "close_price": 1.16707, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:12:01.017882", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:12:00 | Balance: $63882.43"}}
+{"timestamp": "2025-10-16T18:12:01.018319", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:12:00 | Balance: $63882.43"}}
+{"timestamp": "2025-10-16T18:12:01.149977", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16702, "stop_loss": 1.16672, "take_profit": 1.16762, "comment": "key-17-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:12:01.209619", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16702, "stop_loss": 1.16694, "take_profit": 1.1673, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:12:59.688988", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:13:00 | Balance: $63948.23"}}
+{"timestamp": "2025-10-16T18:12:59.689308", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:13:00 | Balance: $63948.23"}}
+{"timestamp": "2025-10-16T18:12:59.699005", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63999.63 | VELA PIERCING_LINE | VELA | LONG | GANANCIA: +$51.40 (+0.08%) | Ganancias: $2217.36 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:12:59.699262", "event": "trade_close", "data": {"ticket": 53660489099, "symbol": "EURUSD", "close_price": 1.16731, "profit": 51.4}}
+{"timestamp": "2025-10-16T18:12:59.699687", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64006.83 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$7.20 (+0.01%) | Ganancias: $2224.56 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:12:59.699900", "event": "trade_close", "data": {"ticket": 53660671557, "symbol": "EURUSD", "close_price": 1.1673, "profit": 7.2}}
+{"timestamp": "2025-10-16T18:12:59.700191", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64014.03 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$7.20 (+0.01%) | Ganancias: $2231.76 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:12:59.700358", "event": "trade_close", "data": {"ticket": 53660603765, "symbol": "EURUSD", "close_price": 1.16728, "profit": 7.2}}
+{"timestamp": "2025-10-16T18:12:59.829141", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16722, "stop_loss": 1.16692, "take_profit": 1.16782, "comment": "key-29-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:12:59.881669", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16722, "stop_loss": 1.16714, "take_profit": 1.1675, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:14:00.368437", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:14:00 | Balance: $63948.23"}}
+{"timestamp": "2025-10-16T18:14:00.368781", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:14:00 | Balance: $63948.23"}}
+{"timestamp": "2025-10-16T18:14:00.482809", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63949.52 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$1.29 (+0.00%) | Ganancias: $2233.05 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:14:00.483130", "event": "trade_close", "data": {"ticket": 53660689764, "symbol": "EURUSD", "close_price": 1.16727, "profit": 1.29}}
+{"timestamp": "2025-10-16T18:15:00.015552", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:15:00 | Balance: $63949.52"}}
+{"timestamp": "2025-10-16T18:15:00.015963", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:15:00 | Balance: $63949.52"}}
+{"timestamp": "2025-10-16T18:15:00.026271", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63950.81 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | GANANCIA: +$1.29 (+0.00%) | Ganancias: $2234.34 | Pérdidas: $1963.08"}}
+{"timestamp": "2025-10-16T18:15:00.026591", "event": "trade_close", "data": {"ticket": 53660689764, "symbol": "EURUSD", "close_price": 1.16727, "profit": 1.29}}
+{"timestamp": "2025-10-16T18:15:00.160493", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16744, "stop_loss": 1.16736, "take_profit": 1.16772, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:16:02.720712", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:16:00 | Balance: $63949.52"}}
+{"timestamp": "2025-10-16T18:16:02.721047", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:16:00 | Balance: $63949.52"}}
+{"timestamp": "2025-10-16T18:17:03.432046", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:17:00 | Balance: $63947.46"}}
+{"timestamp": "2025-10-16T18:17:03.432392", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:17:00 | Balance: $63947.46"}}
+{"timestamp": "2025-10-16T18:17:03.442099", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63945.40 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2234.34 | Pérdidas: $1965.14"}}
+{"timestamp": "2025-10-16T18:17:03.442370", "event": "trade_close", "data": {"ticket": 53660732238, "symbol": "EURUSD", "close_price": 1.16736, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:17:03.572483", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16753, "stop_loss": 1.16745, "take_profit": 1.16781, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:18:00.114734", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:18:00 | Balance: $63998.85"}}
+{"timestamp": "2025-10-16T18:18:00.115159", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:18:00 | Balance: $63998.85"}}
+{"timestamp": "2025-10-16T18:18:00.125228", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $64050.24 | VELA INVERTED_HAMMER | VELA | LONG | GANANCIA: +$51.39 (+0.08%) | Ganancias: $2285.73 | Pérdidas: $1965.14"}}
+{"timestamp": "2025-10-16T18:18:00.125540", "event": "trade_close", "data": {"ticket": 53660671516, "symbol": "EURUSD", "close_price": 1.1676199999999999, "profit": 51.39}}
+{"timestamp": "2025-10-16T18:18:00.249535", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16764, "stop_loss": 1.16734, "take_profit": 1.16824, "comment": "key-29-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:18:00.309721", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16764, "stop_loss": 1.16756, "take_profit": 1.16792, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:18:59.885299", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:19:00 | Balance: $63998.85"}}
+{"timestamp": "2025-10-16T18:18:59.885674", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:19:00 | Balance: $63998.85"}}
+{"timestamp": "2025-10-16T18:19:59.562352", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:20:00 | Balance: $63996.79"}}
+{"timestamp": "2025-10-16T18:19:59.562792", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:20:00 | Balance: $63996.79"}}
+{"timestamp": "2025-10-16T18:19:59.572649", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63994.73 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2285.73 | Pérdidas: $1967.20"}}
+{"timestamp": "2025-10-16T18:19:59.572894", "event": "trade_close", "data": {"ticket": 53660806953, "symbol": "EURUSD", "close_price": 1.16756, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:19:59.659005", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16763, "stop_loss": 1.16733, "take_profit": 1.16823, "comment": "key-21-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:19:59.714691", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16763, "stop_loss": 1.16755, "take_profit": 1.16791, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:21:00.253143", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:21:00 | Balance: $63992.67"}}
+{"timestamp": "2025-10-16T18:21:00.253490", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:21:00 | Balance: $63992.67"}}
+{"timestamp": "2025-10-16T18:21:00.263520", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63990.61 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2285.73 | Pérdidas: $1969.26"}}
+{"timestamp": "2025-10-16T18:21:00.263863", "event": "trade_close", "data": {"ticket": 53660781216, "symbol": "EURUSD", "close_price": 1.16745, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:21:00.264262", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63988.55 | FOREX STRATEGY_BOLLINGER_BANDS_BREAKOUT | FOREX | LONG | PÉRDIDA: -$2.06 (-0.00%) | Ganancias: $2285.73 | Pérdidas: $1971.32"}}
+{"timestamp": "2025-10-16T18:21:00.264550", "event": "trade_close", "data": {"ticket": 53660876797, "symbol": "EURUSD", "close_price": 1.16755, "profit": -2.06}}
+{"timestamp": "2025-10-16T18:22:00.932570", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:22:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:22:00.932907", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:22:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:22:00.943111", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63915.57 | VELA DOJI_REVERSAL | VELA | LONG | PÉRDIDA: -$25.70 (-0.04%) | Ganancias: $2285.73 | Pérdidas: $1997.02"}}
+{"timestamp": "2025-10-16T18:22:00.943438", "event": "trade_close", "data": {"ticket": 53660876787, "symbol": "EURUSD", "close_price": 1.16733, "profit": -25.7}}
+{"timestamp": "2025-10-16T18:22:00.943831", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $63889.87 | VELA THREE_INSIDE_UP_DOWN | VELA | LONG | PÉRDIDA: -$25.70 (-0.04%) | Ganancias: $2285.73 | Pérdidas: $2022.72"}}
+{"timestamp": "2025-10-16T18:22:00.944116", "event": "trade_close", "data": {"ticket": 53660806911, "symbol": "EURUSD", "close_price": 1.16734, "profit": -25.7}}
+{"timestamp": "2025-10-16T18:23:03.660579", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:23:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:23:03.660898", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:23:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:23:03.799151", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 1.0, "open_price": 1.16742, "stop_loss": 1.16712, "take_profit": 1.16802, "comment": "key-24-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:23:03.852016", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.3, "open_price": 1.16742, "stop_loss": 1.16734, "take_profit": 1.1677, "comment": "key-3-Bot-Simulation"}}
+{"timestamp": "2025-10-16T18:24:08.478476", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:24:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:24:08.478868", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:24:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:27:52.116394", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:27:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:27:52.116773", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:27:00 | Balance: $63941.27"}}
+{"timestamp": "2025-10-16T18:28:00.354034", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:28:00 | Balance: $63939.21"}}
+{"timestamp": "2025-10-16T18:28:00.354409", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:28:00 | Balance: $63939.21"}}
+{"timestamp": "2025-10-16T18:31:25.967437", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:31:00 | Balance: $63939.21"}}
+{"timestamp": "2025-10-16T18:31:25.967795", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 19:31:00 | Balance: $63939.21"}}

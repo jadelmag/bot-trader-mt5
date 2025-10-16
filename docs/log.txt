@@ -3344,3 +3344,11 @@
 
 me gustaria que me hicieras un resumen con el dinero total, dinero invertido, beneficios totales, perdidas totales, dinero neto.
 Además, un resumen de todas las estrategias forex y patrones de vela que se han utilizado, cuales han sido las que mayor beneficios han tenido y las que mayores perdidas han generado. para ello quiero que primero leas y analices el prompt que te paso al completo.
+
+
+
+
+
+vamos a empezar por indicators.py, 
+generame las funciones que hay que modificar en las que yo solo tenga que copiar y pegar
+siempre respetando los valores que nos sean utiles de otras graficas como: momentum, macd, atr, rsi, media movil, etc

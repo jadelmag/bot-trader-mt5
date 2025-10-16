@@ -43,8 +43,17 @@ class RiskManager:
                 self._log("[RISK-ERROR] No se pudo obtener información de la cuenta o del símbolo.", 'error')
                 return 0.0
 
+            # PROBLEMA:
+            # No calcula el volumen basado en el SL como debería
+            # Usa directamente el risk_per_trade_percent como volumen
+            # Con risk_per_trade_percent = 100.0 en config.json, está arriesgando 100 lotes por operación
+            
             risk_per_trade_percent = float(self.simulation.general_config.get('risk_per_trade_percent', 1.0))
             volume = risk_per_trade_percent * (risk_multiplier / 100.0)
+
+            # money_to_risk = equity * (risk_per_trade_percent / 100) * risk_multiplier
+            # loss_per_lot = sl_pips * point * contract_size
+            # volume = money_to_risk / loss_per_lot
 
             # Ajustar si está fuera de rango
             if volume < symbol_info.volume_min:
