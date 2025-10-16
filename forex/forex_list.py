@@ -92,7 +92,7 @@ class ForexStrategies:
         is_in_upper_zone = current_price_position >= 0.7  # 30% superior
         if (is_downtrend_or_neutral and is_in_upper_zone and 
             rsi > 60 and rsi_losing and bearish_reversal):
-            return 'short’
+            return 'short'
 
         return None
 
@@ -206,7 +206,7 @@ class ForexStrategies:
             # TODAS las condiciones deben cumplirse para SHORT
             if (macd_cross_down and rsi_perfect_zone and 
                 macd_weakness and price_confirmation):
-                return 'short’
+                return 'short'
 
         return None
 

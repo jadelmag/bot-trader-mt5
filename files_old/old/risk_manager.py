@@ -30,120 +30,51 @@ class RiskManager:
         else:
             print(message)
 
-    def calculate_volume(self, risk_multiplier=1.0, strategy_name=None, stop_loss_pips=None):
-        """
-        Calcula el volumen de la operación basado en el riesgo porcentual, Stop Loss y configuración de estrategia.
-        
-        Fórmula: Volumen = (Capital × Risk% × Strategy_Ratio%) ÷ (SL_pips × Pip_value)
-        
-        Args:
-            risk_multiplier (float): Multiplicador de riesgo adicional
-            strategy_name (str): Nombre de la estrategia para obtener percent_ratio
-            stop_loss_pips (float): Stop Loss en pips para calcular el riesgo real
-        
-        Returns:
-            float: Volumen calculado en lotes
-        """
+    def calculate_volume(self, risk_multiplier=1.0):
+        """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
         if not mt5 or not mt5.terminal_info():
-            self._log("[RISK-ERROR] MT5 no disponible para calcular volumen.", 'error')
-            return 0.01  # Volumen mínimo seguro
-        
+            return 0.0
+
         try:
             account_info = mt5.account_info()
             symbol_info = mt5.symbol_info(self.simulation.symbol)
-            
+
             if not account_info or not symbol_info:
                 self._log("[RISK-ERROR] No se pudo obtener información de la cuenta o del símbolo.", 'error')
-                return 0.01  # Volumen mínimo seguro
+                return 0.0
+
+            # PROBLEMA:
+            # No calcula el volumen basado en el SL como debería
+            # Usa directamente el risk_per_trade_percent como volumen
+            # Con risk_per_trade_percent = 100.0 en config.json, está arriesgando 100 lotes por operación
             
-            # --- 1. OBTENER CONFIGURACIÓN ---
-            equity = account_info.equity
             risk_per_trade_percent = float(self.simulation.general_config.get('risk_per_trade_percent', 1.0))
-            
-            # Obtener percent_ratio de la estrategia específica
-            strategy_config = {}
-            if strategy_name and hasattr(self.simulation, 'strategies_config'):
-                strategy_config = self.simulation.strategies_config.get(strategy_name, {})
-            
-            percent_ratio = strategy_config.get('percent_ratio', 1.0)
-            
-            # Si no se proporciona SL, usar el de la estrategia o default
-            if stop_loss_pips is None:
-                stop_loss_pips = strategy_config.get('stop_loss_pips', 10.0)
-            
-            # --- 2. CALCULAR RIESGO EN DINERO ---
-            # Riesgo base del capital
-            base_risk_amount = equity * (risk_per_trade_percent / 100.0)
-            
-            # Aplicar ratio de la estrategia
-            strategy_risk_amount = base_risk_amount * percent_ratio
-            
-            # Aplicar multiplicador adicional
-            total_risk_amount = strategy_risk_amount * risk_multiplier
-            
-            # --- 3. CALCULAR VALOR DEL PIP ---
-            # Para EURUSD: 1 lote = 10€/pip, 0.1 lote = 1€/pip, 0.01 lote = 0.1€/pip
-            contract_size = symbol_info.trade_contract_size  # Normalmente 100,000
-            point = symbol_info.point  # Normalmente 0.00001 para EURUSD
-            
-            # Calcular valor del pip por lote
-            if self.simulation.symbol == "EURUSD":
-                pip_value_per_lot = 10.0  # 10€ por pip por lote estándar
-            else:
-                # Cálculo genérico para otros pares
-                pip_value_per_lot = (contract_size * point * 10)  # 10 pips = 1 pip real
-            
-            # --- 4. CALCULAR VOLUMEN BASADO EN SL ---
-            if stop_loss_pips > 0 and pip_value_per_lot > 0:
-                # Volumen = Riesgo_en_dinero ÷ (SL_pips × Valor_pip_por_lote)
-                calculated_volume = total_risk_amount / (stop_loss_pips * pip_value_per_lot)
-            else:
-                self._log("[RISK-WARN] SL o pip_value inválidos. Usando volumen mínimo.", 'warn')
-                calculated_volume = 0.01
-            
-            # --- 5. APLICAR LÍMITES DEL BROKER ---
-            volume_min = symbol_info.volume_min
-            volume_max = symbol_info.volume_max
-            volume_step = symbol_info.volume_step
-            
-            # Ajustar a límites
-            if calculated_volume < volume_min:
-                self._log(f"[RISK-WARN] Volumen calculado ({calculated_volume:.6f}) menor que mínimo ({volume_min}). Ajustado.", 'warn')
-                calculated_volume = volume_min
-            elif calculated_volume > volume_max:
-                self._log(f"[RISK-WARN] Volumen calculado ({calculated_volume:.6f}) mayor que máximo ({volume_max}). Ajustado.", 'warn')
-                calculated_volume = volume_max
-            
-            # Ajustar al step del broker
-            if volume_step > 0:
-                calculated_volume = round(calculated_volume / volume_step) * volume_step
-            
-            # --- 6. LOGGING DETALLADO ---
-            if self.simulation.debug_mode:
-                actual_risk = calculated_volume * stop_loss_pips * pip_value_per_lot
-                risk_percentage = (actual_risk / equity) * 100
-                
-                self._log(
-                    f"[RISK-DEBUG] Cálculo de volumen para {strategy_name or 'estrategia'}:\n"
-                    f"  Capital: {equity:.2f}€\n"
-                    f"  Risk config: {risk_per_trade_percent}%\n"
-                    f"  Strategy ratio: {percent_ratio}\n"
-                    f"  Risk multiplier: {risk_multiplier}\n"
-                    f"  Stop Loss: {stop_loss_pips} pips\n"
-                    f"  Pip value: {pip_value_per_lot}€/pip/lote\n"
-                    f"  Riesgo objetivo: {total_risk_amount:.2f}€\n"
-                    f"  Volumen calculado: {calculated_volume} lotes\n"
-                    f"  Riesgo real: {actual_risk}€ ({risk_percentage}%)"
-                )
-            
-            return round(calculated_volume, 6)
-            
+            volume = risk_per_trade_percent * (risk_multiplier / 100.0)
+
+            # money_to_risk = equity * (risk_per_trade_percent / 100) * risk_multiplier
+            # loss_per_lot = sl_pips * point * contract_size
+            # volume = money_to_risk / loss_per_lot
+
+            # Ajustar si está fuera de rango
+            if volume < symbol_info.volume_min:
+                self._log(f"[RISK-WARN] Volumen menor que el mínimo ({symbol_info.volume_min}). Ajustado.", 'warn')
+                volume = symbol_info.volume_min
+            elif volume > symbol_info.volume_max:
+                self._log(f"[RISK-WARN] Volumen mayor que el máximo ({symbol_info.volume_max}). Ajustado.", 'warn')
+                volume = symbol_info.volume_max
+
+            # Asegurar múltiplo del step
+            step = symbol_info.volume_step
+            if step > 0 and (volume % step) != 0:
+                original_volume = volume
+                volume = math.floor(volume / step) * step
+                self._log(f"[RISK-WARN] Volumen ajustado: {original_volume:.6f} → {volume:.6f} (step={step})", 'warn')
+
+            return round(volume, 6)
+
         except Exception as e:
             self._log(f"[RISK-ERROR] Error al calcular el volumen: {str(e)}", 'error')
-            import traceback
-            if hasattr(self.simulation, 'debug_mode') and self.simulation.debug_mode:
-                self._log(f"[RISK-DEBUG] Traceback: {traceback.format_exc()}", 'error')
-            return 0.01  # Volumen mínimo seguro en caso de error
+            return 0.0
 
     def check_daily_profit_limit(self):
         """Verifica si se ha alcanzado el límite de ganancia diaria."""
@@ -234,3 +165,42 @@ class RiskManager:
         except Exception:
             return 0.0
 
+
+    # def calculate_volume(self, risk_multiplier=1.0):
+    #     """Calcula el volumen de la operación basado en el riesgo porcentual del equity."""
+    #     if not mt5 or not mt5.terminal_info():
+    #         return 0.0
+
+    #     try:
+    #         account_info = mt5.account_info()
+    #         symbol_info = mt5.symbol_info(self.simulation.symbol)
+
+    #         if not account_info or not symbol_info:
+    #             self._log("[RISK-ERROR] No se pudo obtener información de la cuenta o del símbolo.", 'error')
+    #             return 0.0
+
+    #         risk_per_trade_percent = float(self.simulation.general_config.get('risk_per_trade_percent', 1.0))
+    #         volume = risk_per_trade_percent * (risk_multiplier / 100.0)
+
+    #         if volume < symbol_info.volume_min:
+    #             self._log(f"[RISK-WARN] Volumen calculado ({volume}) es menor que el mínimo ({symbol_info.volume_min}).", 'warn')
+    #         if volume > symbol_info.volume_max:
+    #             self._log(f"[RISK-WARN] Volumen ajustado al máximo: {symbol_info.volume_max}.", 'warn')
+
+    #         # Asegurar que el volumen sea múltiplo del step
+    #         volume_step = symbol_info.volume_step
+    #         if volume_step > 0 and volume % volume_step != 0:
+    #             original_volume = volume
+    #             # Truncar los decimales adicionales sin redondear
+    #             volume = (volume * (1/volume_step) // 1) * volume_step
+    #             self._log(
+    #                 f"[RISK-WARN] Volumen ajustado: {original_volume:.6f} → {volume:.6f} "
+    #                 f"(debe ser múltiplo de {volume_step})", 
+    #                 'warn'
+    #             )
+
+    #         return volume
+
+    #     except Exception as e:
+    #         self._log(f"[RISK-ERROR] Error al calcular el volumen: {str(e)}", 'error')
+    #         return 0.0
