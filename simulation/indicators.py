@@ -217,14 +217,14 @@ class IndicatorCalculator:
     
     def confirm_signal_with_indicators(self, candles_df, signal_type, strategy_name=None):
         """
-        Confirma señales usando múltiples indicadores OPTIMIZADO PARA WINRATE 100%.
-        Sistema de confirmación ULTRA-ESTRICTO:
-        - Requiere 4 de 6 confirmaciones (67% mínimo)
-        - RSI en zonas EXTREMAS únicamente
-        - Solo cruces MACD confirmados
-        - Momentum OBLIGATORIO en dirección correcta
-        - Tolerancias mínimas (0.1%)
-        - Confirmaciones adicionales con Williams %R y CCI
+        Confirma señales usando análisis inteligente de múltiples indicadores y tendencias.
+        Sistema de confirmación INTELIGENTE:
+        - Analiza las últimas 10 velas para determinar tendencia real
+        - Requiere 3 de 6 confirmaciones (50% - más flexible)
+        - RSI flexible pero efectivo
+        - Confirmación de momentum en múltiples velas
+        - Análisis de tendencia de precios
+        - Usa TODOS los indicadores disponibles de forma inteligente
         """
         if candles_df.empty or len(candles_df) < 50:
             return False
@@ -249,227 +249,206 @@ class IndicatorCalculator:
         atr = last_row.get('ATR')
         williams_r = last_row.get('Williams_R')
         cci = last_row.get('CCI')
-        adx = last_row.get('ADX')
-        
-        # Verificar que tengamos datos válidos
-        if pd.isna(rsi) or pd.isna(macd_line) or pd.isna(ema_50) or pd.isna(momentum):
-            if self.debug_mode:
-                self._log(f"[INDICATORS-DEBUG] Indicadores críticos no disponibles para confirmación")
-            return False
-        
-        # CONFIRMACIÓN PARA LONG - WINRATE 100%
-        if signal_type == 'long':
-            # 1. RSI: ZONA EXTREMA de sobreventa + ganando fuerza
-            rsi_extreme_oversold = rsi < 35 and rsi > rsi_prev and rsi > 25
-            rsi_ok = rsi_extreme_oversold
-            
-            # 2. MACD: SOLO cruces confirmados al alza (NO posiciones estáticas)
-            macd_cross_up = (macd_line > macd_signal and macd_line_prev <= macd_signal_prev)
-            macd_strength = macd_line > macd_line_prev  # MACD ganando fuerza
-            macd_ok = macd_cross_up and macd_strength
-            
-            # 3. Momentum: OBLIGATORIO positivo y mejorando
-            momentum_positive = momentum > 0
-            momentum_improving = momentum > momentum_prev
-            momentum_ok = momentum_positive and momentum_improving
-            
-            # 4. Precio: Confirmación ESTRICTA de reversión alcista
-            price_vs_ema20 = close > ema_20 if not pd.isna(ema_20) else True
-            price_vs_ema50 = close > ema_50 * 0.999  # Solo 0.1% tolerancia
-            price_momentum = close > close_prev  # Precio subiendo
-            price_ok = price_vs_ema20 and price_vs_ema50 and price_momentum
-            
-            # 5. Tendencia: ULTRA-ESTRICTA cerca de EMA_200
-            trend_ok = True
-            if not pd.isna(ema_200):
-                # Solo 0.1% de tolerancia por debajo de EMA_200
-                trend_ok = close > ema_200 * 0.999
-            
-            # 6. Confirmación adicional: Williams %R y CCI
-            additional_ok = True
-            if not pd.isna(williams_r):
-                # Williams %R debe estar saliendo de sobreventa extrema
-                additional_ok = williams_r > -80 and williams_r < -20
-            if not pd.isna(cci) and additional_ok:
-                # CCI debe estar saliendo de zona negativa
-                additional_ok = cci > -100 and cci < 100
-            
-            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
-            confirmed_count = sum(confirmations)
-            
-            if self.debug_mode:
-                self._log(
-                    f"[INDICATORS-DEBUG] Confirmación LONG ULTRA-ESTRICTA para '{strategy_name}': "
-                    f"RSI_EXTREMO={rsi_ok}({rsi:.1f}), MACD_CRUCE={macd_ok}, "
-                    f"MOMENTUM_OBLIGATORIO={momentum_ok}, PRECIO_ESTRICTO={price_ok}, "
-                    f"TENDENCIA_ULTRA={trend_ok}, ADICIONAL={additional_ok} | "
-                    f"Total: {confirmed_count}/6 (requiere ≥4 para WINRATE 100%)"
-                )
-            
-            # Requiere al menos 4 de 6 confirmaciones (67%) para WINRATE 100%
-            return confirmed_count >= 4
-        
-        # CONFIRMACIÓN PARA SHORT - WINRATE 100%
-        elif signal_type == 'short':
-            # 1. RSI: ZONA EXTREMA de sobrecompra + perdiendo fuerza
-            rsi_extreme_overbought = rsi > 65 and rsi < rsi_prev and rsi < 75
-            rsi_ok = rsi_extreme_overbought
-            
-            # 2. MACD: SOLO cruces confirmados a la baja (NO posiciones estáticas)
-            macd_cross_down = (macd_line < macd_signal and macd_line_prev >= macd_signal_prev)
-            macd_weakness = macd_line < macd_line_prev  # MACD perdiendo fuerza
-            macd_ok = macd_cross_down and macd_weakness
-            
-            # 3. Momentum: OBLIGATORIO negativo y empeorando
-            momentum_negative = momentum < 0
-            momentum_worsening = momentum < momentum_prev
-            momentum_ok = momentum_negative and momentum_worsening
-            
-            # 4. Precio: Confirmación ESTRICTA de reversión bajista
-            price_vs_ema20 = close < ema_20 if not pd.isna(ema_20) else True
-            price_vs_ema50 = close < ema_50 * 1.001  # Solo 0.1% tolerancia
-            price_momentum = close < close_prev  # Precio bajando
-            price_ok = price_vs_ema20 and price_vs_ema50 and price_momentum
-            
-            # 5. Tendencia: ULTRA-ESTRICTA cerca de EMA_200
-            trend_ok = True
-            if not pd.isna(ema_200):
-                # Solo 0.1% de tolerancia por encima de EMA_200
-                trend_ok = close < ema_200 * 1.001
-            
-            # 6. Confirmación adicional: Williams %R y CCI
-            additional_ok = True
-            if not pd.isna(williams_r):
-                # Williams %R debe estar saliendo de sobrecompra extrema
-                additional_ok = williams_r < -20 and williams_r > -80
-            if not pd.isna(cci) and additional_ok:
-                # CCI debe estar saliendo de zona positiva
-                additional_ok = cci < 100 and cci > -100
-            
-            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
-            confirmed_count = sum(confirmations)
-            
-            if self.debug_mode:
-                self._log(
-                    f"[INDICATORS-DEBUG] Confirmación SHORT ULTRA-ESTRICTA para '{strategy_name}': "
-                    f"RSI_EXTREMO={rsi_ok}({rsi:.1f}), MACD_CRUCE={macd_ok}, "
-                    f"MOMENTUM_OBLIGATORIO={momentum_ok}, PRECIO_ESTRICTO={price_ok}, "
-                    f"TENDENCIA_ULTRA={trend_ok}, ADICIONAL={additional_ok} | "
-                    f"Total: {confirmed_count}/6 (requiere ≥4 para WINRATE 100%)"
-                )
-            
-            # Requiere al menos 4 de 6 confirmaciones (67%) para WINRATE 100%
-            return confirmed_count >= 4
-        
-        return False
-        """
-        Confirma señales usando múltiples indicadores para reducir false signals.
-        Sistema de confirmación MEJORADO:
-        - Permite señales de reversión (no solo tendencia)
-        - Requiere 2 de 5 confirmaciones (más flexible)
-        - Respeta RSI, MACD, Momentum, ATR y precio vs EMAs
-        """
-        if candles_df.empty or len(candles_df) < 50:
-            return False
-        
-        last_row = candles_df.iloc[-1]
-        prev_row = candles_df.iloc[-2] if len(candles_df) > 1 else last_row
-        
-        # Obtener indicadores
-        rsi = last_row.get('RSI')
-        rsi_prev = prev_row.get('RSI')
-        macd_line = last_row.get('MACD_line')
-        macd_signal = last_row.get('MACD_signal')
-        macd_line_prev = prev_row.get('MACD_line')
-        macd_signal_prev = prev_row.get('MACD_signal')
-        momentum = last_row.get('Momentum')
-        ema_20 = last_row.get('EMA_20')
-        ema_50 = last_row.get('EMA_50')
-        ema_200 = last_row.get('EMA_200')
-        close = last_row['close']
-        close_prev = prev_row['close']
-        atr = last_row.get('ATR')
+        bb_upper = last_row.get('bb_upper')
+        bb_lower = last_row.get('bb_lower')
+        bb_middle = last_row.get('bb_middle')
         
         # Verificar que tengamos datos válidos
         if pd.isna(rsi) or pd.isna(macd_line) or pd.isna(ema_50):
             if self.debug_mode:
-                self._log(f"[INDICATORS-DEBUG] Indicadores no disponibles para confirmación")
+                self._log(f"[INDICATORS-DEBUG] Indicadores críticos no disponibles para confirmación")
             return False
+        
+        # --- ANÁLISIS DE TENDENCIA DE LAS ÚLTIMAS 10 VELAS ---
+        def analyze_trend_last_candles(df, periods=10):
+            """Analiza la tendencia real de las últimas N velas."""
+            if len(df) < periods:
+                return 'neutral'
+            
+            recent_candles = df.iloc[-periods:]
+            closes = recent_candles['close']
+            
+            # Contar velas alcistas vs bajistas
+            bullish_candles = sum(recent_candles['close'] > recent_candles['open'])
+            bearish_candles = sum(recent_candles['close'] < recent_candles['open'])
+            
+            # Tendencia del precio (primer vs último cierre)
+            price_change = (closes.iloc[-1] - closes.iloc[0]) / closes.iloc[0]
+            
+            # Momentum promedio
+            if 'Momentum' in df.columns:
+                avg_momentum = recent_candles['Momentum'].mean()
+            else:
+                avg_momentum = 0
+            
+            # Determinar tendencia
+            if bullish_candles > bearish_candles * 1.3 and price_change > 0.001:
+                return 'bullish'
+            elif bearish_candles > bullish_candles * 1.3 and price_change < -0.001:
+                return 'bearish'
+            else:
+                return 'neutral'
+        
+        market_trend = analyze_trend_last_candles(candles_df, periods=10)
+        
+        # --- ANÁLISIS DE MOMENTUM EN MÚLTIPLES VELAS ---
+        def check_momentum_consistency(df, direction, periods=5):
+            """Verifica consistencia del momentum en las últimas N velas."""
+            if len(df) < periods or 'Momentum' not in df.columns:
+                return False
+            
+            recent_momentum = df['Momentum'].iloc[-periods:]
+            
+            if direction == 'bullish':
+                # Al menos 60% de las velas con momentum positivo
+                positive_count = sum(recent_momentum > 0)
+                return positive_count >= (periods * 0.6)
+            else:
+                # Al menos 60% de las velas con momentum negativo
+                negative_count = sum(recent_momentum < 0)
+                return negative_count >= (periods * 0.6)
+        
+        momentum_bullish_consistent = check_momentum_consistency(candles_df, 'bullish', 5)
+        momentum_bearish_consistent = check_momentum_consistency(candles_df, 'bearish', 5)
         
         # CONFIRMACIÓN PARA LONG
         if signal_type == 'long':
-            # 1. RSI: No sobrecomprado y ganando fuerza
-            rsi_ok = rsi < 70 and (rsi > 30 or (rsi > rsi_prev and rsi > 25))
+            # 1. RSI: Flexible pero efectivo (no sobrecomprado, preferible en zona baja-media)
+            rsi_favorable = rsi < 65 and rsi > rsi_prev and rsi > 30
+            rsi_ok = rsi_favorable
             
-            # 2. MACD: Alcista o cruzando al alza
-            macd_bullish = macd_line > macd_signal
-            macd_crossing_up = (macd_line > macd_signal and macd_line_prev <= macd_signal_prev)
-            macd_ok = macd_bullish or macd_crossing_up
+            # 2. MACD: Cruce alcista O posición alcista con momentum
+            macd_cross_up = (macd_line > macd_signal and macd_line_prev <= macd_signal_prev)
+            macd_bullish_position = macd_line > macd_signal and macd_line > macd_line_prev
+            macd_ok = macd_cross_up or macd_bullish_position
             
-            # 3. Momentum: Positivo o mejorando
-            momentum_ok = momentum > 0 if not pd.isna(momentum) else True
+            # 3. Momentum: Positivo o mejorando consistentemente
+            momentum_improving = momentum > momentum_prev if not pd.isna(momentum_prev) else True
+            momentum_ok = (momentum > 0 or momentum_improving) and momentum_bullish_consistent
             
-            # 4. Precio: Por encima de EMA_20 o rebotando desde zona de soporte
-            price_vs_ema20 = close > ema_20 if not pd.isna(ema_20) else True
-            price_vs_ema50 = close > ema_50 * 0.998  # Permite 0.2% por debajo (reversión)
-            price_ok = price_vs_ema20 or price_vs_ema50
+            # 4. Precio: Análisis de posición respecto a medias móviles
+            price_above_ema20 = close > ema_20 if not pd.isna(ema_20) else True
+            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False  # Cerca de EMA50
+            price_momentum = close > close_prev
+            price_ok = (price_above_ema20 or price_near_ema50) and price_momentum
             
-            # 5. Tendencia general: Alcista o neutral (permite reversiones)
-            trend_ok = True
-            if not pd.isna(ema_200):
-                # Permite operar si está cerca de EMA_200 (zona de reversión)
-                trend_ok = close > ema_200 * 0.995  # Permite 0.5% por debajo
+            # 5. Tendencia del mercado: Alcista o neutral + precio sobre EMA_200
+            trend_favorable = market_trend in ['bullish', 'neutral']
+            price_vs_ema200 = close > ema_200 * 0.995 if not pd.isna(ema_200) else True
+            trend_ok = trend_favorable and price_vs_ema200
             
-            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok]
+            # 6. Confirmación adicional con múltiples indicadores
+            additional_ok = False
+            confirmations_count = 0
+            
+            # Williams %R favorable (saliendo de sobreventa)
+            if not pd.isna(williams_r) and williams_r > -80 and williams_r < -30:
+                confirmations_count += 1
+            
+            # CCI favorable (no extremo negativo)
+            if not pd.isna(cci) and cci > -100:
+                confirmations_count += 1
+            
+            # Bollinger Bands: cerca de banda inferior o en zona media-baja
+            if not pd.isna(bb_lower) and not pd.isna(bb_upper):
+                bb_position = (close - bb_lower) / (bb_upper - bb_lower)
+                if bb_position < 0.5:  # En mitad inferior
+                    confirmations_count += 1
+            
+            # ATR: volatilidad razonable (no extrema)
+            if not pd.isna(atr):
+                atr_ratio = atr / close
+                if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
+                    confirmations_count += 1
+            
+            additional_ok = confirmations_count >= 2  # Al menos 2 de 4 confirmaciones adicionales
+            
+            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
             
             if self.debug_mode:
                 self._log(
-                    f"[INDICATORS-DEBUG] Confirmación LONG para '{strategy_name}': "
-                    f"RSI={rsi_ok}({rsi:.1f}), MACD={macd_ok}, Momentum={momentum_ok}, "
-                    f"Precio={price_ok}, Tendencia={trend_ok} | "
-                    f"Total: {confirmed_count}/5 (requiere ≥2)"
+                    f"[INDICATORS-DEBUG] Confirmación LONG INTELIGENTE para '{strategy_name}':\n"
+                    f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
+                    f"  MACD={macd_ok} (cross_up={macd_cross_up}, bullish={macd_bullish_position})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.2f}, consistente={momentum_bullish_consistent})\n"
+                    f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
+                    f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
+                    f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
+                    f"  Total: {confirmed_count}/6 (requiere ≥3 para confirmar)"
                 )
             
-            # Requiere al menos 2 de 5 confirmaciones (40%)
-            return confirmed_count >= 2
+            # Requiere al menos 3 de 6 confirmaciones (50% - más flexible pero inteligente)
+            return confirmed_count >= 3
         
         # CONFIRMACIÓN PARA SHORT
         elif signal_type == 'short':
-            # 1. RSI: No sobrevendido y perdiendo fuerza
-            rsi_ok = rsi > 30 and (rsi < 70 or (rsi < rsi_prev and rsi < 75))
+            # 1. RSI: Flexible pero efectivo (no sobrevendido, preferible en zona alta-media)
+            rsi_favorable = rsi > 35 and rsi < rsi_prev and rsi < 70
+            rsi_ok = rsi_favorable
             
-            # 2. MACD: Bajista o cruzando a la baja
-            macd_bearish = macd_line < macd_signal
-            macd_crossing_down = (macd_line < macd_signal and macd_line_prev >= macd_signal_prev)
-            macd_ok = macd_bearish or macd_crossing_down
+            # 2. MACD: Cruce bajista O posición bajista con momentum
+            macd_cross_down = (macd_line < macd_signal and macd_line_prev >= macd_signal_prev)
+            macd_bearish_position = macd_line < macd_signal and macd_line < macd_line_prev
+            macd_ok = macd_cross_down or macd_bearish_position
             
-            # 3. Momentum: Negativo o empeorando
-            momentum_ok = momentum < 0 if not pd.isna(momentum) else True
+            # 3. Momentum: Negativo o empeorando consistentemente
+            momentum_worsening = momentum < momentum_prev if not pd.isna(momentum_prev) else True
+            momentum_ok = (momentum < 0 or momentum_worsening) and momentum_bearish_consistent
             
-            # 4. Precio: Por debajo de EMA_20 o rechazando desde zona de resistencia
-            price_vs_ema20 = close < ema_20 if not pd.isna(ema_20) else True
-            price_vs_ema50 = close < ema_50 * 1.002  # Permite 0.2% por encima (reversión)
-            price_ok = price_vs_ema20 or price_vs_ema50
+            # 4. Precio: Análisis de posición respecto a medias móviles
+            price_below_ema20 = close < ema_20 if not pd.isna(ema_20) else True
+            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False
+            price_momentum = close < close_prev
+            price_ok = (price_below_ema20 or price_near_ema50) and price_momentum
             
-            # 5. Tendencia general: Bajista o neutral (permite reversiones)
-            trend_ok = True
-            if not pd.isna(ema_200):
-                # Permite operar si está cerca de EMA_200 (zona de reversión)
-                trend_ok = close < ema_200 * 1.005  # Permite 0.5% por encima
+            # 5. Tendencia del mercado: Bajista o neutral + precio bajo EMA_200
+            trend_favorable = market_trend in ['bearish', 'neutral']
+            price_vs_ema200 = close < ema_200 * 1.005 if not pd.isna(ema_200) else True
+            trend_ok = trend_favorable and price_vs_ema200
             
-            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok]
+            # 6. Confirmación adicional con múltiples indicadores
+            additional_ok = False
+            confirmations_count = 0
+            
+            # Williams %R favorable (saliendo de sobrecompra)
+            if not pd.isna(williams_r) and williams_r < -20 and williams_r > -70:
+                confirmations_count += 1
+            
+            # CCI favorable (no extremo positivo)
+            if not pd.isna(cci) and cci < 100:
+                confirmations_count += 1
+            
+            # Bollinger Bands: cerca de banda superior o en zona media-alta
+            if not pd.isna(bb_lower) and not pd.isna(bb_upper):
+                bb_position = (close - bb_lower) / (bb_upper - bb_lower)
+                if bb_position > 0.5:  # En mitad superior
+                    confirmations_count += 1
+            
+            # ATR: volatilidad razonable (no extrema)
+            if not pd.isna(atr):
+                atr_ratio = atr / close
+                if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
+                    confirmations_count += 1
+            
+            additional_ok = confirmations_count >= 2  # Al menos 2 de 4 confirmaciones adicionales
+            
+            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
             
             if self.debug_mode:
                 self._log(
-                    f"[INDICATORS-DEBUG] Confirmación SHORT para '{strategy_name}': "
-                    f"RSI={rsi_ok}({rsi:.1f}), MACD={macd_ok}, Momentum={momentum_ok}, "
-                    f"Precio={price_ok}, Tendencia={trend_ok} | "
-                    f"Total: {confirmed_count}/5 (requiere ≥2)"
+                    f"[INDICATORS-DEBUG] Confirmación SHORT INTELIGENTE para '{strategy_name}':\n"
+                    f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
+                    f"  MACD={macd_ok} (cross_down={macd_cross_down}, bearish={macd_bearish_position})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.2f}, consistente={momentum_bearish_consistent})\n"
+                    f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
+                    f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
+                    f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
+                    f"  Total: {confirmed_count}/6 (requiere ≥3 para confirmar)"
                 )
             
-            # Requiere al menos 2 de 5 confirmaciones (40%)
-            return confirmed_count >= 2
+            # Requiere al menos 3 de 6 confirmaciones (50% - más flexible pero inteligente)
+            return confirmed_count >= 3
         
         return False
