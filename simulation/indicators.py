@@ -317,18 +317,39 @@ class IndicatorCalculator:
             rsi_favorable = rsi < 65 and rsi > rsi_prev and rsi > 30
             rsi_ok = rsi_favorable
             
-            # 2. MACD: Cruce alcista O posición alcista con momentum
-            macd_cross_up = (macd_line > macd_signal and macd_line_prev <= macd_signal_prev)
-            macd_bullish_position = macd_line > macd_signal and macd_line > macd_line_prev
+            # 2. MACD: Cruce alcista REAL (con tolerancia mínima) O posición alcista FUERTE
+            # Cruce real: la línea debe cruzar la señal con una diferencia mínima
+            tolerance = abs(close * 0.00001)  # 0.001% del precio como tolerancia mínima
+            
+            # Detectar cruce alcista: línea MACD cruza HACIA ARRIBA la señal
+            macd_cross_up = (
+                macd_line > macd_signal and 
+                macd_line_prev <= macd_signal_prev and
+                (macd_line - macd_signal) > tolerance  # Debe haber separación real
+            )
+            
+            # Posición alcista FUERTE: línea por encima Y creciendo
+            macd_bullish_position = (
+                macd_line > macd_signal and 
+                macd_line > macd_line_prev and
+                (macd_line - macd_signal) > tolerance * 2  # Debe haber separación clara
+            )
+            
             macd_ok = macd_cross_up or macd_bullish_position
             
-            # 3. Momentum: Positivo o mejorando consistentemente
-            momentum_improving = momentum > momentum_prev if not pd.isna(momentum_prev) else True
-            momentum_ok = (momentum > 0 or momentum_improving) and momentum_bullish_consistent
+            # 3. Momentum: DEBE ser positivo Y consistente (no aceptar solo mejora)
+            # Momentum mínimo requerido para considerar movimiento real
+            min_momentum = abs(close * 0.00005)  # 0.005% del precio como momentum mínimo
+            
+            momentum_is_positive = not pd.isna(momentum) and momentum > min_momentum
+            momentum_improving = momentum > momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # REQUIERE momentum positivo Y consistencia en múltiples velas
+            momentum_ok = momentum_is_positive and (momentum_bullish_consistent or momentum_improving)
             
             # 4. Precio: Análisis de posición respecto a medias móviles
             price_above_ema20 = close > ema_20 if not pd.isna(ema_20) else True
-            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False  # Cerca de EMA50
+            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False
             price_momentum = close > close_prev
             price_ok = (price_above_ema20 or price_near_ema50) and price_momentum
             
@@ -361,7 +382,7 @@ class IndicatorCalculator:
                 if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
                     confirmations_count += 1
             
-            additional_ok = confirmations_count >= 2  # Al menos 2 de 4 confirmaciones adicionales
+            additional_ok = confirmations_count >= 2
             
             confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
@@ -371,15 +392,15 @@ class IndicatorCalculator:
                     f"[INDICATORS-DEBUG] Confirmación LONG INTELIGENTE para '{strategy_name}':\n"
                     f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
                     f"  MACD={macd_ok} (cross_up={macd_cross_up}, bullish={macd_bullish_position})\n"
-                    f"  Momentum={momentum_ok} (actual={momentum:.2f}, consistente={momentum_bullish_consistent})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.5f}, consistente={momentum_bullish_consistent})\n"
                     f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
                     f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
                     f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
-                    f"  Total: {confirmed_count}/6 (requiere ≥3 para confirmar)"
+                    f"  Total: {confirmed_count}/6 (requiere ≥5 para confirmar)"
                 )
             
-            # Requiere al menos 3 de 6 confirmaciones (50% - más flexible pero inteligente)
-            return confirmed_count >= 3
+            # AUMENTADO: Requiere al menos 5 de 6 confirmaciones (83%)
+            return confirmed_count >= 5
         
         # CONFIRMACIÓN PARA SHORT
         elif signal_type == 'short':
@@ -387,14 +408,33 @@ class IndicatorCalculator:
             rsi_favorable = rsi > 35 and rsi < rsi_prev and rsi < 70
             rsi_ok = rsi_favorable
             
-            # 2. MACD: Cruce bajista O posición bajista con momentum
-            macd_cross_down = (macd_line < macd_signal and macd_line_prev >= macd_signal_prev)
-            macd_bearish_position = macd_line < macd_signal and macd_line < macd_line_prev
+            # 2. MACD: Cruce bajista REAL (con tolerancia mínima) O posición bajista FUERTE
+            tolerance = abs(close * 0.00001)  # 0.001% del precio como tolerancia mínima
+            
+            # Detectar cruce bajista: línea MACD cruza HACIA ABAJO la señal
+            macd_cross_down = (
+                macd_line < macd_signal and 
+                macd_line_prev >= macd_signal_prev and
+                (macd_signal - macd_line) > tolerance  # Debe haber separación real
+            )
+            
+            # Posición bajista FUERTE: línea por debajo Y decreciendo
+            macd_bearish_position = (
+                macd_line < macd_signal and 
+                macd_line < macd_line_prev and
+                (macd_signal - macd_line) > tolerance * 2  # Debe haber separación clara
+            )
+            
             macd_ok = macd_cross_down or macd_bearish_position
             
-            # 3. Momentum: Negativo o empeorando consistentemente
-            momentum_worsening = momentum < momentum_prev if not pd.isna(momentum_prev) else True
-            momentum_ok = (momentum < 0 or momentum_worsening) and momentum_bearish_consistent
+            # 3. Momentum: DEBE ser negativo Y consistente (no aceptar solo empeoramiento)
+            min_momentum = abs(close * 0.00005)  # 0.005% del precio como momentum mínimo
+            
+            momentum_is_negative = not pd.isna(momentum) and momentum < -min_momentum
+            momentum_worsening = momentum < momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # REQUIERE momentum negativo Y consistencia en múltiples velas
+            momentum_ok = momentum_is_negative and (momentum_bearish_consistent or momentum_worsening)
             
             # 4. Precio: Análisis de posición respecto a medias móviles
             price_below_ema20 = close < ema_20 if not pd.isna(ema_20) else True
@@ -431,7 +471,7 @@ class IndicatorCalculator:
                 if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
                     confirmations_count += 1
             
-            additional_ok = confirmations_count >= 2  # Al menos 2 de 4 confirmaciones adicionales
+            additional_ok = confirmations_count >= 2
             
             confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
@@ -441,14 +481,14 @@ class IndicatorCalculator:
                     f"[INDICATORS-DEBUG] Confirmación SHORT INTELIGENTE para '{strategy_name}':\n"
                     f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
                     f"  MACD={macd_ok} (cross_down={macd_cross_down}, bearish={macd_bearish_position})\n"
-                    f"  Momentum={momentum_ok} (actual={momentum:.2f}, consistente={momentum_bearish_consistent})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.5f}, consistente={momentum_bearish_consistent})\n"
                     f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
                     f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
                     f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
-                    f"  Total: {confirmed_count}/6 (requiere ≥3 para confirmar)"
+                    f"  Total: {confirmed_count}/6 (requiere ≥5 para confirmar)"
                 )
             
-            # Requiere al menos 3 de 6 confirmaciones (50% - más flexible pero inteligente)
-            return confirmed_count >= 3
+            # AUMENTADO: Requiere al menos 5 de 6 confirmaciones (83%)
+            return confirmed_count >= 5
         
         return False

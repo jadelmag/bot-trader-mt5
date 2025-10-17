@@ -8,229 +8,692 @@ class ForexStrategies:
     Implementa un conjunto de estrategias de trading basadas en especificaciones detalladas.
     Cada método devuelve una señal ('long', 'short') o None, o información conceptual.
     """
-
+    
     # --- Estrategias de Señal --- 
 
     @staticmethod
     def strategy_price_action_sr(df, lookback=50):
         """
-        Estrategia de Price Action con Soporte/Resistencia FLEXIBLE.
+        Estrategia de Price Action con Soporte/Resistencia OPTIMIZADA.
         
-        Lógica:
-        - Identifica zonas de soporte/resistencia usando cuantiles
-        - LONG: Precio en zona inferior + RSI favorable + momentum alcista
-        - SHORT: Precio en zona superior + RSI favorable + momentum bajista
-        - Confirmación con análisis de velas pero sin ser excesivamente restrictivo
+        Mejoras:
+        - Detección más precisa de zonas S/R
+        - Confirmación con momentum real
+        - Filtro de tendencia más estricto
+        - Requiere TODAS las condiciones
         """
-        required = ['low', 'high', 'close', 'open', 'ema_200', 'rsi']
+        required = ['low', 'high', 'close', 'open', 'ema_200', 'rsi', 'momentum']
         if not all(col in df.columns for col in required) or len(df) < lookback:
             return None
 
-        # --- 1. Obtener datos actuales ---
+        # --- 1. Datos actuales ---
         price = df['close'].iloc[-1]
         price_prev = df['close'].iloc[-2]
         open_price = df['open'].iloc[-1]
         ema_200 = df['ema_200'].iloc[-1]
         rsi = df['rsi'].iloc[-1]
         rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
         
-        # Tendencia general (flexible, permite reversiones)
-        is_uptrend_or_neutral = price > ema_200 * 0.99  # 1% tolerancia
-        is_downtrend_or_neutral = price < ema_200 * 1.01  # 1% tolerancia
-
-        # --- 2. Identificar Zonas de Soporte y Resistencia ---
-        recent_data = df.iloc[-lookback:]
+        # Tendencia ESTRICTA
+        is_uptrend = price > ema_200 * 1.002  # 0.2% por encima
+        is_downtrend = price < ema_200 * 0.998  # 0.2% por debajo
         
-        # Zonas de soporte (cuartiles inferiores)
-        support_zone_top = recent_data['low'].quantile(0.35)  # Zona más amplia: 35%
-        support_zone_bottom = recent_data['low'].quantile(0.10)
-        
-        # Zonas de resistencia (cuartiles superiores)
-        resistance_zone_bottom = recent_data['high'].quantile(0.65)  # Zona más amplia: 65%
-        resistance_zone_top = recent_data['high'].quantile(0.90)
-
-        # --- 3. Confirmación de Momentum ---
-        is_bullish_candle = price > open_price
-        is_bearish_candle = price < open_price
-        
-        price_momentum_up = price > price_prev
-        price_momentum_down = price < price_prev
-        
-        rsi_gaining = rsi > rsi_prev
-        rsi_losing = rsi < rsi_prev
-
-        # --- 4. LÓGICA FLEXIBLE PARA LONG ---
-        current_price_position = (price - support_zone_top) / (resistance_zone_bottom - support_zone_top) if (resistance_zone_bottom - support_zone_top) > 0 else 0.5
-        
-        # Confirmación de reversión (flexible: 2 velas en lugar de 3)
-        if len(df) >= 2:
-            price_2_ago = df['close'].iloc[-2]
-            bullish_reversal = (price_2_ago < price_prev < price) or (price > price_prev and is_bullish_candle)
-            bearish_reversal = (price_2_ago > price_prev > price) or (price < price_prev and is_bearish_candle)
-        else:
-            bullish_reversal = price_momentum_up and is_bullish_candle
-            bearish_reversal = price_momentum_down and is_bearish_candle
-        
-        # LONG: En zona inferior (más amplia) + confirmaciones
-        is_in_lower_zone = current_price_position <= 0.4  # 40% inferior (antes 30%)
-        if (is_uptrend_or_neutral and is_in_lower_zone and 
-            rsi < 55 and rsi_gaining and bullish_reversal):  # RSI más flexible
-            return 'long'
-        
-        # SHORT: En zona superior (más amplia) + confirmaciones
-        is_in_upper_zone = current_price_position >= 0.6  # 40% superior (antes 30%)
-        if (is_downtrend_or_neutral and is_in_upper_zone and 
-            rsi > 45 and rsi_losing and bearish_reversal):  # RSI más flexible
-            return 'short'
-
-        return None
-
-    @staticmethod
-    def strategy_momentum_rsi_macd(df):
-        """
-        Estrategia de Momentum FLEXIBLE que combina RSI, MACD y tendencia.
-        
-        Lógica:
-        - LONG: MACD alcista + RSI favorable + momentum positivo
-        - SHORT: MACD bajista + RSI favorable + momentum negativo
-        - Filtros flexibles para más señales de calidad
-        """
-        required = ['close', 'ema_200', 'rsi', 'macd_line', 'macd_signal']
-        if not all(col in df.columns for col in required) or len(df) < 2:
+        # Si no hay tendencia clara, NO operar
+        if not is_uptrend and not is_downtrend:
             return None
 
-        # --- 1. Filtro de Tendencia FLEXIBLE ---
-        price = df['close'].iloc[-1]
-        ema_200 = df['ema_200'].iloc[-1]
+        # --- 2. Identificar Zonas S/R ---
+        recent_data = df.iloc[-lookback:]
         
-        # Permite operar cerca de EMA_200 (zona de reversión)
-        is_uptrend_or_neutral = price > ema_200 * 0.99  # 1% tolerancia
-        is_downtrend_or_neutral = price < ema_200 * 1.01
+        # Zonas exclusivas (no solapadas)
+        support_zone_top = recent_data['low'].quantile(0.30)
+        support_zone_bottom = recent_data['low'].quantile(0.10)
+        
+        resistance_zone_bottom = recent_data['high'].quantile(0.70)
+        resistance_zone_top = recent_data['high'].quantile(0.90)
 
-        # --- 2. Indicadores de Momentum ---
-        rsi = df['rsi'].iloc[-1]
-        rsi_prev = df['rsi'].iloc[-2]
-        macd_line = df['macd_line'].iloc[-1]
-        macd_signal = df['macd_signal'].iloc[-1]
-        macd_line_prev = df['macd_line'].iloc[-2]
-        macd_signal_prev = df['macd_signal'].iloc[-2]
-
-        # --- 3. LÓGICA FLEXIBLE PARA LONG ---
-        if is_uptrend_or_neutral:
-            # MACD: Cruce alcista O posición alcista con momentum
-            macd_cross_up = macd_line > macd_signal and macd_line_prev <= macd_signal_prev
-            macd_bullish = macd_line > macd_signal and macd_line > macd_line_prev
+        # --- 3. Momentum mínimo requerido ---
+        min_momentum = abs(price * 0.00005)
+        
+        # --- 4. LONG: Solo en 30% inferior ---
+        in_support_zone = support_zone_bottom <= price <= support_zone_top
+        
+        if is_uptrend and in_support_zone:
+            # Confirmación de reversión con 3 velas
+            if len(df) >= 3:
+                price_3_ago = df['close'].iloc[-3]
+                price_2_ago = df['close'].iloc[-2]
+                bullish_reversal = price_3_ago > price_2_ago and price_2_ago < price_prev and price > price_prev
+            else:
+                bullish_reversal = price > price_prev and (price > open_price)
             
-            # RSI: Zona FLEXIBLE pero efectiva
-            rsi_favorable = 30 <= rsi <= 60 and rsi > rsi_prev  # Zona amplia
-            
-            # Confirmación de precio
-            price_confirmation = price > df['close'].iloc[-2]
-            
-            # Al menos 2 de 3 condiciones deben cumplirse
-            conditions = [
-                macd_cross_up or macd_bullish,
-                rsi_favorable,
-                price_confirmation
-            ]
-            
-            if sum(conditions) >= 2:
+            # REQUIERE TODAS
+            if (rsi < 40 and rsi > rsi_prev and  # RSI saliendo de sobreventa
+                not pd.isna(momentum) and momentum > min_momentum and momentum > momentum_prev and
+                bullish_reversal):
                 return 'long'
-
-        # --- 4. LÓGICA FLEXIBLE PARA SHORT ---
-        if is_downtrend_or_neutral:
-            # MACD: Cruce bajista O posición bajista con momentum
-            macd_cross_down = macd_line < macd_signal and macd_line_prev >= macd_signal_prev
-            macd_bearish = macd_line < macd_signal and macd_line < macd_line_prev
+        
+        # --- 5. SHORT: Solo en 30% superior ---
+        in_resistance_zone = resistance_zone_bottom <= price <= resistance_zone_top
+        
+        if is_downtrend and in_resistance_zone:
+            # Confirmación de reversión con 3 velas
+            if len(df) >= 3:
+                price_3_ago = df['close'].iloc[-3]
+                price_2_ago = df['close'].iloc[-2]
+                bearish_reversal = price_3_ago < price_2_ago and price_2_ago > price_prev and price < price_prev
+            else:
+                bearish_reversal = price < price_prev and (price < open_price)
             
-            # RSI: Zona FLEXIBLE pero efectiva
-            rsi_favorable = 40 <= rsi <= 70 and rsi < rsi_prev  # Zona amplia
-            
-            # Confirmación de precio
-            price_confirmation = price < df['close'].iloc[-2]
-            
-            # Al menos 2 de 3 condiciones deben cumplirse
-            conditions = [
-                macd_cross_down or macd_bearish,
-                rsi_favorable,
-                price_confirmation
-            ]
-            
-            if sum(conditions) >= 2:
+            # REQUIERE TODAS
+            if (rsi > 60 and rsi < rsi_prev and  # RSI saliendo de sobrecompra
+                not pd.isna(momentum) and momentum < -min_momentum and momentum < momentum_prev and
+                bearish_reversal):
                 return 'short'
 
         return None
 
     @staticmethod
+    def strategy_ma_crossover(df):
+        """
+        Estrategia de Cruce de Medias Móviles OPTIMIZADA.
+        
+        Mejoras:
+        - Requiere tendencia FUERTE en EMA_200
+        - Cruce REAL con separación mínima
+        - Confirmación con momentum consistente
+        - RSI en zona favorable
+        """
+        required = ['close', 'ema_fast', 'ema_slow', 'ema_200', 'rsi', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 200:
+            return None
+        
+        # Alias para compatibilidad
+        if 'ema_fast' not in df.columns and 'EMA_10' in df.columns:
+            df['ema_fast'] = df['EMA_10']
+        if 'ema_slow' not in df.columns and 'EMA_50' in df.columns:
+            df['ema_slow'] = df['EMA_50']
+        
+        # Datos actuales
+        price = df['close'].iloc[-1]
+        ema_fast = df['ema_fast'].iloc[-1]
+        ema_slow = df['ema_slow'].iloc[-1]
+        ema_fast_prev = df['ema_fast'].iloc[-2]
+        ema_slow_prev = df['ema_slow'].iloc[-2]
+        ema_200 = df['ema_200'].iloc[-1]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Tolerancia y momentum mínimo
+        tolerance = abs(price * 0.00001)
+        min_momentum = abs(price * 0.00005)
+        
+        # Verificar momentum consistente
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
+        
+        # === LONG: Cruce alcista ===
+        # Tendencia FUERTE alcista
+        if price > ema_200 * 1.005:  # 0.5% por encima (FUERTE)
+            # Cruce REAL: EMA rápida cruza hacia arriba la lenta
+            golden_cross = (
+                ema_fast > ema_slow and 
+                ema_fast_prev <= ema_slow_prev and
+                (ema_fast - ema_slow) > tolerance  # Separación real
+            )
+            
+            if golden_cross:
+                # Confirmaciones adicionales
+                rsi_ok = 35 <= rsi <= 65 and rsi > rsi_prev
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum > min_momentum and 
+                              momentum > momentum_prev)
+                price_above_ema = price > ema_200
+                momentum_consistent = positive_count >= 3
+                
+                # REQUIERE 3 de 4 confirmaciones
+                confirmations = [rsi_ok, momentum_ok, price_above_ema, momentum_consistent]
+                if sum(confirmations) >= 3:
+                    return 'long'
+        
+        # === SHORT: Cruce bajista ===
+        # Tendencia FUERTE bajista
+        if price < ema_200 * 0.995:  # 0.5% por debajo (FUERTE)
+            # Cruce REAL: EMA rápida cruza hacia abajo la lenta
+            death_cross = (
+                ema_fast < ema_slow and 
+                ema_fast_prev >= ema_slow_prev and
+                (ema_slow - ema_fast) > tolerance  # Separación real
+            )
+            
+            if death_cross:
+                # Confirmaciones adicionales
+                rsi_ok = 35 <= rsi <= 65 and rsi < rsi_prev
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum < -min_momentum and 
+                              momentum < momentum_prev)
+                price_below_ema = price < ema_200
+                momentum_consistent = negative_count >= 3
+                
+                # REQUIERE 3 de 4 confirmaciones
+                confirmations = [rsi_ok, momentum_ok, price_below_ema, momentum_consistent]
+                if sum(confirmations) >= 3:
+                    return 'short'
+        
+        return None
+
+    @staticmethod
+    def strategy_scalping_stochrsi_ema(df):
+        """
+        Estrategia de Scalping OPTIMIZADA con StochRSI y EMA.
+        
+        Mejoras:
+        - Requiere tendencia clara en EMA_20
+        - StochRSI en zonas EXTREMAS (no >80/<20)
+        - Cruce REAL confirmado
+        - Momentum consistente
+        - Precio confirmando dirección
+        """
+        required = ['close', 'ema_20', 'stochrsi_k', 'stochrsi_d', 'rsi', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 50:
+            return None
+        
+        # Datos actuales
+        price = df['close'].iloc[-1]
+        price_prev = df['close'].iloc[-2]
+        ema_20 = df['ema_20'].iloc[-1]
+        stoch_k = df['stochrsi_k'].iloc[-1]
+        stoch_d = df['stochrsi_d'].iloc[-1]
+        stoch_k_prev = df['stochrsi_k'].iloc[-2]
+        stoch_d_prev = df['stochrsi_d'].iloc[-2]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Verificar NaN
+        if pd.isna(stoch_k) or pd.isna(stoch_d) or pd.isna(ema_20):
+            return None
+        
+        # Momentum mínimo
+        min_momentum = abs(price * 0.00005)
+        
+        # Verificar momentum consistente
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
+        
+        # === LONG: StochRSI saliendo de sobreventa ===
+        # Tendencia alcista
+        if price > ema_20 * 1.001:  # 0.1% por encima
+            # StochRSI en zona EXTREMA de sobreventa
+            in_oversold = stoch_k < 15 and stoch_d < 15  # Más estricto (antes 20)
+            
+            # Cruce alcista REAL
+            bullish_cross = (
+                stoch_k > stoch_d and 
+                stoch_k_prev <= stoch_d_prev and
+                stoch_k > stoch_k_prev  # K subiendo
+            )
+            
+            if in_oversold or bullish_cross:
+                # Confirmaciones
+                rsi_ok = rsi < 55 and rsi > rsi_prev
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum > min_momentum and 
+                              momentum > momentum_prev)
+                price_rising = price > price_prev
+                momentum_consistent = positive_count >= 3
+                
+                # REQUIERE 3 de 4
+                confirmations = [rsi_ok, momentum_ok, price_rising, momentum_consistent]
+                if sum(confirmations) >= 3:
+                    return 'long'
+        
+        # === SHORT: StochRSI saliendo de sobrecompra ===
+        # Tendencia bajista
+        if price < ema_20 * 0.999:  # 0.1% por debajo
+            # StochRSI en zona EXTREMA de sobrecompra
+            in_overbought = stoch_k > 85 and stoch_d > 85  # Más estricto (antes 80)
+            
+            # Cruce bajista REAL
+            bearish_cross = (
+                stoch_k < stoch_d and 
+                stoch_k_prev >= stoch_d_prev and
+                stoch_k < stoch_k_prev  # K bajando
+            )
+            
+            if in_overbought or bearish_cross:
+                # Confirmaciones
+                rsi_ok = rsi > 45 and rsi < rsi_prev
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum < -min_momentum and 
+                              momentum < momentum_prev)
+                price_falling = price < price_prev
+                momentum_consistent = negative_count >= 3
+                
+                # REQUIERE 3 de 4
+                confirmations = [rsi_ok, momentum_ok, price_falling, momentum_consistent]
+                if sum(confirmations) >= 3:
+                    return 'short'
+        
+        return None
+
+    @staticmethod
+    def strategy_fibonacci_reversal(df, lookback=100):
+        """
+        Estrategia de Retroceso Fibonacci OPTIMIZADA.
+        
+        Mejoras:
+        - Niveles Fibonacci más precisos (38.2%, 50%, 61.8%)
+        - Confirmación con momentum real
+        - RSI en zonas extremas
+        - Patrón de reversión confirmado
+        """
+        required = ['high', 'low', 'close', 'rsi', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < lookback:
+            return None
+        
+        # Datos recientes
+        recent_data = df.iloc[-lookback:]
+        price = df['close'].iloc[-1]
+        price_prev = df['close'].iloc[-2]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Momentum mínimo
+        min_momentum = abs(price * 0.00005)
+        
+        # Encontrar swing high y swing low
+        swing_high = recent_data['high'].max()
+        swing_low = recent_data['low'].min()
+        
+        # Calcular rango
+        fib_range = swing_high - swing_low
+        
+        if fib_range <= 0:
+            return None
+        
+        # Niveles Fibonacci
+        fib_23_6 = swing_high - (fib_range * 0.236)
+        fib_38_2 = swing_high - (fib_range * 0.382)
+        fib_50_0 = swing_high - (fib_range * 0.500)
+        fib_61_8 = swing_high - (fib_range * 0.618)
+        fib_78_6 = swing_high - (fib_range * 0.786)
+        
+        # Tolerancia (1% del rango)
+        tolerance = fib_range * 0.01
+        
+        # === LONG: Rebote en niveles Fibonacci ===
+        # Verificar si está en zona de retroceso (38.2% - 61.8%)
+        in_fib_zone_long = (fib_61_8 - tolerance <= price <= fib_38_2 + tolerance)
+        
+        # Nivel más fuerte: 50%
+        at_golden_level = abs(price - fib_50_0) < tolerance
+        
+        if in_fib_zone_long or at_golden_level:
+            # Confirmación de reversión con 3 velas
+            if len(df) >= 3:
+                close_3_ago = df['close'].iloc[-3]
+                close_2_ago = df['close'].iloc[-2]
+                bullish_reversal = (close_3_ago > close_2_ago > price_prev and 
+                                   price > price_prev)
+            else:
+                bullish_reversal = price > price_prev
+            
+            # Confirmaciones
+            rsi_ok = rsi < 40 and rsi > rsi_prev  # Saliendo de sobreventa
+            momentum_ok = (not pd.isna(momentum) and 
+                          momentum > min_momentum and 
+                          momentum > momentum_prev)
+            
+            # Bonus si está en nivel 50% o 61.8%
+            at_strong_level = (abs(price - fib_50_0) < tolerance or 
+                              abs(price - fib_61_8) < tolerance)
+            
+            # REQUIERE TODAS las confirmaciones básicas
+            if bullish_reversal and rsi_ok and momentum_ok:
+                return 'long'
+        
+        # === SHORT: Rechazo en niveles Fibonacci ===
+        # Verificar si está en zona de extensión (23.6% - 38.2%)
+        in_fib_zone_short = (fib_38_2 - tolerance <= price <= fib_23_6 + tolerance)
+        
+        # O cerca del máximo
+        at_resistance = abs(price - swing_high) < tolerance
+        
+        if in_fib_zone_short or at_resistance:
+            # Confirmación de reversión con 3 velas
+            if len(df) >= 3:
+                close_3_ago = df['close'].iloc[-3]
+                close_2_ago = df['close'].iloc[-2]
+                bearish_reversal = (close_3_ago < close_2_ago < price_prev and 
+                                   price < price_prev)
+            else:
+                bearish_reversal = price < price_prev
+            
+            # Confirmaciones
+            rsi_ok = rsi > 60 and rsi < rsi_prev  # Saliendo de sobrecompra
+            momentum_ok = (not pd.isna(momentum) and 
+                          momentum < -min_momentum and 
+                          momentum < momentum_prev)
+            
+            # REQUIERE TODAS las confirmaciones básicas
+            if bearish_reversal and rsi_ok and momentum_ok:
+                return 'short'
+        
+        return None
+
+    @staticmethod
+    def strategy_ichimoku_kinko_hyo(df):
+        """
+        Estrategia Ichimoku Kinko Hyo OPTIMIZADA.
+        
+        Mejoras:
+        - Requiere TODAS las 5 confirmaciones (no 3)
+        - Cruce REAL de Tenkan/Kijun con separación
+        - Momentum consistente
+        - Posición clara respecto a la nube
+        """
+        required = ['close', 'high', 'low', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 52:
+            return None
+        
+        # Calcular componentes Ichimoku
+        # Tenkan-sen (línea de conversión): (max9 + min9) / 2
+        high_9 = df['high'].rolling(window=9).max()
+        low_9 = df['low'].rolling(window=9).min()
+        tenkan_sen = (high_9 + low_9) / 2
+        
+        # Kijun-sen (línea base): (max26 + min26) / 2
+        high_26 = df['high'].rolling(window=26).max()
+        low_26 = df['low'].rolling(window=26).min()
+        kijun_sen = (high_26 + low_26) / 2
+        
+        # Senkou Span A (línea adelantada A): (Tenkan + Kijun) / 2, desplazada 26 periodos
+        senkou_span_a = ((tenkan_sen + kijun_sen) / 2).shift(26)
+        
+        # Senkou Span B (línea adelantada B): (max52 + min52) / 2, desplazada 26 periodos
+        high_52 = df['high'].rolling(window=52).max()
+        low_52 = df['low'].rolling(window=52).min()
+        senkou_span_b = ((high_52 + low_52) / 2).shift(26)
+        
+        # Datos actuales
+        price = df['close'].iloc[-1]
+        price_prev = df['close'].iloc[-2]
+        tenkan = tenkan_sen.iloc[-1]
+        kijun = kijun_sen.iloc[-1]
+        tenkan_prev = tenkan_sen.iloc[-2]
+        kijun_prev = kijun_sen.iloc[-2]
+        span_a = senkou_span_a.iloc[-1]
+        span_b = senkou_span_b.iloc[-1]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Verificar NaN
+        if any(pd.isna(x) for x in [tenkan, kijun, span_a, span_b]):
+            return None
+        
+        # Tolerancia y momentum mínimo
+        tolerance = abs(price * 0.00001)
+        min_momentum = abs(price * 0.00005)
+        
+        # Verificar momentum consistente
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
+        
+        # Nube (Kumo)
+        cloud_top = max(span_a, span_b)
+        cloud_bottom = min(span_a, span_b)
+        
+        # === LONG: Señal alcista ===
+        # 1. Tenkan cruza Kijun hacia arriba (TK Cross)
+        tk_cross_up = (tenkan > kijun and tenkan_prev <= kijun_prev and 
+                       (tenkan - kijun) > tolerance)
+        
+        # 2. Precio por encima de la nube
+        price_above_cloud = price > cloud_top * 1.001  # 0.1% por encima
+        
+        # 3. Nube es alcista (Span A > Span B)
+        bullish_cloud = span_a > span_b
+        
+        # 4. Momentum positivo y consistente
+        momentum_ok = (not pd.isna(momentum) and 
+                      momentum > min_momentum and 
+                      momentum > momentum_prev and
+                      positive_count >= 4)  # 4 de 5 velas
+        
+        # 5. Precio subiendo
+        price_rising = price > price_prev
+        
+        # REQUIERE TODAS las 5 confirmaciones
+        if (tk_cross_up and price_above_cloud and bullish_cloud and 
+            momentum_ok and price_rising):
+            return 'long'
+        
+        # === SHORT: Señal bajista ===
+        # 1. Tenkan cruza Kijun hacia abajo (TK Cross)
+        tk_cross_down = (tenkan < kijun and tenkan_prev >= kijun_prev and 
+                        (kijun - tenkan) > tolerance)
+        
+        # 2. Precio por debajo de la nube
+        price_below_cloud = price < cloud_bottom * 0.999  # 0.1% por debajo
+        
+        # 3. Nube es bajista (Span A < Span B)
+        bearish_cloud = span_a < span_b
+        
+        # 4. Momentum negativo y consistente
+        momentum_ok = (not pd.isna(momentum) and 
+                      momentum < -min_momentum and 
+                      momentum < momentum_prev and
+                      negative_count >= 4)  # 4 de 5 velas
+        
+        # 5. Precio bajando
+        price_falling = price < price_prev
+        
+        # REQUIERE TODAS las 5 confirmaciones
+        if (tk_cross_down and price_below_cloud and bearish_cloud and 
+            momentum_ok and price_falling):
+            return 'short'
+        
+        return None
+
+    @staticmethod
     def strategy_bollinger_bands_breakout(df):
         """
-        Estrategia Bollinger Bands MEAN REVERSION FLEXIBLE (Rebote en Bandas).
+        Estrategia Bollinger Bands MEAN REVERSION OPTIMIZADA.
         
-        Lógica:
-        - LONG: Precio cerca de banda inferior + señales de rebote
-        - SHORT: Precio cerca de banda superior + señales de rechazo
-        - Confirmación flexible con RSI y momentum
+        Mejoras:
+        - Requiere reversión confirmada en 3 velas
+        - RSI más estricto (zonas extremas)
+        - Momentum debe ser consistente
+        - Verificación de cierre dentro de bandas
         """
-        required = ['close', 'bb_upper', 'bb_lower', 'high', 'low']
-        if not all(col in df.columns for col in required): 
-            return None
-        
-        # Verificar que tenemos suficientes datos
-        if len(df) < 20:
+        required = ['close', 'bb_upper', 'bb_lower', 'high', 'low', 'rsi', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 20:
             return None
             
-        # Obtener valores actuales y anteriores
+        # Datos actuales
         close = df['close'].iloc[-1]
         close_prev = df['close'].iloc[-2]
         high = df['high'].iloc[-1]
         low = df['low'].iloc[-1]
         bb_upper = df['bb_upper'].iloc[-1]
         bb_lower = df['bb_lower'].iloc[-1]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
         
-        # Calcular banda media (SMA20)
-        bb_middle = (bb_upper + bb_lower) / 2
+        # Momentum mínimo
+        min_momentum = abs(close * 0.00005)
         
-        # RSI para confirmar condiciones
-        rsi = df['rsi'].iloc[-1] if 'rsi' in df.columns else 50
-        rsi_prev = df['rsi'].iloc[-2] if 'rsi' in df.columns and len(df) > 1 else rsi
+        # Verificar momentum consistente en 5 velas
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
         
-        # ESTRATEGIA FLEXIBLE: REBOTE EN LAS BANDAS
-        
-        # Verificar reversión con 2 velas (más flexible)
-        if len(df) >= 2:
+        # Reversión confirmada con 3 velas
+        if len(df) >= 3:
+            close_3_ago = df['close'].iloc[-3]
             close_2_ago = df['close'].iloc[-2]
             
-            # Reversión alcista: precio bajando + rebote
-            confirmed_bullish_reversal = (
-                close_2_ago > close_prev and  # Vela anterior bajista
-                close > close_prev  # Rebote confirmado
+            bullish_reversal_confirmed = (
+                close_3_ago > close_2_ago > close_prev and  # 2 velas bajistas
+                close > close_prev and  # Vela actual alcista
+                close > close_3_ago  # Supera inicio
             )
             
-            # Reversión bajista: precio subiendo + rechazo
-            confirmed_bearish_reversal = (
-                close_2_ago < close_prev and  # Vela anterior alcista
-                close < close_prev  # Rechazo confirmado
+            bearish_reversal_confirmed = (
+                close_3_ago < close_2_ago < close_prev and  # 2 velas alcistas
+                close < close_prev and  # Vela actual bajista
+                close < close_3_ago  # Rompe inicio
             )
         else:
-            confirmed_bullish_reversal = close > close_prev
-            confirmed_bearish_reversal = close < close_prev
+            bullish_reversal_confirmed = close > close_prev
+            bearish_reversal_confirmed = close < close_prev
         
-        # LONG: Cerca de banda inferior + reversión
-        touching_lower = low <= bb_lower * 1.005  # 0.5% tolerancia
-        closing_above_lower = close > bb_lower
-        rsi_oversold_flexible = rsi < 45 and rsi > rsi_prev  # Más flexible
-        
-        if (touching_lower and closing_above_lower and 
-            confirmed_bullish_reversal and rsi_oversold_flexible):
+        # LONG: Banda inferior + RSI extremo + momentum
+        if (low <= bb_lower and  # Tocó banda inferior
+            close > bb_lower and  # Cerró dentro
+            rsi < 35 and rsi > rsi_prev and  # RSI extremo saliendo
+            not pd.isna(momentum) and momentum > min_momentum and
+            momentum > momentum_prev and
+            positive_count >= 3 and  # Momentum consistente
+            bullish_reversal_confirmed):
             return 'long'
         
-        # SHORT: Cerca de banda superior + reversión
-        touching_upper = high >= bb_upper * 0.995  # 0.5% tolerancia
-        closing_below_upper = close < bb_upper
-        rsi_overbought_flexible = rsi > 55 and rsi < rsi_prev  # Más flexible
+        # SHORT: Banda superior + RSI extremo + momentum
+        if (high >= bb_upper and  # Tocó banda superior
+            close < bb_upper and  # Cerró dentro
+            rsi > 65 and rsi < rsi_prev and  # RSI extremo saliendo
+            not pd.isna(momentum) and momentum < -min_momentum and
+            momentum < momentum_prev and
+            negative_count >= 3 and  # Momentum consistente
+            bearish_reversal_confirmed):
+            return 'short'
         
-        if (touching_upper and closing_below_upper and 
-            confirmed_bearish_reversal and rsi_overbought_flexible):
+        return None
+
+    @staticmethod
+    def strategy_hybrid_optimizer(df):
+        """
+        Estrategia HÍBRIDA OPTIMIZADA que combina múltiples señales con scoring estricto.
+        
+        Lógica CORREGIDA:
+        - Requiere puntuación mínima de 4 de 6 (antes era 3)
+        - Verifica cruces MACD reales
+        - Momentum debe ser consistente
+        - Filtro de tendencia más estricto
+        """
+        required = ['close', 'rsi', 'macd_line', 'macd_signal', 'ema_50', 'ema_200', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 10:
+            return None
+        
+        # Verificar suficientes velas
+        if len(df) < 10:
+            return None
+        
+        price = df['close'].iloc[-1]
+        price_prev = df['close'].iloc[-2]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        macd_line = df['macd_line'].iloc[-1]
+        macd_signal = df['macd_signal'].iloc[-1]
+        macd_line_prev = df['macd_line'].iloc[-2]
+        macd_signal_prev = df['macd_signal'].iloc[-2]
+        ema_50 = df['ema_50'].iloc[-1]
+        ema_200 = df['ema_200'].iloc[-1]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Verificar momentum consistente en 5 velas
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
+        
+        # Sistema de puntuación estricto
+        long_score = 0
+        short_score = 0
+        
+        # Tolerancia para cruces MACD
+        tolerance = abs(price * 0.00001)
+        min_momentum = abs(price * 0.00005)
+        
+        # === CRITERIOS PARA LONG ===
+        
+        # 1. Tendencia alcista (peso: 1)
+        if price > ema_200 * 1.002:  # 0.2% por encima
+            long_score += 1
+        
+        # 2. RSI favorable (peso: 1)
+        if 30 < rsi < 65 and rsi > rsi_prev:
+            long_score += 1
+        
+        # 3. MACD cruce alcista REAL (peso: 1)
+        if (macd_line > macd_signal and 
+            macd_line_prev <= macd_signal_prev and
+            (macd_line - macd_signal) > tolerance):
+            long_score += 1
+        
+        # 4. Precio subiendo (peso: 1)
+        if price > price_prev:
+            long_score += 1
+        
+        # 5. Momentum positivo Y consistente (peso: 1)
+        if (not pd.isna(momentum) and 
+            momentum > min_momentum and 
+            momentum > momentum_prev and
+            positive_count >= 3):  # Al menos 3 de 5 velas
+            long_score += 1
+        
+        # 6. Precio cerca de EMA_50 (rebote) (peso: 1)
+        if abs(price - ema_50) / ema_50 < 0.005:  # Dentro del 0.5%
+            long_score += 1
+        
+        # === CRITERIOS PARA SHORT ===
+        
+        # 1. Tendencia bajista (peso: 1)
+        if price < ema_200 * 0.998:  # 0.2% por debajo
+            short_score += 1
+        
+        # 2. RSI favorable (peso: 1)
+        if 35 < rsi < 70 and rsi < rsi_prev:
+            short_score += 1
+        
+        # 3. MACD cruce bajista REAL (peso: 1)
+        if (macd_line < macd_signal and 
+            macd_line_prev >= macd_signal_prev and
+            (macd_signal - macd_line) > tolerance):
+            short_score += 1
+        
+        # 4. Precio bajando (peso: 1)
+        if price < price_prev:
+            short_score += 1
+        
+        # 5. Momentum negativo Y consistente (peso: 1)
+        if (not pd.isna(momentum) and 
+            momentum < -min_momentum and 
+            momentum < momentum_prev and
+            negative_count >= 3):  # Al menos 3 de 5 velas
+            short_score += 1
+        
+        # 6. Precio cerca de EMA_50 (rechazo) (peso: 1)
+        if abs(price - ema_50) / ema_50 < 0.005:  # Dentro del 0.5%
+            short_score += 1
+        
+        # REQUIERE puntuación mínima de 4/6 (67%)
+        if long_score >= 4:
+            return 'long'
+        elif short_score >= 4:
             return 'short'
         
         return None
@@ -238,817 +701,447 @@ class ForexStrategies:
     @staticmethod
     def strategy_swing_trading_multi_indicator(df):
         """
-        Estrategia de Swing Trading FLEXIBLE con múltiples indicadores.
-        Busca entradas en retrocesos con confirmaciones inteligentes.
+        Estrategia de Swing Trading OPTIMIZADA.
+        
+        Mejoras:
+        - Tendencia FUERTE requerida (sin tolerancia)
+        - Pullback REAL confirmado en 5 velas
+        - Requiere 3 confirmaciones (no 2)
+        - MACD con cruces reales
+        - Momentum consistente
         """
-        required = ['close', 'ema_50', 'ema_200', 'rsi', 'macd_line', 'macd_signal']
+        required = ['close', 'ema_50', 'ema_200', 'rsi', 'macd_line', 'macd_signal', 'momentum']
         if not all(col in df.columns for col in required) or len(df) < 200:
             return None
 
-        # --- 1. Definir Tendencia Principal (FLEXIBLE) ---
+        # Datos actuales
         price = df['close'].iloc[-1]
+        price_prev = df['close'].iloc[-2]
         ema_50 = df['ema_50'].iloc[-1]
         ema_200 = df['ema_200'].iloc[-1]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        macd_line = df['macd_line'].iloc[-1]
+        macd_signal = df['macd_signal'].iloc[-1]
+        macd_line_prev = df['macd_line'].iloc[-2]
+        macd_signal_prev = df['macd_signal'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
         
-        # Tendencia con tolerancia razonable
-        is_strong_uptrend = ema_50 > ema_200 * 1.001 and price > ema_50 * 0.995
-        is_strong_downtrend = ema_50 < ema_200 * 0.999 and price < ema_50 * 1.005
+        # Tendencia FUERTE (sin tolerancia)
+        is_strong_uptrend = ema_50 > ema_200 * 1.003 and price > ema_50  # 0.3% mínimo
+        is_strong_downtrend = ema_50 < ema_200 * 0.997 and price < ema_50
+        
+        # Tolerancia y momentum mínimo
+        tolerance = abs(price * 0.00001)
+        min_momentum = abs(price * 0.00005)
 
-        # --- 2. Lógica LONG (Pullback en tendencia alcista) ---
+        # === LONG (Pullback en tendencia alcista) ===
         if is_strong_uptrend:
-            # Pullback: precio cerca o tocó EMA_50 en últimas 5 velas
-            pullback_detected = (df['low'].iloc[-5:] <= ema_50 * 1.005).any()
+            # Pullback REAL: precio tocó EMA_50 en últimas 5 velas
+            pullback_real = (df['low'].iloc[-5:] <= ema_50 * 1.002).any()
             
-            if pullback_detected:
-                # CONFIRMACIÓN 1: MACD cruzando al alza O alcista con momentum
-                macd_cross_up = (df['macd_line'].iloc[-1] > df['macd_signal'].iloc[-1] and 
-                            df['macd_line'].iloc[-2] <= df['macd_signal'].iloc[-2])
-                macd_bullish = (df['macd_line'].iloc[-1] > df['macd_signal'].iloc[-1] and
-                            df['macd_line'].iloc[-1] > df['macd_line'].iloc[-2])
+            if pullback_real:
+                # CONFIRMACIÓN 1: MACD cruce alcista REAL
+                macd_cross_up = (
+                    macd_line > macd_signal and 
+                    macd_line_prev <= macd_signal_prev and
+                    (macd_line - macd_signal) > tolerance
+                )
                 
-                # CONFIRMACIÓN 2: RSI en zona favorable (flexible)
-                rsi = df['rsi'].iloc[-1]
-                rsi_favorable = 35 <= rsi <= 65 and rsi > df['rsi'].iloc[-2]
+                # CONFIRMACIÓN 2: RSI saliendo de zona baja
+                rsi_ok = 35 <= rsi <= 60 and rsi > rsi_prev
                 
-                # CONFIRMACIÓN 3: Precio rebotando desde EMA_50
-                price_bouncing = (price > ema_50 * 0.998 and 
-                                price > df['close'].iloc[-2])
+                # CONFIRMACIÓN 3: Precio rebotando
+                price_bouncing = price > ema_50 and price > price_prev
                 
-                # Al menos 2 de 3 confirmaciones
-                confirmations = [
-                    macd_cross_up or macd_bullish,
-                    rsi_favorable,
-                    price_bouncing
-                ]
+                # CONFIRMACIÓN 4: Momentum positivo
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum > min_momentum and 
+                              momentum > momentum_prev)
                 
-                if sum(confirmations) >= 2:
+                # REQUIERE 3 de 4
+                confirmations = [macd_cross_up, rsi_ok, price_bouncing, momentum_ok]
+                if sum(confirmations) >= 3:
                     return 'long'
 
-        # --- 3. Lógica SHORT (Pullback en tendencia bajista) ---
+        # === SHORT (Pullback en tendencia bajista) ===
         if is_strong_downtrend:
-            # Pullback: precio cerca o tocó EMA_50 en últimas 5 velas
-            pullback_detected = (df['high'].iloc[-5:] >= ema_50 * 0.995).any()
+            # Pullback REAL: precio tocó EMA_50 en últimas 5 velas
+            pullback_real = (df['high'].iloc[-5:] >= ema_50 * 0.998).any()
             
-            if pullback_detected:
-                # CONFIRMACIÓN 1: MACD cruzando a la baja O bajista con momentum
-                macd_cross_down = (df['macd_line'].iloc[-1] < df['macd_signal'].iloc[-1] and 
-                                df['macd_line'].iloc[-2] >= df['macd_signal'].iloc[-2])
-                macd_bearish = (df['macd_line'].iloc[-1] < df['macd_signal'].iloc[-1] and
-                            df['macd_line'].iloc[-1] < df['macd_line'].iloc[-2])
+            if pullback_real:
+                # CONFIRMACIÓN 1: MACD cruce bajista REAL
+                macd_cross_down = (
+                    macd_line < macd_signal and 
+                    macd_line_prev >= macd_signal_prev and
+                    (macd_signal - macd_line) > tolerance
+                )
                 
-                # CONFIRMACIÓN 2: RSI en zona favorable (flexible)
-                rsi = df['rsi'].iloc[-1]
-                rsi_favorable = 35 <= rsi <= 65 and rsi < df['rsi'].iloc[-2]
+                # CONFIRMACIÓN 2: RSI saliendo de zona alta
+                rsi_ok = 40 <= rsi <= 65 and rsi < rsi_prev
                 
-                # CONFIRMACIÓN 3: Precio rechazando desde EMA_50
-                price_rejecting = (price < ema_50 * 1.002 and 
-                                price < df['close'].iloc[-2])
+                # CONFIRMACIÓN 3: Precio rechazando
+                price_rejecting = price < ema_50 and price < price_prev
                 
-                # Al menos 2 de 3 confirmaciones
-                confirmations = [
-                    macd_cross_down or macd_bearish,
-                    rsi_favorable,
-                    price_rejecting
-                ]
+                # CONFIRMACIÓN 4: Momentum negativo
+                momentum_ok = (not pd.isna(momentum) and 
+                              momentum < -min_momentum and 
+                              momentum < momentum_prev)
                 
-                if sum(confirmations) >= 2:
+                # REQUIERE 3 de 4
+                confirmations = [macd_cross_down, rsi_ok, price_rejecting, momentum_ok]
+                if sum(confirmations) >= 3:
                     return 'short'
 
         return None
 
     @staticmethod
-    def strategy_candle_pattern_reversal(df, lookback=200):
+    def strategy_candle_pattern_reversal(df):
         """
-        Estrategia FOREX FLEXIBLE de reversión con patrones de velas en niveles clave.
-        Optimizada para generar señales de calidad con filtros inteligentes.
+        Estrategia de Reversión por Patrones de Velas OPTIMIZADA.
         
-        Args:
-            df (DataFrame): DataFrame con datos OHLC y indicadores
-            lookback (int): Periodo de lookback para niveles (200 velas)
-        
-        Returns:
-            str: 'long', 'short' o None
+        Mejoras:
+        - Score requerido aumentado a 4 (antes 3)
+        - Pesos de patrones ajustados
+        - Confirmación con momentum real
+        - Filtro de tendencia más estricto
         """
-        
-        # Configuración específica para EURUSD
-        pair = "EURUSD"
-        pair_settings = {
-            "tolerance_base": 0.002,  # 0.2% (más flexible)
-            "rsi_overbought": 65,  # Menos restrictivo
-            "rsi_oversold": 35,    # Menos restrictivo
-            "min_atr_multiplier": 1.2,
-            "volatility_threshold": 0.0008
-        }
-        
-        # 1. VERIFICACIONES INICIALES
-        if len(df) < lookback + 20:
-            return None
-            
-        # Columnas requeridas
-        required_columns = ['open', 'high', 'low', 'close', 'rsi', 'atr']
-        if not all(col in df.columns for col in required_columns):
+        required = ['open', 'high', 'low', 'close', 'rsi', 'ema_200', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 20:
             return None
         
-        # 2. DETECCIÓN DE SOPORTES/RESISTENCIAS
-        recent_data = df.iloc[-lookback:]
-        current_price = df['close'].iloc[-1]
-        
-        # Método 1: Pivot Points Diarios
-        daily_high = recent_data['high'].max()
-        daily_low = recent_data['low'].min()
-        daily_close = recent_data['close'].iloc[-1]
-        
-        pivot = (daily_high + daily_low + daily_close) / 3
-        r1 = 2 * pivot - daily_low
-        s1 = 2 * pivot - daily_high
-        r2 = pivot + (daily_high - daily_low)
-        s2 = pivot - (daily_high - daily_low)
-        
-        # Método 2: Mínimos y máximos locales
-        window_size = max(10, lookback // 20)
-        supports = []
-        resistances = []
-        
-        for i in range(window_size, len(recent_data) - window_size, window_size // 2):
-            window = recent_data.iloc[i-window_size:i+window_size]
-            
-            if window['low'].iloc[window_size] == window['low'].min():
-                supports.append(window['low'].iloc[window_size])
-            
-            if window['high'].iloc[window_size] == window['high'].max():
-                resistances.append(window['high'].iloc[window_size])
-        
-        # Método 3: Niveles psicológicos
-        psychological_levels = []
-        base_level = round(current_price, 3)
-        for i in range(-5, 6):
-            level = base_level + (i * 0.005)
-            psychological_levels.append(level)
-        
-        # Combinar todos los niveles
-        all_supports = supports + [s1, s2] + [l for l in psychological_levels if l < current_price]
-        all_resistances = resistances + [r1, r2] + [l for l in psychological_levels if l > current_price]
-        
-        # Encontrar niveles más relevantes
-        support = max(all_supports, key=lambda x: sum(abs(recent_data['low'] - x) < 0.0005)) if all_supports else daily_low
-        resistance = min(all_resistances, key=lambda x: sum(abs(recent_data['high'] - x) < 0.0005)) if all_resistances else daily_high
-        
-        # 3. TOLERANCIA ADAPTATIVA
-        atr = df['atr'].iloc[-1]
-        volatility_ratio = atr / current_price
-        
-        if volatility_ratio > pair_settings["volatility_threshold"]:
-            tolerance = min(pair_settings["tolerance_base"] * 1.5, atr * pair_settings["min_atr_multiplier"])
-        else:
-            tolerance = max(pair_settings["tolerance_base"], atr * pair_settings["min_atr_multiplier"] * 0.8)
-        
-        tolerance = min(tolerance, pair_settings["tolerance_base"] * 2)
-        
-        # 4. DETECCIÓN DE PATRONES DE VELAS
-        candle_data = df.to_dict('records')
-        current_index = len(candle_data) - 1
-        
-        try:
-            signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
-        except:
-            signals = {'long': [], 'short': [], 'neutral': []}
-        
-        # 5. INDICADORES DE CONFIRMACIÓN
-        rsi = df['rsi'].iloc[-1]
-        rsi_prev = df['rsi'].iloc[-2] if len(df) > 1 else rsi
-        
-        # Volumen relativo (si disponible)
-        volume_increase = False
-        if 'tick_volume' in df.columns and len(df) > 20:
-            avg_volume = df['tick_volume'].iloc[-50:].mean()
-            current_volume = df['tick_volume'].iloc[-1]
-            volume_increase = current_volume > avg_volume * 1.2  # Menos restrictivo
-        
-        # Momentum adicional
-        price_above_ema = False
-        if 'ema_20' in df.columns:
-            price_above_ema = df['close'].iloc[-1] > df['ema_20'].iloc[-1]
-        
-        # 6. EVALUACIÓN LONG
-        distance_to_support = abs(df['low'].iloc[-1] - support) / support
-        is_near_support = distance_to_support < tolerance
-        
-        # Patrones alcistas con pesos
-        bullish_weights = {
-            'hammer': 2, 'inverted_hammer': 2, 'bullish_engulfing': 3,
-            'piercing_line': 2, 'morning_star': 3, 'three_white_soldiers': 3,
-            'doji_dragonfly': 1
-        }
-        
-        has_bullish_pattern = any(pattern in signals['long'] for pattern in bullish_weights.keys())
-        bullish_pattern_strength = sum(bullish_weights.get(pattern, 1) for pattern in signals['long'] if pattern in bullish_weights)
-        
-        # Condiciones adicionales
-        has_doji_at_support = 'doji' in signals['neutral'] and is_near_support
-        rsi_oversold = rsi < pair_settings["rsi_oversold"] and rsi > rsi_prev
-        price_confirmation = df['close'].iloc[-1] > df['open'].iloc[-1]
-        strong_bullish_candle = (df['close'].iloc[-1] - df['open'].iloc[-1]) > (atr * 0.25)
-        
-        # SCORE LONG (menos restrictivo)
-        long_score = 0
-        if is_near_support: long_score += 2
-        if has_bullish_pattern: long_score += bullish_pattern_strength
-        if has_doji_at_support: long_score += 1
-        if rsi_oversold: long_score += 2
-        if volume_increase: long_score += 1
-        if price_confirmation: long_score += 1
-        if strong_bullish_candle: long_score += 1
-        if price_above_ema: long_score += 1
-        
-        # 7. EVALUACIÓN SHORT
-        distance_to_resistance = abs(df['high'].iloc[-1] - resistance) / resistance
-        is_near_resistance = distance_to_resistance < tolerance
-        
-        # Patrones bajistas con pesos
-        bearish_weights = {
-            'shooting_star': 2, 'hanging_man': 2, 'bearish_engulfing': 3,
-            'dark_cloud_cover': 2, 'evening_star': 3, 'three_black_crows': 3,
-            'doji_gravestone': 1
-        }
-        
-        has_bearish_pattern = any(pattern in signals['short'] for pattern in bearish_weights.keys())
-        bearish_pattern_strength = sum(bearish_weights.get(pattern, 1) for pattern in signals['short'] if pattern in bearish_weights)
-        
-        # Condiciones adicionales
-        has_doji_at_resistance = 'doji' in signals['neutral'] and is_near_resistance
-        rsi_overbought = rsi > pair_settings["rsi_overbought"] and rsi < rsi_prev
-        price_confirmation_short = df['close'].iloc[-1] < df['open'].iloc[-1]
-        strong_bearish_candle = (df['open'].iloc[-1] - df['close'].iloc[-1]) > (atr * 0.25)
-        
-        # SCORE SHORT (menos restrictivo)
-        short_score = 0
-        if is_near_resistance: short_score += 2
-        if has_bearish_pattern: short_score += bearish_pattern_strength
-        if has_doji_at_resistance: short_score += 1
-        if rsi_overbought: short_score += 2
-        if volume_increase: short_score += 1
-        if price_confirmation_short: short_score += 1
-        if strong_bearish_candle: short_score += 1
-        if not price_above_ema: short_score += 1
-        
-        # 8. DECISIÓN FINAL (menos restrictivo)
-        required_score = 3  # Score mínimo requerido
-        
-        # Evitar señales contradictorias
-        if long_score >= required_score and long_score > short_score:
-            if df['close'].iloc[-1] > df['close'].iloc[-2]:
-                return 'long'
-        
-        if short_score >= required_score and short_score > long_score:
-            if df['close'].iloc[-1] < df['close'].iloc[-2]:
-                return 'short'
-        
-        return None
-
-    @staticmethod
-    def strategy_ma_crossover(df):
-        """
-        Estrategia de Cruce de Medias Móviles FLEXIBLE.
-        
-        Lógica:
-        - Cruce de EMA rápida (10) y lenta (50)
-        - FILTRO FLEXIBLE: Opera a favor de tendencia o cerca de EMA_200
-        - LONG: Cruce alcista + condiciones favorables
-        - SHORT: Cruce bajista + condiciones favorables
-        """
-        required = ['ema_fast', 'ema_slow', 'ema_200', 'close']
-        if not all(col in df.columns for col in required):
-            return None
-        
-        # Obtener valores actuales y previos
-        ema_fast = df['ema_fast'].iloc[-1]
-        ema_slow = df['ema_slow'].iloc[-1]
-        ema_fast_prev = df['ema_fast'].iloc[-2]
-        ema_slow_prev = df['ema_slow'].iloc[-2]
-        ema_200 = df['ema_200'].iloc[-1]
+        # Datos actuales
         price = df['close'].iloc[-1]
-        price_prev = df['close'].iloc[-2]
+        ema_200 = df['ema_200'].iloc[-1]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
         
-        # Filtro de tendencia FLEXIBLE (permite operaciones cerca de EMA_200)
-        is_uptrend_or_neutral = price > ema_200 * 0.99  # 1% tolerancia
-        is_downtrend_or_neutral = price < ema_200 * 1.01
+        # Momentum mínimo
+        min_momentum = abs(price * 0.00005)
         
-        # Detectar cruce alcista
-        cross_up = ema_fast > ema_slow and ema_fast_prev <= ema_slow_prev
+        # Tendencia
+        is_uptrend_or_neutral = price > ema_200 * 0.998
+        is_downtrend_or_neutral = price < ema_200 * 1.002
         
-        # Detectar cruce bajista
-        cross_down = ema_fast < ema_slow and ema_fast_prev >= ema_slow_prev
+        # Detectar patrones
+        candles_list = df.to_dict('records')
+        current_index = len(candles_list) - 1
         
-        # Confirmaciones adicionales (más flexible)
-        price_momentum_up = price > price_prev
-        price_momentum_down = price < price_prev
-        
-        # RSI adicional si está disponible
-        rsi_favorable_long = True
-        rsi_favorable_short = True
-        if 'rsi' in df.columns:
-            rsi = df['rsi'].iloc[-1]
-            rsi_favorable_long = rsi < 65  # No sobrecomprado
-            rsi_favorable_short = rsi > 35  # No sobrevendido
-        
-        # LONG: Cruce alcista + tendencia favorable + confirmaciones
-        if cross_up and is_uptrend_or_neutral:
-            confirmations = [
-                price_momentum_up,
-                rsi_favorable_long,
-                price > ema_200 * 0.995  # Cerca o sobre EMA_200
-            ]
-            if sum(confirmations) >= 2:  # 2 de 3
-                return 'long'
-        
-        # SHORT: Cruce bajista + tendencia favorable + confirmaciones
-        if cross_down and is_downtrend_or_neutral:
-            confirmations = [
-                price_momentum_down,
-                rsi_favorable_short,
-                price < ema_200 * 1.005  # Cerca o bajo EMA_200
-            ]
-            if sum(confirmations) >= 2:  # 2 de 3
-                return 'short'
-        
-        return None
-
-    @staticmethod
-    def strategy_scalping_stochrsi_ema(df):
-        """
-        Estrategia de Scalping FLEXIBLE con StochRSI y EMAs.
-        
-        Lógica:
-        - Usa StochRSI para momentum rápido
-        - Filtro de tendencia FLEXIBLE
-        - LONG: StochRSI favorable + tendencia alcista o neutral
-        - SHORT: StochRSI favorable + tendencia bajista o neutral
-        """
-        required = ['close', 'stochrsi_k', 'stochrsi_d', 'ema_20', 'ema_50']
-        if not all(col in df.columns for col in required):
-            return None
-
-        # Obtener valores actuales y previos
-        close = df['close'].iloc[-1]
-        stoch_k = df['stochrsi_k'].iloc[-1]
-        stoch_d = df['stochrsi_d'].iloc[-1]
-        stoch_k_prev = df['stochrsi_k'].iloc[-2] if len(df) > 1 else stoch_k
-        stoch_d_prev = df['stochrsi_d'].iloc[-2] if len(df) > 1 else stoch_d
-        ema_20 = df['ema_20'].iloc[-1]
-        ema_50 = df['ema_50'].iloc[-1]
-        
-        # Verificar que los valores no sean NaN
-        if pd.isna(stoch_k) or pd.isna(stoch_d) or pd.isna(ema_20) or pd.isna(ema_50):
-            return None
-
-        # Filtro de tendencia FLEXIBLE
-        is_uptrend_or_neutral = close > ema_50 * 0.995 or (close > ema_20 * 0.998)
-        is_downtrend_or_neutral = close < ema_50 * 1.005 or (close < ema_20 * 1.002)
-        
-        # Detectar cruce de StochRSI
-        stoch_cross_up = stoch_k > stoch_d and stoch_k_prev <= stoch_d_prev
-        stoch_cross_down = stoch_k < stoch_d and stoch_k_prev >= stoch_d_prev
-
-        # Condiciones para LONG (más flexible)
-        if is_uptrend_or_neutral:
-            # StochRSI alcista y en zona favorable
-            stoch_bullish = stoch_k > stoch_d and stoch_k < 80
-            stoch_oversold_recovery = stoch_k > 25 and stoch_cross_up
-            
-            if stoch_bullish or stoch_oversold_recovery:
-                return 'long'
-
-        # Condiciones para SHORT (más flexible)
-        if is_downtrend_or_neutral:
-            # StochRSI bajista y en zona favorable
-            stoch_bearish = stoch_k < stoch_d and stoch_k > 20
-            stoch_overbought_reversal = stoch_k < 75 and stoch_cross_down
-            
-            if stoch_bearish or stoch_overbought_reversal:
-                return 'short'
-
-        return None
-
-    @staticmethod
-    def strategy_fibonacci_reversal(df, lookback=100):
-        """
-        Estrategia de Fibonacci FLEXIBLE con reversiones en niveles clave.
-        
-        Lógica:
-        - Identifica niveles de Fibonacci en swing reciente
-        - LONG: Precio en nivel Fib + patrón de reversión alcista
-        - SHORT: Precio en nivel Fib + patrón de reversión bajista
-        - Tolerancia ampliada para más señales
-        """
-        required = ['high', 'low', 'close']
-        if not all(col in df.columns for col in required): 
-            return None
-        
-        swing_high = df['high'].iloc[-lookback:-1].max()
-        swing_low = df['low'].iloc[-lookback:-1].min()
-        price_range = swing_high - swing_low
-        
-        if price_range == 0: 
-            return None
-        
-        # Niveles de Fibonacci (añadimos más niveles)
-        fib_levels = {
-            'level_0.236': swing_high - 0.236 * price_range,
-            'level_0.382': swing_high - 0.382 * price_range,
-            'level_0.500': swing_high - 0.500 * price_range,
-            'level_0.618': swing_high - 0.618 * price_range,
-            'level_0.786': swing_high - 0.786 * price_range
-        }
-        
-        candle_data = df.to_dict('records')
         try:
-            signals = CandlePatterns.detect_all_patterns(candle_data)
+            signals = CandlePatterns.detect_all_patterns(candles_list, current_index)
         except:
-            signals = {'long': [], 'short': [], 'neutral': []}
+            return None
         
-        current_price = df['close'].iloc[-1]
-        current_low = df['low'].iloc[-1]
-        current_high = df['high'].iloc[-1]
+        # === Scoring OPTIMIZADO ===
         
-        # Patrones alcistas (ampliados)
-        bullish_patterns = ['hammer', 'bullish_engulfing', 'piercing_line', 'morning_star', 'doji']
-        has_bullish_pattern = any(pattern in signals['long'] or pattern in signals['neutral'] for pattern in bullish_patterns)
-        
-        # RSI adicional si está disponible
-        rsi_favorable_long = True
-        if 'rsi' in df.columns:
-            rsi = df['rsi'].iloc[-1]
-            rsi_favorable_long = rsi < 60  # Flexible
-        
-        # LONG: Cerca de nivel Fibonacci + patrón alcista
-        for level in fib_levels.values():
-            distance = abs(current_low - level) / level
-            if distance < 0.015 and has_bullish_pattern and rsi_favorable_long:  # 1.5% tolerancia
-                return 'long'
-        
-        # Niveles para SHORT (desde swing low)
-        fib_levels_short = {
-            'level_0.236': swing_low + 0.236 * price_range,
-            'level_0.382': swing_low + 0.382 * price_range,
-            'level_0.500': swing_low + 0.500 * price_range,
-            'level_0.618': swing_low + 0.618 * price_range,
-            'level_0.786': swing_low + 0.786 * price_range
+        # Patrones alcistas con PESOS AUMENTADOS
+        bullish_patterns = {
+            'hammer': 2.0,  # Aumentado de 1.5
+            'bullish_engulfing': 2.0,
+            'morning_star': 2.5,  # Aumentado de 2.0
+            'three_white_soldiers': 2.5,
+            'piercing_line': 1.5
         }
         
-        # Patrones bajistas (ampliados)
-        bearish_patterns = ['shooting_star', 'bearish_engulfing', 'dark_cloud_cover', 'evening_star', 'doji']
-        has_bearish_pattern = any(pattern in signals['short'] or pattern in signals['neutral'] for pattern in bearish_patterns)
+        # Patrones bajistas con PESOS AUMENTADOS
+        bearish_patterns = {
+            'shooting_star': 2.0,
+            'bearish_engulfing': 2.0,
+            'evening_star': 2.5,
+            'three_black_crows': 2.5,
+            'dark_cloud_cover': 1.5
+        }
         
-        # RSI adicional
-        rsi_favorable_short = True
-        if 'rsi' in df.columns:
-            rsi_favorable_short = rsi > 40  # Flexible
+        # Calcular scores
+        long_score = sum(bullish_patterns.get(p, 0) for p in signals.get('long', []))
+        short_score = sum(bearish_patterns.get(p, 0) for p in signals.get('short', []))
         
-        # SHORT: Cerca de nivel Fibonacci + patrón bajista
-        for level in fib_levels_short.values():
-            distance = abs(current_high - level) / level
-            if distance < 0.015 and has_bearish_pattern and rsi_favorable_short:  # 1.5% tolerancia
+        # === LONG ===
+        if is_uptrend_or_neutral and long_score > 0:
+            # Confirmaciones adicionales
+            rsi_ok = rsi < 55 and rsi > rsi_prev
+            momentum_ok = (not pd.isna(momentum) and 
+                          momentum > min_momentum and 
+                          momentum > momentum_prev)
+            price_rising = price > df['close'].iloc[-2]
+            
+            # Bonus por confirmaciones
+            if rsi_ok:
+                long_score += 0.5
+            if momentum_ok:
+                long_score += 0.5
+            if price_rising:
+                long_score += 0.5
+            
+            # Score mínimo AUMENTADO a 4
+            if long_score >= 4:
+                return 'long'
+        
+        # === SHORT ===
+        if is_downtrend_or_neutral and short_score > 0:
+            # Confirmaciones adicionales
+            rsi_ok = rsi > 45 and rsi < rsi_prev
+            momentum_ok = (not pd.isna(momentum) and 
+                          momentum < -min_momentum and 
+                          momentum < momentum_prev)
+            price_falling = price < df['close'].iloc[-2]
+            
+            # Bonus por confirmaciones
+            if rsi_ok:
+                short_score += 0.5
+            if momentum_ok:
+                short_score += 0.5
+            if price_falling:
+                short_score += 0.5
+            
+            # Score mínimo AUMENTADO a 4
+            if short_score >= 4:
                 return 'short'
         
+        return None
+
+    @staticmethod
+    def strategy_momentum_rsi_macd(df):
+        """
+        Estrategia de Momentum ESTRICTA que combina RSI, MACD y tendencia.
+        
+        Lógica CORREGIDA:
+        - Requiere TODAS las condiciones (no 2 de 3)
+        - MACD: Solo cruces REALES con separación mínima
+        - Momentum: Debe ser consistente en múltiples velas
+        - Evita señales falsas en mercado lateral
+        """
+        required = ['close', 'ema_200', 'rsi', 'macd_line', 'macd_signal', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < 10:
+            return None
+
+        # Verificar que tengamos suficientes velas para análisis
+        if len(df) < 10:
+            return None
+
+        # --- 1. Filtro de Tendencia ESTRICTO ---
+        price = df['close'].iloc[-1]
+        ema_200 = df['ema_200'].iloc[-1]
+        
+        # Debe estar claramente por encima/debajo de EMA_200
+        is_uptrend = price > ema_200 * 1.002  # 0.2% por encima
+        is_downtrend = price < ema_200 * 0.998  # 0.2% por debajo
+        
+        # Si estamos en zona neutral (cerca de EMA_200), NO operar
+        if not is_uptrend and not is_downtrend:
+            return None
+
+        # --- 2. Indicadores actuales y previos ---
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        macd_line = df['macd_line'].iloc[-1]
+        macd_signal = df['macd_signal'].iloc[-1]
+        macd_line_prev = df['macd_line'].iloc[-2]
+        macd_signal_prev = df['macd_signal'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # --- 3. Verificar Momentum CONSISTENTE en últimas 5 velas ---
+        recent_momentum = df['momentum'].iloc[-5:].values
+        positive_momentum_count = sum(m > 0 for m in recent_momentum if not pd.isna(m))
+        negative_momentum_count = sum(m < 0 for m in recent_momentum if not pd.isna(m))
+        
+        # Momentum debe ser consistente (al menos 70% de velas)
+        has_bullish_momentum = positive_momentum_count >= 4  # 4 de 5 velas
+        has_bearish_momentum = negative_momentum_count >= 4
+
+        # --- 4. LÓGICA ESTRICTA PARA LONG ---
+        if is_uptrend:
+            # Tolerancia para detectar cruces reales
+            tolerance = abs(price * 0.00001)  # 0.001% del precio
+            
+            # MACD: Cruce alcista REAL (debe haber separación clara)
+            macd_cross_up = (
+                macd_line > macd_signal and 
+                macd_line_prev <= macd_signal_prev and
+                (macd_line - macd_signal) > tolerance
+            )
+            
+            # RSI: Zona favorable y mejorando
+            rsi_favorable = 35 <= rsi <= 65 and rsi > rsi_prev
+            
+            # Momentum: Positivo Y mejorando
+            min_momentum = abs(price * 0.00005)
+            momentum_positive = not pd.isna(momentum) and momentum > min_momentum
+            momentum_improving = momentum > momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # Precio: Debe estar subiendo
+            price_rising = price > df['close'].iloc[-2]
+            
+            # REQUIERE TODAS LAS CONDICIONES
+            if (macd_cross_up and 
+                rsi_favorable and 
+                momentum_positive and 
+                momentum_improving and
+                has_bullish_momentum and
+                price_rising):
+                return 'long'
+
+        # --- 5. LÓGICA ESTRICTA PARA SHORT ---
+        if is_downtrend:
+            tolerance = abs(price * 0.00001)
+            
+            # MACD: Cruce bajista REAL (debe haber separación clara)
+            macd_cross_down = (
+                macd_line < macd_signal and 
+                macd_line_prev >= macd_signal_prev and
+                (macd_signal - macd_line) > tolerance
+            )
+            
+            # RSI: Zona favorable y empeorando
+            rsi_favorable = 35 <= rsi <= 65 and rsi < rsi_prev
+            
+            # Momentum: Negativo Y empeorando
+            min_momentum = abs(price * 0.00005)
+            momentum_negative = not pd.isna(momentum) and momentum < -min_momentum
+            momentum_worsening = momentum < momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # Precio: Debe estar bajando
+            price_falling = price < df['close'].iloc[-2]
+            
+            # REQUIERE TODAS LAS CONDICIONES
+            if (macd_cross_down and 
+                rsi_favorable and 
+                momentum_negative and 
+                momentum_worsening and
+                has_bearish_momentum and
+                price_falling):
+                return 'short'
+
         return None
 
     @staticmethod
     def strategy_chart_pattern_breakout(df, lookback=60):
         """
-        Estrategia de Patrones Gráficos FLEXIBLE (Rompimientos).
+        Estrategia de Patrones Gráficos OPTIMIZADA (Rompimientos).
         
-        Lógica:
-        - Detecta doble techo/suelo con tolerancia flexible
-        - LONG: Rompimiento alcista de doble suelo
-        - SHORT: Rompimiento bajista de doble techo
+        Mejoras:
+        - Tolerancia reducida de 4% a 1%
+        - Confirmación con momentum real
+        - Reversión verificada en 3 velas
+        - RSI más estricto (<40 para LONG, >60 para SHORT)
+        - Requiere 3 de 4 confirmaciones
         """
-        if len(df) < lookback or 'atr' not in df.columns:
+        required = ['high', 'low', 'close', 'atr', 'rsi', 'momentum']
+        if not all(col in df.columns for col in required) or len(df) < lookback:
             return None
 
         df_lookback = df.iloc[-lookback:]
-        prominence = df_lookback['atr'].iloc[-1] * 1.2  # Menos restrictivo
-
+        
+        # Prominencia más estricta
+        prominence = df_lookback['atr'].iloc[-1] * 1.5  # Aumentado de 1.2 a 1.5
+        
+        # Detectar picos y valles
         peaks, _ = find_peaks(df_lookback['high'], prominence=prominence)
         valleys, _ = find_peaks(-df_lookback['low'], prominence=prominence)
+        
+        # Datos actuales
+        current_close = df_lookback['close'].iloc[-1]
+        prev_close = df_lookback['close'].iloc[-2]
+        rsi = df['rsi'].iloc[-1]
+        rsi_prev = df['rsi'].iloc[-2]
+        momentum = df['momentum'].iloc[-1]
+        momentum_prev = df['momentum'].iloc[-2]
+        
+        # Momentum mínimo requerido
+        min_momentum = abs(current_close * 0.00005)
+        
+        # Verificar reversión con 3 velas
+        if len(df) >= 3:
+            close_3_ago = df['close'].iloc[-3]
+            close_2_ago = df['close'].iloc[-2]
+            
+            bullish_reversal = (
+                close_3_ago > close_2_ago > prev_close and
+                current_close > prev_close
+            )
+            
+            bearish_reversal = (
+                close_3_ago < close_2_ago < prev_close and
+                current_close < prev_close
+            )
+        else:
+            bullish_reversal = current_close > prev_close
+            bearish_reversal = current_close < prev_close
 
-        # SHORT: Doble techo con tolerancia flexible
+        # === SHORT: Doble techo con tolerancia ESTRICTA ===
         if len(peaks) >= 2:
             p1_idx, p2_idx = peaks[-2], peaks[-1]
-            p1_high, p2_high = df_lookback['high'].iloc[p1_idx], df_lookback['high'].iloc[p2_idx]
+            p1_high = df_lookback['high'].iloc[p1_idx]
+            p2_high = df_lookback['high'].iloc[p2_idx]
 
-            if abs(p1_high - p2_high) / p1_high < 0.04:  # 4% tolerancia
+            # Tolerancia REDUCIDA de 4% a 1%
+            if abs(p1_high - p2_high) / p1_high < 0.01:  # 1% tolerancia
                 neckline = df_lookback['low'].iloc[p1_idx:p2_idx].min()
                 
-                # Confirmación de rompimiento
-                current_close = df_lookback['close'].iloc[-1]
-                prev_close = df_lookback['close'].iloc[-2]
+                # Confirmación de rompimiento con tolerancia estricta
+                breakout_confirmed = (
+                    current_close < neckline * 0.998 and 
+                    prev_close >= neckline
+                )
                 
-                if current_close < neckline * 0.998 and prev_close >= neckline * 0.998:
-                    # Confirmación adicional con RSI
-                    if 'rsi' in df.columns:
-                        rsi = df['rsi'].iloc[-1]
-                        if rsi > 40:  # No sobrevendido extremo
-                            return 'short'
-                    else:
+                if breakout_confirmed:
+                    # CONFIRMACIÓN 1: RSI en zona alta (saliendo de sobrecompra)
+                    rsi_ok = rsi > 60 and rsi < rsi_prev
+                    
+                    # CONFIRMACIÓN 2: Momentum negativo
+                    momentum_ok = (not pd.isna(momentum) and 
+                                  momentum < -min_momentum and 
+                                  momentum < momentum_prev)
+                    
+                    # CONFIRMACIÓN 3: Reversión bajista confirmada
+                    reversal_ok = bearish_reversal
+                    
+                    # CONFIRMACIÓN 4: Precio cayendo
+                    price_falling = current_close < prev_close
+                    
+                    # REQUIERE 3 de 4 confirmaciones
+                    confirmations = [rsi_ok, momentum_ok, reversal_ok, price_falling]
+                    if sum(confirmations) >= 3:
                         return 'short'
 
-        # LONG: Doble suelo con tolerancia flexible
+        # === LONG: Doble suelo con tolerancia ESTRICTA ===
         if len(valleys) >= 2:
             v1_idx, v2_idx = valleys[-2], valleys[-1]
-            v1_low, v2_low = df_lookback['low'].iloc[v1_idx], df_lookback['low'].iloc[v2_idx]
+            v1_low = df_lookback['low'].iloc[v1_idx]
+            v2_low = df_lookback['low'].iloc[v2_idx]
 
-            if abs(v1_low - v2_low) / v1_low < 0.04:  # 4% tolerancia
+            # Tolerancia REDUCIDA de 4% a 1%
+            if abs(v1_low - v2_low) / v1_low < 0.01:  # 1% tolerancia
                 neckline = df_lookback['high'].iloc[v1_idx:v2_idx].max()
                 
-                # Confirmación de rompimiento
-                current_close = df_lookback['close'].iloc[-1]
-                prev_close = df_lookback['close'].iloc[-2]
+                # Confirmación de rompimiento con tolerancia estricta
+                breakout_confirmed = (
+                    current_close > neckline * 1.002 and 
+                    prev_close <= neckline
+                )
                 
-                if current_close > neckline * 1.002 and prev_close <= neckline * 1.002:
-                    # Confirmación adicional con RSI
-                    if 'rsi' in df.columns:
-                        rsi = df['rsi'].iloc[-1]
-                        if rsi < 60:  # No sobrecomprado extremo
-                            return 'long'
-                    else:
+                if breakout_confirmed:
+                    # CONFIRMACIÓN 1: RSI en zona baja (saliendo de sobreventa)
+                    rsi_ok = rsi < 40 and rsi > rsi_prev
+                    
+                    # CONFIRMACIÓN 2: Momentum positivo
+                    momentum_ok = (not pd.isna(momentum) and 
+                                  momentum > min_momentum and 
+                                  momentum > momentum_prev)
+                    
+                    # CONFIRMACIÓN 3: Reversión alcista confirmada
+                    reversal_ok = bullish_reversal
+                    
+                    # CONFIRMACIÓN 4: Precio subiendo
+                    price_rising = current_close > prev_close
+                    
+                    # REQUIERE 3 de 4 confirmaciones
+                    confirmations = [rsi_ok, momentum_ok, reversal_ok, price_rising]
+                    if sum(confirmations) >= 3:
                         return 'long'
 
-        return None
-
-    @staticmethod
-    def strategy_hybrid_optimizer(df, min_score=3):
-        """
-        Estrategia híbrida FLEXIBLE que combina múltiples señales.
-        Usa sistema de puntuación para filtrar oportunidades de calidad.
-        """
-        if len(df) < 200:
-            return None
-            
-        # Inicializar puntuación
-        long_score = 0
-        short_score = 0
-        
-        # 1. TENDENCIA PRINCIPAL (EMA 50 y 200) - Flexible
-        if 'ema_50' in df.columns and 'ema_200' in df.columns:
-            ema_50 = df['ema_50'].iloc[-1]
-            ema_200 = df['ema_200'].iloc[-1]
-            price = df['close'].iloc[-1]
-            
-            if ema_50 > ema_200 * 1.001 and price > ema_50 * 0.995:
-                long_score += 2
-            elif ema_50 < ema_200 * 0.999 and price < ema_50 * 1.005:
-                short_score += 2
-                
-        # 2. MOMENTUM (RSI + MACD) - Flexible
-        if 'rsi' in df.columns:
-            rsi = df['rsi'].iloc[-1]
-            rsi_prev = df['rsi'].iloc[-2]
-            
-            if 30 < rsi < 55 and rsi > rsi_prev:
-                long_score += 1.5
-            elif 45 < rsi < 70 and rsi < rsi_prev:
-                short_score += 1.5
-                
-        if 'macd_line' in df.columns and 'macd_signal' in df.columns:
-            macd = df['macd_line'].iloc[-1]
-            signal = df['macd_signal'].iloc[-1]
-            macd_prev = df['macd_line'].iloc[-2]
-            signal_prev = df['macd_signal'].iloc[-2]
-            
-            # Cruce O posición con momentum
-            if (macd > signal and macd_prev <= signal_prev) or (macd > signal and macd > macd_prev):
-                long_score += 2
-            elif (macd < signal and macd_prev >= signal_prev) or (macd < signal and macd < macd_prev):
-                short_score += 2
-                
-        # 3. VOLATILIDAD (Bollinger Bands + ATR)
-        if all(col in df.columns for col in ['bb_upper', 'bb_lower', 'atr']):
-            close = df['close'].iloc[-1]
-            bb_upper = df['bb_upper'].iloc[-1]
-            bb_lower = df['bb_lower'].iloc[-1]
-            bb_middle = (bb_upper + bb_lower) / 2
-            
-            bb_position = (close - bb_lower) / (bb_upper - bb_lower) if (bb_upper - bb_lower) > 0 else 0.5
-            
-            if 0.15 < bb_position < 0.45:  # Zona inferior-media
-                long_score += 1
-            elif 0.55 < bb_position < 0.85:  # Zona superior-media
-                short_score += 1
-                
-        # 4. ESTRUCTURA DE MERCADO
-        lookback = min(100, len(df) - 1)
-        recent_highs = df['high'].iloc[-lookback:].rolling(10).max()
-        recent_lows = df['low'].iloc[-lookback:].rolling(10).min()
-        
-        current_high = df['high'].iloc[-1]
-        current_low = df['low'].iloc[-1]
-        prev_high = recent_highs.iloc[-10] if len(recent_highs) > 10 else df['high'].iloc[-2]
-        prev_low = recent_lows.iloc[-10] if len(recent_lows) > 10 else df['low'].iloc[-2]
-        
-        if current_high > prev_high * 1.001:
-            long_score += 1
-        if current_low < prev_low * 0.999:
-            short_score += 1
-            
-        # 5. PATRONES DE VELAS (simplificado)
-        candle_data = df.to_dict('records')
-        current_index = len(candle_data) - 1
-        try:
-            signals = CandlePatterns.detect_all_patterns(candle_data, current_index)
-            
-            strong_bullish = ['bullish_engulfing', 'morning_star', 'hammer']
-            strong_bearish = ['bearish_engulfing', 'evening_star', 'shooting_star']
-            
-            if any(pattern in signals['long'] for pattern in strong_bullish):
-                long_score += 1.5
-            if any(pattern in signals['short'] for pattern in strong_bearish):
-                short_score += 1.5
-        except:
-            pass
-            
-        # 6. CONFIRMACIÓN DE VOLUMEN
-        if 'tick_volume' in df.columns and len(df) > 20:
-            current_vol = df['tick_volume'].iloc[-1]
-            avg_vol = df['tick_volume'].iloc[-20:].mean()
-            
-            if current_vol > avg_vol * 1.2:
-                if df['close'].iloc[-1] > df['open'].iloc[-1]:
-                    long_score += 1
-                else:
-                    short_score += 1
-                    
-        # 7. FILTRO FINAL (más flexible)
-        if long_score >= min_score and long_score > short_score:
-            return 'long'
-        elif short_score >= min_score and short_score > long_score:
-            return 'short'
-            
-        return None
-
-    @staticmethod
-    def strategy_ichimoku_kinko_hyo(df):
-        """
-        Estrategia Ichimoku Kinko Hyo FLEXIBLE para máxima rentabilidad.
-        
-        Lógica:
-        - Analiza la posición del precio respecto a la nube (Kumo)
-        - Confirma señales con cruce de Tenkan-sen y Kijun-sen
-        - Filtros inteligentes pero no excesivamente restrictivos
-        - LONG: Precio sobre nube + condiciones favorables
-        - SHORT: Precio bajo nube + condiciones favorables
-        """
-        required = ['close', 'tenkan_sen', 'kijun_sen', 'senkou_span_a', 'senkou_span_b']
-        if not all(col in df.columns for col in required):
-            return None
-        
-        # Verificar que tenemos suficientes datos
-        if len(df) < 26:  # Ichimoku necesita al menos 26 períodos
-            return None
-        
-        # --- 1. Obtener valores actuales y previos ---
-        price = df['close'].iloc[-1]
-        price_prev = df['close'].iloc[-2]
-        tenkan_sen = df['tenkan_sen'].iloc[-1]
-        kijun_sen = df['kijun_sen'].iloc[-1]
-        tenkan_sen_prev = df['tenkan_sen'].iloc[-2]
-        kijun_sen_prev = df['kijun_sen'].iloc[-2]
-        senkou_span_a = df['senkou_span_a'].iloc[-1]
-        senkou_span_b = df['senkou_span_b'].iloc[-1]
-        
-        # --- 2. Definir posición respecto a la nube (Kumo) ---
-        kumo_top = max(senkou_span_a, senkou_span_b)
-        kumo_bottom = min(senkou_span_a, senkou_span_b)
-        
-        # Posición del precio respecto a la nube
-        is_above_kumo = price > kumo_top * 0.998  # Tolerancia 0.2%
-        is_below_kumo = price < kumo_bottom * 1.002
-        is_inside_kumo = not is_above_kumo and not is_below_kumo
-        
-        # --- 3. Detectar cruces y posiciones de Tenkan-sen y Kijun-sen ---
-        tk_cross_up = tenkan_sen > kijun_sen and tenkan_sen_prev <= kijun_sen_prev
-        tk_cross_down = tenkan_sen < kijun_sen and tenkan_sen_prev >= kijun_sen_prev
-        tk_bullish = tenkan_sen > kijun_sen
-        tk_bearish = tenkan_sen < kijun_sen
-        
-        # --- 4. Confirmaciones adicionales FLEXIBLES ---
-        
-        # Momentum del precio
-        price_momentum_up = price > price_prev
-        price_momentum_down = price < price_prev
-        
-        # Dirección de las líneas Ichimoku
-        tenkan_rising = tenkan_sen > tenkan_sen_prev
-        kijun_rising = kijun_sen > kijun_sen_prev
-        tenkan_falling = tenkan_sen < tenkan_sen_prev
-        kijun_falling = kijun_sen < kijun_sen_prev
-        
-        # Distancia del precio a la nube (flexible)
-        if is_above_kumo:
-            distance_ratio = abs(price - kumo_top) / price
-        elif is_below_kumo:
-            distance_ratio = abs(price - kumo_bottom) / price
-        else:
-            distance_ratio = 0
-        
-        # RSI adicional si está disponible
-        rsi_favorable_long = True
-        rsi_favorable_short = True
-        if 'rsi' in df.columns:
-            rsi = df['rsi'].iloc[-1]
-            rsi_prev = df['rsi'].iloc[-2]
-            rsi_favorable_long = rsi < 60 and rsi > rsi_prev  # Flexible
-            rsi_favorable_short = rsi > 40 and rsi < rsi_prev
-        
-        # --- 5. LÓGICA LONG FLEXIBLE ---
-        if is_above_kumo:
-            # Confirmaciones: cruce O posición alcista con momentum
-            confirmations = 0
-            
-            # Confirmación 1: Tenkan/Kijun alcistas
-            if tk_cross_up or (tk_bullish and tenkan_rising):
-                confirmations += 1
-            
-            # Confirmación 2: Precio con momentum alcista
-            if price_momentum_up:
-                confirmations += 1
-            
-            # Confirmación 3: Líneas subiendo
-            if tenkan_rising or kijun_rising:
-                confirmations += 1
-            
-            # Confirmación 4: RSI favorable
-            if rsi_favorable_long:
-                confirmations += 1
-            
-            # Confirmación 5: Precio claramente sobre nube (no muy lejos)
-            if distance_ratio < 0.015:  # Dentro de 1.5%
-                confirmations += 1
-            
-            # Requerir al menos 3 de 5 confirmaciones (60%)
-            if confirmations >= 3:
-                return 'long'
-        
-        # --- 6. LÓGICA SHORT FLEXIBLE ---
-        if is_below_kumo:
-            # Confirmaciones: cruce O posición bajista con momentum
-            confirmations = 0
-            
-            # Confirmación 1: Tenkan/Kijun bajistas
-            if tk_cross_down or (tk_bearish and tenkan_falling):
-                confirmations += 1
-            
-            # Confirmación 2: Precio con momentum bajista
-            if price_momentum_down:
-                confirmations += 1
-            
-            # Confirmación 3: Líneas bajando
-            if tenkan_falling or kijun_falling:
-                confirmations += 1
-            
-            # Confirmación 4: RSI favorable
-            if rsi_favorable_short:
-                confirmations += 1
-            
-            # Confirmación 5: Precio claramente bajo nube (no muy lejos)
-            if distance_ratio < 0.015:  # Dentro de 1.5%
-                confirmations += 1
-            
-            # Requerir al menos 3 de 5 confirmaciones (60%)
-            if confirmations >= 3:
-                return 'short'
-        
-        # --- 7. SEÑALES DE ROMPIMIENTO DE NUBE (MÁS FLEXIBLE) ---
-        
-        # Rompimiento alcista: precio cruzando sobre la nube
-        if (price > kumo_top and price_prev <= kumo_top * 1.005):
-            # Confirmaciones para rompimiento
-            breakout_confirmations = 0
-            
-            if tk_bullish or tk_cross_up:
-                breakout_confirmations += 1
-            if price_momentum_up:
-                breakout_confirmations += 1
-            if rsi_favorable_long:
-                breakout_confirmations += 1
-            
-            # Al menos 2 de 3 para rompimiento alcista
-            if breakout_confirmations >= 2:
-                return 'long'
-        
-        # Rompimiento bajista: precio cruzando bajo la nube
-        if (price < kumo_bottom and price_prev >= kumo_bottom * 0.995):
-            # Confirmaciones para rompimiento
-            breakout_confirmations = 0
-            
-            if tk_bearish or tk_cross_down:
-                breakout_confirmations += 1
-            if price_momentum_down:
-                breakout_confirmations += 1
-            if rsi_favorable_short:
-                breakout_confirmations += 1
-            
-            # Al menos 2 de 3 para rompimiento bajista
-            if breakout_confirmations >= 2:
-                return 'short'
-        
         return None
