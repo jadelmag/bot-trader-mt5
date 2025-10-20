@@ -3,6 +3,7 @@ import MetaTrader5 as mt5
 import threading
 from datetime import datetime
 from tkinter import messagebox
+from simulation.config_loader import ConfigLoader
 
 try:
     from modals.detect_all_candles_modal import DetectAllCandlesModal
@@ -165,6 +166,17 @@ class ActionHandler:
             if AuditLogger:
                 AuditLogger()._load_config()
                 AuditLogger()._setup_log_file()
+            # Recargar y aplicar configuración general en caliente a la simulación en curso
+            try:
+                new_general_config = ConfigLoader(self.app.logger).load_general_config()
+                if getattr(self.app, 'simulation_instance', None):
+                    self.app.simulation_instance.general_config = new_general_config or {}
+                    if self.app.debug_mode_var.get():
+                        self.app._log_success("Configuración general recargada y aplicada a la simulación en curso.")
+            except Exception as e:
+                # Registrar pero no bloquear la UI si hay problema al recargar
+                if self.app.debug_mode_var.get():
+                    self.app._log_error(f"No se pudo recargar la configuración general: {e}")
         else:
             if self.app.debug_mode_var.get():
                 self.app._log_info("La configuración no fue modificada.")
