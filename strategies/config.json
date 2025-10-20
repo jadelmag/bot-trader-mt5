@@ -7,5 +7,6 @@
     "audit_log_enabled": true,
     "risk_per_trade_percent": "1.00000000",
     "daily_profit_limit": 0.0,
-    "close_candle_limit": 50.0
+    "close_candle_limit": 50.0,
+    "close_forex_limit": 50.0
 }
