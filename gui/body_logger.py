@@ -3,6 +3,15 @@ from tkinter import ttk
 from datetime import datetime
 
 
+# Semantic color mapping for convenience names
+COLOR_MAP = {
+    "info": "#9cdcfe",
+    "success": "#6A9955",
+    "error": "#F44747",
+    "warn": "#D7BA7D",
+}
+
+
 class BodyLogger(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -35,6 +44,22 @@ class BodyLogger(ttk.Frame):
         self.text.tag_configure("WARN", foreground="#D7BA7D")
         self.text.tag_configure("TIME", foreground="#888888")
 
+    def _resolve_color(self, value: str) -> str | None:
+        """Return a Tk-acceptable color string or None if invalid.
+
+        Accepts hex colors (e.g., #RRGGBB), any Tk color name, or our semantic
+        names defined in COLOR_MAP (e.g., 'info', 'success', 'error', 'warn').
+        """
+        if not value:
+            return None
+        candidate = COLOR_MAP.get(value.strip().lower(), value)
+        try:
+            # Validate color with Tk; raises TclError if unknown
+            self.winfo_rgb(candidate)
+            return candidate
+        except tk.TclError:
+            return None
+
     def _append(self, message: str, tag: str = "INFO", color: str = None):
         """Añade un mensaje al log. Si se proporciona 'color', se usa para una etiqueta dinámica."""
         # Ensure thread-safe UI update
@@ -44,12 +69,13 @@ class BodyLogger(ttk.Frame):
             self.text.insert("end", f"[{now}] ", ("TIME",))
 
             # Usar color personalizado si se proporciona
+            final_tag = tag
             if color:
-                custom_tag = f"custom_{color.replace('#', '')}"
-                self.text.tag_configure(custom_tag, foreground=color)
-                final_tag = custom_tag
-            else:
-                final_tag = tag
+                resolved = self._resolve_color(color)
+                if resolved:
+                    custom_tag = f"custom_{resolved.lstrip('#').lower()}"
+                    self.text.tag_configure(custom_tag, foreground=resolved)
+                    final_tag = custom_tag
 
             self.text.insert("end", message + "\n", (final_tag,))
             self.text.see("end")

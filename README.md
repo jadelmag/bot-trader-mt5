@@ -515,7 +515,7 @@ bot-trader-mt5/
 
 **Soluciones**:
 - Verificar que MT5 esté abierto y activo
-- Comprobar credenciales en [.env](cci:7://file:///c:/Users/Xu/Documents/repositories/bot-trader-mt5/.env:0:0-0:0)
+- Comprobar credenciales en [.env]
 - Verificar conexión a internet
 - Reiniciar terminal MT5
 - Verificar que el servidor esté operativo
@@ -570,7 +570,7 @@ bot-trader-mt5/
 
 **Solución**: ✅ **CORREGIDO en v2.3.0**
 - Comentarios extendidos a 63 caracteres
-- Parsing mejorado en [window_operations.py](cci:7://file:///c:/Users/Xu/Documents/repositories/bot-trader-mt5/operations/window_operations.py:0:0-0:0)
+- Parsing mejorado en [window_operations.py]
 - Muestra nombres completos de estrategias
 
 #### 8. UI No Se Actualiza
@@ -578,7 +578,7 @@ bot-trader-mt5/
 
 **Solución**: ✅ **CORREGIDO en v2.3.0**
 - Actualización automática implementada
-- Método `_update_ui_account_info()` en [action_handler.py](cci:7://file:///c:/Users/Xu/Documents/repositories/bot-trader-mt5/main/action_handler.py:0:0-0:0)
+- Método `_update_ui_account_info()` en [action_handler.py]
 - Ejecuta en hilo principal con `after(0, ...)`
 
 ---
