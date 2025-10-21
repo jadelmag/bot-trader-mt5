@@ -379,7 +379,7 @@ bot-trader-mt5/
 
 #### Límites de Operaciones
 - **Por vela**: Control de número máximo de trades por vela
-- **Variable**: `trades_in_current_candle` en [simulation.py](cci:7://file:///c:/Users/Xu/Documents/repositories/bot-trader-mt5/simulation/simulation.py:0:0-0:0)
+- **Variable**: `trades_in_current_candle` en [simulation.py]
 - **Reseteo**: Automático al cambiar de vela
 
 #### Protección de Drawdown
@@ -418,7 +418,7 @@ bot-trader-mt5/
 
 #### Ganancia Diaria
 - **Descripción**: Control de objetivos de beneficio
-- **Tracking**: `daily_start_balance` en [risk_manager.py](cci:7://file:///c:/Users/Xu/Documents/repositories/bot-trader-mt5/simulation/risk_manager.py:0:0-0:0)
+- **Tracking**: `daily_start_balance` en [risk_manager.py]
 - **Reseteo**: Automático al detectar nuevo día
 
 ### Reportes Disponibles
