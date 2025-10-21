@@ -166,7 +166,12 @@ class SignalAnalyzer:
                 risk_multiplier = pattern_config.get('percent_ratio', 1.0)
 
                 if sl_pips > 0:
-                    volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
+                    # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
+                    volume = self.simulation.risk_manager.calculate_volume(
+                        risk_multiplier=risk_multiplier,
+                        strategy_name=f"candle_{pattern_name}",
+                        stop_loss_pips=sl_pips
+                    )
                     if volume > 0:
                         self._log(f"[SIGNAL] ✅ Señal de VELA '{pattern_name}' CONFIRMADA. Abriendo {candle_signal.upper()}.")
                         self.simulation.trade_manager.open_trade(
@@ -210,7 +215,12 @@ class SignalAnalyzer:
                 rr_ratio = params.get('rr_ratio', 2.0)
                 risk_multiplier = params.get('percent_ratio', 1.0)
 
-                volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
+                # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
+                volume = self.simulation.risk_manager.calculate_volume(
+                    risk_multiplier=risk_multiplier,
+                    strategy_name=strategy_name,
+                    stop_loss_pips=sl_pips
+                )
 
                 if volume > 0:
                     self._log(f"[SIGNAL] ✅ Señal de FOREX '{strategy_name}' CONFIRMADA. Abriendo {trade_type.upper()}.")
@@ -244,7 +254,12 @@ class SignalAnalyzer:
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
                 if strategy_name == 'run_pico_y_pala':
-                    volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=1.0)
+                    # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=1.0)
+                    volume = self.simulation.risk_manager.calculate_volume(
+                        risk_multiplier=1.0,
+                        strategy_name=strategy_name,
+                        stop_loss_pips=config.get('stop_loss_pips', 10.0)
+                    )
                     if volume > 0:
                         self._log(f"[SIGNAL] Lanzando estrategia personalizada '{strategy_name}'.")
                         thread = threading.Thread(

@@ -30,7 +30,7 @@ class IndicatorCalculator:
     def calculate_all_indicators(self, candles_df):
         """
         Calcula TODOS los indicadores técnicos usando pandas_ta.
-        Añade columnas al DataFrame: RSI, ATR, MACD, Momentum, EMAs, Bollinger Bands.
+        Añade columnas al DataFrame: RSI, ATR, MACD, Momentum, EMAs, Bollinger Bands, StochRSI.
         """
         if candles_df.empty or len(candles_df) < 50:
             if self.debug_mode:
@@ -65,7 +65,25 @@ class IndicatorCalculator:
             momentum = ta.mom(df['Close'], length=10)
             candles_df['Momentum'] = momentum
             
+            # --- StochRSI (14, 14, 3, 3) para strategy_scalping_stochrsi_ema ---
+            stochrsi_result = ta.stochrsi(df['Close'], length=14, rsi_length=14, k=3, d=3)
+            if stochrsi_result is not None and not stochrsi_result.empty:
+                # Buscar columnas dinámicamente
+                k_col = [col for col in stochrsi_result.columns if col.startswith('STOCHRSIk_')]
+                d_col = [col for col in stochrsi_result.columns if col.startswith('STOCHRSId_')]
+                
+                if k_col and d_col:
+                    candles_df['StochRSI_K'] = stochrsi_result[k_col[0]]
+                    candles_df['StochRSI_D'] = stochrsi_result[d_col[0]]
+                else:
+                    candles_df['StochRSI_K'] = pd.Series([float('nan')] * len(candles_df))
+                    candles_df['StochRSI_D'] = pd.Series([float('nan')] * len(candles_df))
+            else:
+                candles_df['StochRSI_K'] = pd.Series([float('nan')] * len(candles_df))
+                candles_df['StochRSI_D'] = pd.Series([float('nan')] * len(candles_df))
+            
             # --- EMAs para tendencia ---
+            candles_df['EMA_20'] = ta.ema(df['Close'], length=20)
             candles_df['EMA_50'] = ta.ema(df['Close'], length=50)
             candles_df['EMA_200'] = ta.ema(df['Close'], length=200)
             
@@ -78,6 +96,20 @@ class IndicatorCalculator:
             # --- EMAs adicionales para strategy_ma_crossover ---
             candles_df['ema_fast'] = ta.ema(df['Close'], length=10)
             candles_df['ema_slow'] = ta.ema(df['Close'], length=50)
+            
+            # --- Indicadores adicionales para máxima precisión ---
+            # Williams %R para confirmación adicional
+            candles_df['Williams_R'] = ta.willr(df['High'], df['Low'], df['Close'], length=14)
+            
+            # CCI (Commodity Channel Index) para detectar extremos
+            candles_df['CCI'] = ta.cci(df['High'], df['Low'], df['Close'], length=20)
+            
+            # ADX para fuerza de tendencia
+            adx_result = ta.adx(df['High'], df['Low'], df['Close'], length=14)
+            if adx_result is not None and not adx_result.empty:
+                adx_col = [col for col in adx_result.columns if col.startswith('ADX_')]
+                if adx_col:
+                    candles_df['ADX'] = adx_result[adx_col[0]]
             
             if self.debug_mode:
                 last_row = candles_df.iloc[-1]
@@ -152,6 +184,7 @@ class IndicatorCalculator:
         """Crea aliases en minúsculas para compatibilidad con forex_list.py y candle_list.py."""
         candles_df['rsi'] = candles_df['RSI']
         candles_df['atr'] = candles_df['ATR']
+        candles_df['ema_20'] = candles_df['EMA_20']
         candles_df['ema_50'] = candles_df['EMA_50']
         candles_df['ema_200'] = candles_df['EMA_200']
         candles_df['macd_line'] = candles_df['MACD_line']
@@ -165,70 +198,297 @@ class IndicatorCalculator:
             candles_df['bb_middle'] = candles_df['BB_middle']
             candles_df['bb_lower'] = candles_df['BB_lower']
         
+        # Crear aliases de StochRSI
+        if 'StochRSI_K' in candles_df.columns:
+            candles_df['stochrsi_k'] = candles_df['StochRSI_K']
+            candles_df['stochrsi_d'] = candles_df['StochRSI_D']
+        
+        # Crear aliases de indicadores adicionales
+        if 'Williams_R' in candles_df.columns:
+            candles_df['williams_r'] = candles_df['Williams_R']
+        
+        if 'CCI' in candles_df.columns:
+            candles_df['cci'] = candles_df['CCI']
+        
+        if 'ADX' in candles_df.columns:
+            candles_df['adx'] = candles_df['ADX']
+        
         return candles_df
     
     def confirm_signal_with_indicators(self, candles_df, signal_type, strategy_name=None):
         """
-        Confirma señales usando múltiples indicadores para reducir false signals.
-        Requiere al menos 3 de 4 confirmaciones para aprobar una señal.
+        Confirma señales usando análisis inteligente de múltiples indicadores y tendencias.
+        Sistema de confirmación INTELIGENTE:
+        - Analiza las últimas 10 velas para determinar tendencia real
+        - Requiere 3 de 6 confirmaciones (50% - más flexible)
+        - RSI flexible pero efectivo
+        - Confirmación de momentum en múltiples velas
+        - Análisis de tendencia de precios
+        - Usa TODOS los indicadores disponibles de forma inteligente
         """
         if candles_df.empty or len(candles_df) < 50:
             return False
         
         last_row = candles_df.iloc[-1]
+        prev_row = candles_df.iloc[-2] if len(candles_df) > 1 else last_row
         
         # Obtener indicadores
         rsi = last_row.get('RSI')
+        rsi_prev = prev_row.get('RSI')
         macd_line = last_row.get('MACD_line')
         macd_signal = last_row.get('MACD_signal')
+        macd_line_prev = prev_row.get('MACD_line')
+        macd_signal_prev = prev_row.get('MACD_signal')
         momentum = last_row.get('Momentum')
+        momentum_prev = prev_row.get('Momentum')
+        ema_20 = last_row.get('EMA_20')
         ema_50 = last_row.get('EMA_50')
+        ema_200 = last_row.get('EMA_200')
         close = last_row['close']
+        close_prev = prev_row['close']
+        atr = last_row.get('ATR')
+        williams_r = last_row.get('Williams_R')
+        cci = last_row.get('CCI')
+        bb_upper = last_row.get('bb_upper')
+        bb_lower = last_row.get('bb_lower')
+        bb_middle = last_row.get('bb_middle')
         
         # Verificar que tengamos datos válidos
         if pd.isna(rsi) or pd.isna(macd_line) or pd.isna(ema_50):
             if self.debug_mode:
-                self._log(f"[INDICATORS-DEBUG] Indicadores no disponibles para confirmación")
+                self._log(f"[INDICATORS-DEBUG] Indicadores críticos no disponibles para confirmación")
             return False
+        
+        # --- ANÁLISIS DE TENDENCIA DE LAS ÚLTIMAS 10 VELAS ---
+        def analyze_trend_last_candles(df, periods=10):
+            """Analiza la tendencia real de las últimas N velas."""
+            if len(df) < periods:
+                return 'neutral'
+            
+            recent_candles = df.iloc[-periods:]
+            closes = recent_candles['close']
+            
+            # Contar velas alcistas vs bajistas
+            bullish_candles = sum(recent_candles['close'] > recent_candles['open'])
+            bearish_candles = sum(recent_candles['close'] < recent_candles['open'])
+            
+            # Tendencia del precio (primer vs último cierre)
+            price_change = (closes.iloc[-1] - closes.iloc[0]) / closes.iloc[0]
+            
+            # Momentum promedio
+            if 'Momentum' in df.columns:
+                avg_momentum = recent_candles['Momentum'].mean()
+            else:
+                avg_momentum = 0
+            
+            # Determinar tendencia
+            if bullish_candles > bearish_candles * 1.3 and price_change > 0.001:
+                return 'bullish'
+            elif bearish_candles > bullish_candles * 1.3 and price_change < -0.001:
+                return 'bearish'
+            else:
+                return 'neutral'
+        
+        market_trend = analyze_trend_last_candles(candles_df, periods=10)
+        
+        # --- ANÁLISIS DE MOMENTUM EN MÚLTIPLES VELAS ---
+        def check_momentum_consistency(df, direction, periods=5):
+            """Verifica consistencia del momentum en las últimas N velas."""
+            if len(df) < periods or 'Momentum' not in df.columns:
+                return False
+            
+            recent_momentum = df['Momentum'].iloc[-periods:]
+            
+            if direction == 'bullish':
+                # Al menos 60% de las velas con momentum positivo
+                positive_count = sum(recent_momentum > 0)
+                return positive_count >= (periods * 0.6)
+            else:
+                # Al menos 60% de las velas con momentum negativo
+                negative_count = sum(recent_momentum < 0)
+                return negative_count >= (periods * 0.6)
+        
+        momentum_bullish_consistent = check_momentum_consistency(candles_df, 'bullish', 5)
+        momentum_bearish_consistent = check_momentum_consistency(candles_df, 'bearish', 5)
         
         # CONFIRMACIÓN PARA LONG
         if signal_type == 'long':
-            trend_ok = close > ema_50
-            rsi_ok = 30 < rsi < 70
-            macd_ok = macd_line > macd_signal
-            momentum_ok = momentum > 0 if not pd.isna(momentum) else True
+            # 1. RSI: Flexible pero efectivo (no sobrecomprado, preferible en zona baja-media)
+            rsi_favorable = rsi < 65 and rsi > rsi_prev and rsi > 30
+            rsi_ok = rsi_favorable
             
-            confirmations = [trend_ok, rsi_ok, macd_ok, momentum_ok]
+            # 2. MACD: Cruce alcista REAL (con tolerancia mínima) O posición alcista FUERTE
+            # Cruce real: la línea debe cruzar la señal con una diferencia mínima
+            tolerance = abs(close * 0.00001)  # 0.001% del precio como tolerancia mínima
+            
+            # Detectar cruce alcista: línea MACD cruza HACIA ARRIBA la señal
+            macd_cross_up = (
+                macd_line > macd_signal and 
+                macd_line_prev <= macd_signal_prev and
+                (macd_line - macd_signal) > tolerance  # Debe haber separación real
+            )
+            
+            # Posición alcista FUERTE: línea por encima Y creciendo
+            macd_bullish_position = (
+                macd_line > macd_signal and 
+                macd_line > macd_line_prev and
+                (macd_line - macd_signal) > tolerance * 2  # Debe haber separación clara
+            )
+            
+            macd_ok = macd_cross_up or macd_bullish_position
+            
+            # 3. Momentum: DEBE ser positivo Y consistente (no aceptar solo mejora)
+            # Momentum mínimo requerido para considerar movimiento real
+            min_momentum = abs(close * 0.00005)  # 0.005% del precio como momentum mínimo
+            
+            momentum_is_positive = not pd.isna(momentum) and momentum > min_momentum
+            momentum_improving = momentum > momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # REQUIERE momentum positivo Y consistencia en múltiples velas
+            momentum_ok = momentum_is_positive and (momentum_bullish_consistent or momentum_improving)
+            
+            # 4. Precio: Análisis de posición respecto a medias móviles
+            price_above_ema20 = close > ema_20 if not pd.isna(ema_20) else True
+            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False
+            price_momentum = close > close_prev
+            price_ok = (price_above_ema20 or price_near_ema50) and price_momentum
+            
+            # 5. Tendencia del mercado: Alcista o neutral + precio sobre EMA_200
+            trend_favorable = market_trend in ['bullish', 'neutral']
+            price_vs_ema200 = close > ema_200 * 0.995 if not pd.isna(ema_200) else True
+            trend_ok = trend_favorable and price_vs_ema200
+            
+            # 6. Confirmación adicional con múltiples indicadores
+            additional_ok = False
+            confirmations_count = 0
+            
+            # Williams %R favorable (saliendo de sobreventa)
+            if not pd.isna(williams_r) and williams_r > -80 and williams_r < -30:
+                confirmations_count += 1
+            
+            # CCI favorable (no extremo negativo)
+            if not pd.isna(cci) and cci > -100:
+                confirmations_count += 1
+            
+            # Bollinger Bands: cerca de banda inferior o en zona media-baja
+            if not pd.isna(bb_lower) and not pd.isna(bb_upper):
+                bb_position = (close - bb_lower) / (bb_upper - bb_lower)
+                if bb_position < 0.5:  # En mitad inferior
+                    confirmations_count += 1
+            
+            # ATR: volatilidad razonable (no extrema)
+            if not pd.isna(atr):
+                atr_ratio = atr / close
+                if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
+                    confirmations_count += 1
+            
+            additional_ok = confirmations_count >= 2
+            
+            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
             
             if self.debug_mode:
                 self._log(
-                    f"[INDICATORS-DEBUG] Confirmación LONG para '{strategy_name}': "
-                    f"Tendencia={trend_ok}, RSI={rsi_ok}({rsi:.1f}), "
-                    f"MACD={macd_ok}, Momentum={momentum_ok} | "
-                    f"Total: {confirmed_count}/4"
+                    f"[INDICATORS-DEBUG] Confirmación LONG INTELIGENTE para '{strategy_name}':\n"
+                    f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
+                    f"  MACD={macd_ok} (cross_up={macd_cross_up}, bullish={macd_bullish_position})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.5f}, consistente={momentum_bullish_consistent})\n"
+                    f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
+                    f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
+                    f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
+                    f"  Total: {confirmed_count}/6 (requiere ≥5 para confirmar)"
                 )
             
-            return confirmed_count >= 3
+            # AUMENTADO: Requiere al menos 5 de 6 confirmaciones (83%)
+            return confirmed_count >= 5
         
         # CONFIRMACIÓN PARA SHORT
         elif signal_type == 'short':
-            trend_ok = close < ema_50
-            rsi_ok = 30 < rsi < 70
-            macd_ok = macd_line < macd_signal
-            momentum_ok = momentum < 0 if not pd.isna(momentum) else True
+            # 1. RSI: Flexible pero efectivo (no sobrevendido, preferible en zona alta-media)
+            rsi_favorable = rsi > 35 and rsi < rsi_prev and rsi < 70
+            rsi_ok = rsi_favorable
             
-            confirmations = [trend_ok, rsi_ok, macd_ok, momentum_ok]
+            # 2. MACD: Cruce bajista REAL (con tolerancia mínima) O posición bajista FUERTE
+            tolerance = abs(close * 0.00001)  # 0.001% del precio como tolerancia mínima
+            
+            # Detectar cruce bajista: línea MACD cruza HACIA ABAJO la señal
+            macd_cross_down = (
+                macd_line < macd_signal and 
+                macd_line_prev >= macd_signal_prev and
+                (macd_signal - macd_line) > tolerance  # Debe haber separación real
+            )
+            
+            # Posición bajista FUERTE: línea por debajo Y decreciendo
+            macd_bearish_position = (
+                macd_line < macd_signal and 
+                macd_line < macd_line_prev and
+                (macd_signal - macd_line) > tolerance * 2  # Debe haber separación clara
+            )
+            
+            macd_ok = macd_cross_down or macd_bearish_position
+            
+            # 3. Momentum: DEBE ser negativo Y consistente (no aceptar solo empeoramiento)
+            min_momentum = abs(close * 0.00005)  # 0.005% del precio como momentum mínimo
+            
+            momentum_is_negative = not pd.isna(momentum) and momentum < -min_momentum
+            momentum_worsening = momentum < momentum_prev if not pd.isna(momentum_prev) else False
+            
+            # REQUIERE momentum negativo Y consistencia en múltiples velas
+            momentum_ok = momentum_is_negative and (momentum_bearish_consistent or momentum_worsening)
+            
+            # 4. Precio: Análisis de posición respecto a medias móviles
+            price_below_ema20 = close < ema_20 if not pd.isna(ema_20) else True
+            price_near_ema50 = abs(close - ema_50) / ema_50 < 0.01 if not pd.isna(ema_50) else False
+            price_momentum = close < close_prev
+            price_ok = (price_below_ema20 or price_near_ema50) and price_momentum
+            
+            # 5. Tendencia del mercado: Bajista o neutral + precio bajo EMA_200
+            trend_favorable = market_trend in ['bearish', 'neutral']
+            price_vs_ema200 = close < ema_200 * 1.005 if not pd.isna(ema_200) else True
+            trend_ok = trend_favorable and price_vs_ema200
+            
+            # 6. Confirmación adicional con múltiples indicadores
+            additional_ok = False
+            confirmations_count = 0
+            
+            # Williams %R favorable (saliendo de sobrecompra)
+            if not pd.isna(williams_r) and williams_r < -20 and williams_r > -70:
+                confirmations_count += 1
+            
+            # CCI favorable (no extremo positivo)
+            if not pd.isna(cci) and cci < 100:
+                confirmations_count += 1
+            
+            # Bollinger Bands: cerca de banda superior o en zona media-alta
+            if not pd.isna(bb_lower) and not pd.isna(bb_upper):
+                bb_position = (close - bb_lower) / (bb_upper - bb_lower)
+                if bb_position > 0.5:  # En mitad superior
+                    confirmations_count += 1
+            
+            # ATR: volatilidad razonable (no extrema)
+            if not pd.isna(atr):
+                atr_ratio = atr / close
+                if 0.0005 < atr_ratio < 0.005:  # Volatilidad normal
+                    confirmations_count += 1
+            
+            additional_ok = confirmations_count >= 2
+            
+            confirmations = [rsi_ok, macd_ok, momentum_ok, price_ok, trend_ok, additional_ok]
             confirmed_count = sum(confirmations)
             
             if self.debug_mode:
                 self._log(
-                    f"[INDICATORS-DEBUG] Confirmación SHORT para '{strategy_name}': "
-                    f"Tendencia={trend_ok}, RSI={rsi_ok}({rsi:.1f}), "
-                    f"MACD={macd_ok}, Momentum={momentum_ok} | "
-                    f"Total: {confirmed_count}/4"
+                    f"[INDICATORS-DEBUG] Confirmación SHORT INTELIGENTE para '{strategy_name}':\n"
+                    f"  RSI={rsi_ok} (RSI={rsi:.1f}, prev={rsi_prev:.1f})\n"
+                    f"  MACD={macd_ok} (cross_down={macd_cross_down}, bearish={macd_bearish_position})\n"
+                    f"  Momentum={momentum_ok} (actual={momentum:.5f}, consistente={momentum_bearish_consistent})\n"
+                    f"  Precio={price_ok} (close={close:.5f}, prev={close_prev:.5f})\n"
+                    f"  Tendencia={trend_ok} (mercado={market_trend}, vs_EMA200={price_vs_ema200})\n"
+                    f"  Adicional={additional_ok} ({confirmations_count}/4 confirmaciones)\n"
+                    f"  Total: {confirmed_count}/6 (requiere ≥5 para confirmar)"
                 )
             
-            return confirmed_count >= 3
+            # AUMENTADO: Requiere al menos 5 de 6 confirmaciones (83%)
+            return confirmed_count >= 5
         
         return False

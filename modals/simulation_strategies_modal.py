@@ -46,17 +46,17 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         # --- Valores por defecto para estrategias Forex ---
         self.strategy_defaults = {
-            "strategy_ma_crossover": {"percent_ratio": 0.7, "rr_ratio": 1.7, "sl": 10.0},
-            "strategy_price_action_sr": {"percent_ratio": 0.8, "rr_ratio": 1.6, "sl": 10.0},
-            "strategy_momentum_rsi_macd": {"percent_ratio": 0.7, "rr_ratio": 1.5, "sl": 11.0},
-            "strategy_hybrid_optimizer": {"percent_ratio": 0.65, "rr_ratio": 1.4, "sl": 13.0},
-            "strategy_fibonacci_reversal": {"percent_ratio": 0.5, "rr_ratio": 1.4, "sl": 14.0},
-            "strategy_ichimoku_kinko_hyo": {"percent_ratio": 0.5, "rr_ratio": 1.8, "sl": 15.0},
-            "strategy_bollinger_bands_breakout": {"percent_ratio": 0.5, "rr_ratio": 1.3, "sl": 12.0},
-            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.3, "rr_ratio": 1.2, "sl": 8.0},
-            "strategy_candle_pattern_reversal": {"percent_ratio": 0.3, "rr_ratio": 1.4, "sl": 10.0},
-            "strategy_swing_trading_multi_indicator": {"percent_ratio": 0.4, "rr_ratio": 1.8, "sl": 15.0},
-            "strategy_chart_pattern_breakout": {"percent_ratio": 0.45, "rr_ratio": 1.5, "sl": 12.0},
+            "strategy_price_action_sr": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 15.0},
+            "strategy_ma_crossover": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_momentum_rsi_macd": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 10.0},
+            "strategy_bollinger_bands_breakout": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 15.0},
+            "strategy_fibonacci_reversal": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 12.0},
+            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 8.0},
+            "strategy_candle_pattern_reversal": {"percent_ratio": 0.6, "rr_ratio": 3.0, "sl": 10.0},
+            "strategy_swing_trading_multi_indicator": {"percent_ratio": 0.5, "rr_ratio": 2.5, "sl": 25.0},
+            "strategy_hybrid_optimizer": {"percent_ratio": 0.6, "rr_ratio": 2.5, "sl": 10.0},
+            "strategy_ichimoku_kinko_hyo": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 20.0},
+            "strategy_chart_pattern_breakout": {"percent_ratio": 0.6, "rr_ratio": 2.5, "sl": 12.0},
         }
 
         # --- UI Components ---
@@ -128,12 +128,12 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         # Fila para Slots
         ttk.Label(config_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5), pady=(5,0))
-        self.slots_forex_var = tk.IntVar(value=2)
+        self.slots_forex_var = tk.IntVar(value=5)
         forex_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_forex_var, width=5)
         forex_slots_entry.grid(row=0, column=2, sticky='w', pady=(5,0))
 
         ttk.Label(config_frame, text="Slots Candle:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
-        self.slots_candles_var = tk.IntVar(value=2)
+        self.slots_candles_var = tk.IntVar(value=5)
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
         candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
 
@@ -158,16 +158,10 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de estrategias Forex."""
         # --- Estrategias a excluir de la selección por defecto ---
         excluded_strategies = [
-            "strategy_bollinger_bands_breakout",
-            "strategy_candle_pattern_reversal",
-            "strategy_chart_pattern_breakout",
-            "strategy_ichimoku_kinko_hyo",
-            "strategy_momentum_rsi_macd",
-            "strategy_fibonacci_reversal",
             "strategy_swing_trading_multi_indicator",
-            "strategy_hybrid_optimizer",
-            "strategy_piercing_line",
-            "strategy_three_outside_up_down"
+            "strategy_chart_pattern_breakout",
+            "strategy_fibonacci_reversal",
+            "strategy_ichimoku_kinko_hyo"
         ]
 
         # --- Frame Superior para botones de selección ---
@@ -244,11 +238,15 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de patrones de velas."""
         # --- Patrones de velas a seleccionar por defecto ---
         default_selected_candles = [
-            'is_engulfing',
-            'is_hammer',
-            'is_doji_reversal',
-            'is_three_white_soldiers',
-            'is_inverted_hammer'
+           "is_harami",
+           "is_three_inside_up_down",
+           "is_piercing_line",
+           "is_doji_reversal",
+           "is_marubozu",
+           "is_three_white_soldiers",
+           "is_engulfing",
+           "is_shooting_star",
+           "is_hammer"
         ]
 
         # --- Frame Superior para botones de selección ---
@@ -319,50 +317,7 @@ class SimulationStrategiesModal(tk.Toplevel):
             self._update_load_button_state(pattern_name)
 
             # Config predeterminada para patrones
-            pattern_config = {
-                'is_engulfing': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_hammer': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_doji_reversal': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_three_white_soldiers': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_piercing_line': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.2, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_inverted_hammer': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.3, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-                'is_three_outside_up_down': {
-                    'use_signal_change': True, 'use_stop_loss': True, 'use_take_profit': True, 
-                    'use_trailing_stop': False, 'use_pattern_reversal': False,
-                    'atr_sl_multiplier': 1.5, 'atr_tp_multiplier': 1.4, 'atr_trailing_multiplier': 1.5,
-                    'percent_ratio': 1.0
-                },
-            }
+            pattern_config = {}
 
             # Para cada patrón seleccionado por defecto, establecer modo "Custom" y guardar su config
             for pattern_name in default_selected_candles:

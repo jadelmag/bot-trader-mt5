@@ -34,8 +34,9 @@ class PositionMonitor:
         
         # Obtener el límite configurado de close_candle_limit
         close_candle_limit = self.simulation.general_config.get('close_candle_limit', 0.0)
+        close_forex_limit = self.simulation.general_config.get('close_forex_limit', 0.0)
         if close_candle_limit <= 0:
-            return  # Sin límite configurado
+            pass  # Sin límite configurado para velas
             
         open_positions = mt5.positions_get(symbol=self.simulation.symbol)
         if not open_positions:
@@ -46,6 +47,17 @@ class PositionMonitor:
             
             # Solo aplicar a patrones de vela (verificando si están en candle_pattern_configs)
             if ticket not in self.simulation.candle_pattern_configs:
+                # Si no es vela y hay límite para Forex, verificar Forex
+                if close_forex_limit and close_forex_limit > 0:
+                    profit_fx = position.profit
+                    if profit_fx >= close_forex_limit:
+                        trade_type_fx = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'
+                        self._log(
+                            f"[MONITOR] 💰 Límite de ganancia Forex: #{ticket} ({trade_type_fx.upper()}) | "
+                            f"P/L: ${profit_fx:.2f} >= ${close_forex_limit:.2f}",
+                            'success'
+                        )
+                        self.simulation.close_trade(ticket, position.volume, trade_type_fx, "forex_profit_limit_reached")
                 continue
                 
             profit = position.profit

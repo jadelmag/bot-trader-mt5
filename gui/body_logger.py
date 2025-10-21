@@ -71,11 +71,16 @@ class BodyLogger(ttk.Frame):
             # Usar color personalizado si se proporciona
             final_tag = tag
             if color:
-                resolved = self._resolve_color(color)
-                if resolved:
-                    custom_tag = f"custom_{resolved.lstrip('#').lower()}"
-                    self.text.tag_configure(custom_tag, foreground=resolved)
+                lc = color.lower()
+                if color.startswith("#"):
+                    custom_tag = f"custom_{color.replace('#', '')}"
+                    self.text.tag_configure(custom_tag, foreground=color)
                     final_tag = custom_tag
+                else:
+                    tag_map = {"info": "INFO", "success": "SUCCESS", "error": "ERROR", "warn": "WARN"}
+                    final_tag = tag_map.get(lc, tag)
+            else:
+                final_tag = tag
 
             self.text.insert("end", message + "\n", (final_tag,))
             self.text.see("end")
