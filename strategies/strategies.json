@@ -114,7 +114,7 @@
             "stop_loss_pips": 12.0
         },
         "strategy_fibonacci_reversal": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.5,
             "rr_ratio": 2.0,
             "stop_loss_pips": 12.0
@@ -126,7 +126,7 @@
             "stop_loss_pips": 10.0
         },
         "strategy_ichimoku_kinko_hyo": {
-            "selected": false,
+            "selected": true,
             "percent_ratio": 0.5,
             "rr_ratio": 2.0,
             "stop_loss_pips": 20.0
