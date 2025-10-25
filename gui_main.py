@@ -460,6 +460,16 @@ class App:
             # Do not block UI on save errors
             pass
 
+    def _load_strategies_config(self):
+        """Carga la configuración de estrategias desde el archivo JSON."""
+        try:
+            strategies_path = os.path.join(os.path.dirname(__file__), 'strategies', 'strategies.json')
+            with open(strategies_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            self._log_error(f"Error al cargar configuración de estrategias: {e}")
+            return {}
+
     def _set_status(self, text: str, color: str):
         self.status_var.set(f"Estado: {text}")
         try:
@@ -616,13 +626,17 @@ class App:
             self._log_success(f"BENEFICIO TOTAL PERFECTO: {total_profit:.2f} $")
             self._log_info("="*85)
 
+            # Cargar configuración de estrategias
+            strategies_config = self._load_strategies_config()
+            
             # Generar y guardar el informe detallado
             report_generator = ReportGenerator(
                 profitable_trades=profitable_trades,
                 summary_lines=summary_lines,
                 total_profit=total_profit,
                 symbol=self.graphic.symbol,
-                timeframe=self.graphic.timeframe
+                timeframe=self.graphic.timeframe,
+                strategies_config=strategies_config
             )
             report_path = report_generator.generate_report()
             if report_path:

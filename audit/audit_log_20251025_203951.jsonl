@@ -1,0 +1,96 @@
+{"timestamp": "2025-10-25T20:39:51.289594", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16254, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:51.289976", "event": "trade_close", "data": {"ticket": 3, "symbol": "EURUSD", "close_price": 1.16272, "profit": 18.0000000000069}}
+{"timestamp": "2025-10-25T20:39:51.299223", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16256, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_morning_star"}}
+{"timestamp": "2025-10-25T20:39:51.299555", "event": "trade_close", "data": {"ticket": 20, "symbol": "EURUSD", "close_price": 1.16258, "profit": 1.999999999990898}}
+{"timestamp": "2025-10-25T20:39:51.301912", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16247, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_outside_up_down"}}
+{"timestamp": "2025-10-25T20:39:51.302088", "event": "trade_close", "data": {"ticket": 24, "symbol": "EURUSD", "close_price": 1.16244, "profit": 2.999999999997449}}
+{"timestamp": "2025-10-25T20:39:51.303373", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16241, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:51.303542", "event": "trade_close", "data": {"ticket": 26, "symbol": "EURUSD", "close_price": 1.16246, "profit": 5.000000000010552}}
+{"timestamp": "2025-10-25T20:39:51.306819", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16237, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_evening_star"}}
+{"timestamp": "2025-10-25T20:39:51.306987", "event": "trade_close", "data": {"ticket": 32, "symbol": "EURUSD", "close_price": 1.16216, "profit": 20.999999999982144}}
+{"timestamp": "2025-10-25T20:39:51.311110", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16239, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_dragonfly_doji"}}
+{"timestamp": "2025-10-25T20:39:51.311294", "event": "trade_close", "data": {"ticket": 39, "symbol": "EURUSD", "close_price": 1.16246, "profit": 7.0000000000014495}}
+{"timestamp": "2025-10-25T20:39:51.312618", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16233, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:51.312818", "event": "trade_close", "data": {"ticket": 41, "symbol": "EURUSD", "close_price": 1.1625, "profit": 17.000000000000348}}
+{"timestamp": "2025-10-25T20:39:51.316867", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16241, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:51.317060", "event": "trade_close", "data": {"ticket": 48, "symbol": "EURUSD", "close_price": 1.16257, "profit": 16.000000000016}}
+{"timestamp": "2025-10-25T20:39:51.404290", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16267, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_white_soldiers"}}
+{"timestamp": "2025-10-25T20:39:51.404595", "event": "trade_close", "data": {"ticket": 55, "symbol": "EURUSD", "close_price": 1.16276, "profit": 8.999999999992347}}
+{"timestamp": "2025-10-25T20:39:51.422894", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16256, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:51.423163", "event": "trade_close", "data": {"ticket": 57, "symbol": "EURUSD", "close_price": 1.16278, "profit": 21.999999999988695}}
+{"timestamp": "2025-10-25T20:39:51.492743", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16261, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:51.493054", "event": "trade_close", "data": {"ticket": 61, "symbol": "EURUSD", "close_price": 1.1630099999999999, "profit": 39.999999999995595}}
+{"timestamp": "2025-10-25T20:39:51.593854", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16286, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:51.594157", "event": "trade_close", "data": {"ticket": 68, "symbol": "EURUSD", "close_price": 1.1629, "profit": 4.000000000004}}
+{"timestamp": "2025-10-25T20:39:51.653091", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16305, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_dark_cloud_cover"}}
+{"timestamp": "2025-10-25T20:39:51.653297", "event": "trade_close", "data": {"ticket": 73, "symbol": "EURUSD", "close_price": 1.16278, "profit": 26.999999999999247}}
+{"timestamp": "2025-10-25T20:39:51.760803", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16282, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_long_legged_doji"}}
+{"timestamp": "2025-10-25T20:39:51.761073", "event": "trade_close", "data": {"ticket": 80, "symbol": "EURUSD", "close_price": 1.16281, "profit": 1.0000000000065512}}
+{"timestamp": "2025-10-25T20:39:51.763287", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16282, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_outside_up_down"}}
+{"timestamp": "2025-10-25T20:39:51.763484", "event": "trade_close", "data": {"ticket": 80, "symbol": "EURUSD", "close_price": 1.16281, "profit": 1.0000000000065512}}
+{"timestamp": "2025-10-25T20:39:51.780718", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16276, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:51.780922", "event": "trade_close", "data": {"ticket": 82, "symbol": "EURUSD", "close_price": 1.16279, "profit": 2.999999999997449}}
+{"timestamp": "2025-10-25T20:39:51.866329", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16283, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_outside_up_down"}}
+{"timestamp": "2025-10-25T20:39:51.866619", "event": "trade_close", "data": {"ticket": 87, "symbol": "EURUSD", "close_price": 1.16303, "profit": 19.999999999997797}}
+{"timestamp": "2025-10-25T20:39:52.069116", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.163, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_outside_up_down"}}
+{"timestamp": "2025-10-25T20:39:52.069409", "event": "trade_close", "data": {"ticket": 101, "symbol": "EURUSD", "close_price": 1.16255, "profit": 45.000000000006146}}
+{"timestamp": "2025-10-25T20:39:52.097925", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16286, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_black_crows"}}
+{"timestamp": "2025-10-25T20:39:52.098135", "event": "trade_close", "data": {"ticket": 103, "symbol": "EURUSD", "close_price": 1.16266, "profit": 19.999999999997797}}
+{"timestamp": "2025-10-25T20:39:52.165651", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16271, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_harami"}}
+{"timestamp": "2025-10-25T20:39:52.165882", "event": "trade_close", "data": {"ticket": 108, "symbol": "EURUSD", "close_price": 1.16281, "profit": 9.999999999998899}}
+{"timestamp": "2025-10-25T20:39:52.228415", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16266, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:52.228679", "event": "trade_close", "data": {"ticket": 113, "symbol": "EURUSD", "close_price": 1.1625, "profit": 15.999999999993797}}
+{"timestamp": "2025-10-25T20:39:52.270844", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16252, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:52.271082", "event": "trade_close", "data": {"ticket": 116, "symbol": "EURUSD", "close_price": 1.16269, "profit": 17.000000000000348}}
+{"timestamp": "2025-10-25T20:39:52.271334", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16252, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_dragonfly_doji"}}
+{"timestamp": "2025-10-25T20:39:52.271508", "event": "trade_close", "data": {"ticket": 116, "symbol": "EURUSD", "close_price": 1.16269, "profit": 17.000000000000348}}
+{"timestamp": "2025-10-25T20:39:52.492097", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16276, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_shooting_star"}}
+{"timestamp": "2025-10-25T20:39:52.492401", "event": "trade_close", "data": {"ticket": 131, "symbol": "EURUSD", "close_price": 1.16269, "profit": 7.0000000000014495}}
+{"timestamp": "2025-10-25T20:39:52.705543", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16259, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:52.705854", "event": "trade_close", "data": {"ticket": 146, "symbol": "EURUSD", "close_price": 1.16261, "profit": 1.999999999990898}}
+{"timestamp": "2025-10-25T20:39:52.906513", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16259, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:52.906829", "event": "trade_close", "data": {"ticket": 160, "symbol": "EURUSD", "close_price": 1.16273, "profit": 14.000000000002899}}
+{"timestamp": "2025-10-25T20:39:53.133236", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16261, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_harami"}}
+{"timestamp": "2025-10-25T20:39:53.133520", "event": "trade_close", "data": {"ticket": 176, "symbol": "EURUSD", "close_price": 1.16263, "profit": 2.0000000000131024}}
+{"timestamp": "2025-10-25T20:39:53.481101", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.1628, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_long_legged_doji"}}
+{"timestamp": "2025-10-25T20:39:53.481394", "event": "trade_close", "data": {"ticket": 200, "symbol": "EURUSD", "close_price": 1.1627399999999999, "profit": 6.000000000017103}}
+{"timestamp": "2025-10-25T20:39:53.496073", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.1628, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_long_legged_doji"}}
+{"timestamp": "2025-10-25T20:39:53.496294", "event": "trade_close", "data": {"ticket": 201, "symbol": "EURUSD", "close_price": 1.16269, "profit": 11.00000000000545}}
+{"timestamp": "2025-10-25T20:39:53.541864", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16284, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_shooting_star"}}
+{"timestamp": "2025-10-25T20:39:53.542115", "event": "trade_close", "data": {"ticket": 204, "symbol": "EURUSD", "close_price": 1.16262, "profit": 22.0000000000109}}
+{"timestamp": "2025-10-25T20:39:53.783476", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16284, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_marubozu"}}
+{"timestamp": "2025-10-25T20:39:53.783808", "event": "trade_close", "data": {"ticket": 221, "symbol": "EURUSD", "close_price": 1.16296, "profit": 11.999999999989797}}
+{"timestamp": "2025-10-25T20:39:53.868359", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16295, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_marubozu"}}
+{"timestamp": "2025-10-25T20:39:53.868641", "event": "trade_close", "data": {"ticket": 227, "symbol": "EURUSD", "close_price": 1.16322, "profit": 26.999999999999247}}
+{"timestamp": "2025-10-25T20:39:53.868922", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16295, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_piercing_line"}}
+{"timestamp": "2025-10-25T20:39:53.869091", "event": "trade_close", "data": {"ticket": 227, "symbol": "EURUSD", "close_price": 1.16322, "profit": 26.999999999999247}}
+{"timestamp": "2025-10-25T20:39:54.055825", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16311, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_inverted_hammer"}}
+{"timestamp": "2025-10-25T20:39:54.056139", "event": "trade_close", "data": {"ticket": 240, "symbol": "EURUSD", "close_price": 1.16321, "profit": 9.999999999998899}}
+{"timestamp": "2025-10-25T20:39:54.273482", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16339, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_shooting_star"}}
+{"timestamp": "2025-10-25T20:39:54.273791", "event": "trade_close", "data": {"ticket": 255, "symbol": "EURUSD", "close_price": 1.1633, "profit": 8.999999999992347}}
+{"timestamp": "2025-10-25T20:39:54.291182", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16343, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_dark_cloud_cover"}}
+{"timestamp": "2025-10-25T20:39:54.291398", "event": "trade_close", "data": {"ticket": 257, "symbol": "EURUSD", "close_price": 1.16327, "profit": 15.999999999993797}}
+{"timestamp": "2025-10-25T20:39:54.336988", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16346, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_gravestone_doji"}}
+{"timestamp": "2025-10-25T20:39:54.337223", "event": "trade_close", "data": {"ticket": 260, "symbol": "EURUSD", "close_price": 1.16318, "profit": 27.999999999983594}}
+{"timestamp": "2025-10-25T20:39:54.345788", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16346, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_shooting_star"}}
+{"timestamp": "2025-10-25T20:39:54.345975", "event": "trade_close", "data": {"ticket": 260, "symbol": "EURUSD", "close_price": 1.16318, "profit": 27.999999999983594}}
+{"timestamp": "2025-10-25T20:39:54.348808", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16346, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_doji_reversal"}}
+{"timestamp": "2025-10-25T20:39:54.348989", "event": "trade_close", "data": {"ticket": 261, "symbol": "EURUSD", "close_price": 1.16323, "profit": 22.999999999995246}}
+{"timestamp": "2025-10-25T20:39:54.358721", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16346, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_long_legged_doji"}}
+{"timestamp": "2025-10-25T20:39:54.358903", "event": "trade_close", "data": {"ticket": 261, "symbol": "EURUSD", "close_price": 1.16323, "profit": 22.999999999995246}}
+{"timestamp": "2025-10-25T20:39:54.436726", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16327, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_gravestone_doji"}}
+{"timestamp": "2025-10-25T20:39:54.436984", "event": "trade_close", "data": {"ticket": 267, "symbol": "EURUSD", "close_price": 1.16285, "profit": 42.0000000000087}}
+{"timestamp": "2025-10-25T20:39:54.486885", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16318, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_marubozu"}}
+{"timestamp": "2025-10-25T20:39:54.487157", "event": "trade_close", "data": {"ticket": 270, "symbol": "EURUSD", "close_price": 1.16256, "profit": 62.000000000006494}}
+{"timestamp": "2025-10-25T20:39:54.487420", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16318, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_inside_up_down"}}
+{"timestamp": "2025-10-25T20:39:54.487592", "event": "trade_close", "data": {"ticket": 270, "symbol": "EURUSD", "close_price": 1.16256, "profit": 62.000000000006494}}
+{"timestamp": "2025-10-25T20:39:54.515750", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16308, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_marubozu"}}
+{"timestamp": "2025-10-25T20:39:54.515999", "event": "trade_close", "data": {"ticket": 272, "symbol": "EURUSD", "close_price": 1.16246, "profit": 61.99999999998429}}
+{"timestamp": "2025-10-25T20:39:54.530190", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16296, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_three_outside_up_down"}}
+{"timestamp": "2025-10-25T20:39:54.530374", "event": "trade_close", "data": {"ticket": 273, "symbol": "EURUSD", "close_price": 1.16242, "profit": 53.999999999998494}}
+{"timestamp": "2025-10-25T20:39:54.592038", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "short", "volume": 0.01, "open_price": 1.16285, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_marubozu"}}
+{"timestamp": "2025-10-25T20:39:54.592365", "event": "trade_close", "data": {"ticket": 277, "symbol": "EURUSD", "close_price": 1.16238, "profit": 46.999999999997044}}
+{"timestamp": "2025-10-25T20:39:54.658272", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16246, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_hammer"}}
+{"timestamp": "2025-10-25T20:39:54.658577", "event": "trade_close", "data": {"ticket": 282, "symbol": "EURUSD", "close_price": 1.16285, "profit": 38.99999999998904}}
+{"timestamp": "2025-10-25T20:39:54.721653", "event": "trade_open", "data": {"symbol": "EURUSD", "type": "long", "volume": 0.01, "open_price": 1.16235, "stop_loss": 0, "take_profit": 0, "comment": "[Backtest] pattern_morning_star"}}
+{"timestamp": "2025-10-25T20:39:54.721908", "event": "trade_close", "data": {"ticket": 286, "symbol": "EURUSD", "close_price": 1.16273, "profit": 38.0000000000047}}
