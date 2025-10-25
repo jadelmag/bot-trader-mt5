@@ -599,7 +599,402 @@ class CustomStrategies:
         except Exception as e:
             if logger:
                 logger.error(f"[MARKET M1] Error en ejecución: {e}")
+    
+    @staticmethod
+    def strategy_ultra_scalping_multi_confirm(df):
+        """
+        Estrategia de scalping ultra-precisa con múltiples confirmaciones
+        Combina Bollinger Bands, RSI extremo, ATR, MACD, Momentum, Volumen MT5
+        Objetivo: Máximo winrate con operaciones rápidas de segundos/minutos
+        """
+        if len(df) < 50:
+            return None
+        
+        # Obtener datos de la última vela
+        current = df.iloc[-1]
+        prev = df.iloc[-2]
+        prev2 = df.iloc[-3]
+        
+        close = current['close']
+        high = current['high']
+        low = current['low']
+        volume = current.get('tick_volume', 0)
+        
+        # Verificar indicadores necesarios
+        required_indicators = ['RSI', 'bb_upper', 'bb_lower', 'bb_middle', 'ATR', 
+                             'MACD_line', 'MACD_signal', 'Momentum', 'Williams_R', 'CCI']
+        
+        for indicator in required_indicators:
+            if indicator not in df.columns or pd.isna(current.get(indicator)):
+                return None
+        
+        rsi = current['RSI']
+        bb_upper = current['bb_upper']
+        bb_lower = current['bb_lower']
+        bb_middle = current['bb_middle']
+        atr = current['ATR']
+        macd_line = current['MACD_line']
+        macd_signal = current['MACD_signal']
+        macd_line_prev = prev['MACD_line']
+        macd_signal_prev = prev['MACD_signal']
+        momentum = current['Momentum']
+        williams_r = current['Williams_R']
+        cci = current['CCI']
+        
+        # Calcular posición en Bollinger Bands (0 = banda inferior, 1 = banda superior)
+        bb_position = (close - bb_lower) / (bb_upper - bb_lower) if bb_upper != bb_lower else 0.5
+        
+        # Calcular volatilidad relativa
+        atr_ratio = atr / close if close > 0 else 0
+        
+        # Análisis de volumen (últimas 3 velas)
+        volume_avg = df['tick_volume'].iloc[-10:].mean() if 'tick_volume' in df.columns else 1
+        volume_spike = volume > volume_avg * 1.2 if volume_avg > 0 else False
+        
+        # --- SEÑALES LONG (Compra) ---
+        long_signals = []
+        
+        # 1. Bollinger Bands: Precio en zona inferior (reversión alcista)
+        bb_long = bb_position <= 0.15  # En 15% inferior de las bandas
+        long_signals.append(bb_long)
+        
+        # 2. RSI EXTREMO: Zona de sobreventa estricta
+        rsi_long = rsi < 25  # RSI muy bajo para máxima precisión
+        long_signals.append(rsi_long)
+        
+        # 3. MACD: Solo cruces alcistas confirmados
+        macd_cross_long = (
+            macd_line > macd_signal and 
+            macd_line_prev <= macd_signal_prev and
+            abs(macd_line - macd_signal) > abs(close * 0.00001)  # Separación mínima
+        )
+        long_signals.append(macd_cross_long)
+        
+        # 4. Momentum: DEBE ser positivo (movimiento alcista)
+        momentum_long = momentum > abs(close * 0.00005)  # Momentum mínimo positivo
+        long_signals.append(momentum_long)
+        
+        # 5. Williams %R: Saliendo de sobreventa
+        williams_long = williams_r > -85 and williams_r < -50
+        long_signals.append(williams_long)
+        
+        # 6. CCI: No en extremo negativo
+        cci_long = cci > -150
+        long_signals.append(cci_long)
+        
+        # 7. Patrón de reversión de 3 velas (confirmación adicional)
+        pattern_long = (
+            prev2['close'] < prev2['open'] and  # Vela bajista hace 2
+            prev['close'] < prev['open'] and    # Vela bajista anterior
+            current['close'] > current['open']   # Vela alcista actual
+        )
+        long_signals.append(pattern_long)
+        
+        # 8. Volumen de confirmación
+        volume_long = volume_spike or volume > volume_avg * 0.8
+        long_signals.append(volume_long)
+        
+        # --- SEÑALES SHORT (Venta) ---
+        short_signals = []
+        
+        # 1. Bollinger Bands: Precio en zona superior (reversión bajista)
+        bb_short = bb_position >= 0.85  # En 15% superior de las bandas
+        short_signals.append(bb_short)
+        
+        # 2. RSI EXTREMO: Zona de sobrecompra estricta
+        rsi_short = rsi > 75  # RSI muy alto para máxima precisión
+        short_signals.append(rsi_short)
+        
+        # 3. MACD: Solo cruces bajistas confirmados
+        macd_cross_short = (
+            macd_line < macd_signal and 
+            macd_line_prev >= macd_signal_prev and
+            abs(macd_signal - macd_line) > abs(close * 0.00001)  # Separación mínima
+        )
+        short_signals.append(macd_cross_short)
+        
+        # 4. Momentum: DEBE ser negativo (movimiento bajista)
+        momentum_short = momentum < -abs(close * 0.00005)  # Momentum mínimo negativo
+        short_signals.append(momentum_short)
+        
+        # 5. Williams %R: Saliendo de sobrecompra
+        williams_short = williams_r < -15 and williams_r > -50
+        short_signals.append(williams_short)
+        
+        # 6. CCI: No en extremo positivo
+        cci_short = cci < 150
+        short_signals.append(cci_short)
+        
+        # 7. Patrón de reversión de 3 velas (confirmación adicional)
+        pattern_short = (
+            prev2['close'] > prev2['open'] and  # Vela alcista hace 2
+            prev['close'] > prev['open'] and    # Vela alcista anterior
+            current['close'] < current['open']   # Vela bajista actual
+        )
+        short_signals.append(pattern_short)
+        
+        # 8. Volumen de confirmación
+        volume_short = volume_spike or volume > volume_avg * 0.8
+        short_signals.append(volume_short)
+        
+        # --- EVALUACIÓN FINAL ---
+        # Requiere al menos 6 de 8 confirmaciones (75% de precisión)
+        long_count = sum(long_signals)
+        short_count = sum(short_signals)
+        
+        # Filtro adicional: ATR no debe ser extremo (evitar mercados muy volátiles)
+        atr_filter = 0.0002 < atr_ratio < 0.003  # Volatilidad normal
+        
+        if long_count >= 6 and atr_filter:
+            return {
+                'signal': 'long',
+                'confidence': long_count / 8,
+                'confirmations': long_count,
+                'atr_ratio': atr_ratio,
+                'bb_position': bb_position,
+                'rsi': rsi,
+                'volume_spike': volume_spike
+            }
+        elif short_count >= 6 and atr_filter:
+            return {
+                'signal': 'short',
+                'confidence': short_count / 8,
+                'confirmations': short_count,
+                'atr_ratio': atr_ratio,
+                'bb_position': bb_position,
+                'rsi': rsi,
+                'volume_spike': volume_spike
+            }
+        
+        return None
 
-
+    @staticmethod
+    def run_ultra_scalping_multi_confirm(simulation_instance, symbol: str, volume: float, logger=None):
+        """
+        Ejecuta la estrategia de scalping ultra-precisa con gestión automática
+        Operaciones rápidas con SL/TP dinámicos basados en ATR
+        """
+        
+        # Verificar operación existente
+        if not mt5:
+            if logger:
+                logger.error("[ULTRA SCALPING] MT5 no está disponible.")
+            return
+        
+        open_positions = mt5.positions_get(symbol=symbol)
+        if open_positions:
+            for pos in open_positions:
+                if pos.comment == "custom Ultra Scalping":
+                    if logger: 
+                        logger.log("[ULTRA SCALPING] Ya existe una operación de esta estrategia.")
+                    return
+        
+        # Obtener datos históricos (100 velas para indicadores)
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M1, 0, 100)
+        if rates is None or len(rates) < 50:
+            if logger: 
+                logger.error("[ULTRA SCALPING] No se pudieron obtener suficientes datos históricos.")
+            return
+        
+        # Convertir a DataFrame
+        df = pd.DataFrame(rates)
+        df['Date'] = pd.to_datetime(df['time'], unit='s')
+        df.rename(columns={
+            'open': 'Open', 'high': 'High', 'low': 'Low', 
+            'close': 'Close', 'tick_volume': 'Volume'
+        }, inplace=True)
+        
+        # Calcular indicadores usando el sistema existente
+        try:
+            from simulation.indicators import IndicatorCalculator
+            indicator_calc = IndicatorCalculator(debug_mode=False, logger=logger)
+            df = indicator_calc.calculate_all_indicators(df)
+            
+            # Convertir columnas a minúsculas para compatibilidad
+            df.columns = [col.lower() for col in df.columns]
+            
+        except Exception as e:
+            if logger:
+                logger.error(f"[ULTRA SCALPING] Error calculando indicadores: {e}")
+            return
+        
+        # Ejecutar análisis de la estrategia
+        try:
+            signal_result = CustomStrategies.strategy_ultra_scalping_multi_confirm(df)
+            
+            if signal_result is None:
+                if logger:
+                    logger.log("[ULTRA SCALPING] No hay señal válida - Esperando mejores condiciones.")
+                return
+            
+            signal_type = signal_result['signal']
+            confidence = signal_result['confidence']
+            confirmations = signal_result['confirmations']
+            atr_ratio = signal_result['atr_ratio']
+            
+            if logger:
+                logger.log(f"[ULTRA SCALPING] Señal {signal_type.upper()} detectada!")
+                logger.log(f"[ULTRA SCALPING] Confianza: {confidence:.1%} ({confirmations}/8 confirmaciones)")
+                logger.log(f"[ULTRA SCALPING] ATR Ratio: {atr_ratio:.4%}")
+            
+            # Calcular SL/TP dinámicos basados en ATR
+            current_price = df['close'].iloc[-1]
+            atr_value = df['atr'].iloc[-1]
+            
+            # Para scalping: SL pequeño, TP 2:1 ratio
+            sl_distance = atr_value * 1.0  # 1x ATR para SL
+            tp_distance = atr_value * 2.0  # 2x ATR para TP
+            
+            # Convertir a pips (asumiendo 4 dígitos decimales para Forex)
+            sl_pips = (sl_distance / current_price) * 10000
+            tp_pips = (tp_distance / current_price) * 10000
+            
+            # Límites para scalping (máximo 15 pips SL, mínimo 5 pips TP)
+            sl_pips = min(max(sl_pips, 3), 15)
+            tp_pips = min(max(tp_pips, 5), 30)
+            
+            if logger:
+                logger.log(f"[ULTRA SCALPING] SL: {sl_pips:.1f} pips, TP: {tp_pips:.1f} pips")
+                logger.log(f"[ULTRA SCALPING] Ratio R/R: {tp_pips/sl_pips:.2f}")
+            
+            # Abrir operación
+            result = simulation_instance.open_trade(
+                trade_type=signal_type,
+                symbol=symbol,
+                volume=volume,
+                sl_pips=sl_pips,
+                tp_pips=tp_pips,
+                strategy_name="custom Ultra Scalping"
+            )
+            
+            if not result or result.retcode != mt5.TRADE_RETCODE_DONE:
+                if logger: 
+                    logger.error("[ULTRA SCALPING] No se pudo abrir la operación.")
+                return
+            
+            ticket = result.order
+            if logger:
+                logger.success(f"[ULTRA SCALPING] Operación {signal_type.upper()} abierta exitosamente (Ticket: {ticket})")
+            
+            # Iniciar gestión automática en hilo separado
+            import threading
+            monitor_thread = threading.Thread(
+                target=CustomStrategies.manage_ultra_scalping_position,
+                args=(simulation_instance, ticket, volume, signal_type, sl_pips, tp_pips, logger)
+            )
+            monitor_thread.daemon = True
+            monitor_thread.start()
+            
+        except Exception as e:
+            if logger:
+                logger.error(f"[ULTRA SCALPING] Error en ejecución: {e}")
+    
+    @staticmethod
+    def manage_ultra_scalping_position(simulation_instance, ticket: int, volume: float, 
+                                     direction: str, sl_pips: float, tp_pips: float, logger=None):
+        """
+        Gestión avanzada de posiciones de scalping con trailing stop y breakeven
+        """
+        if logger:
+            logger.log(f"[ULTRA SCALPING] Iniciando gestión avanzada (Ticket: {ticket})")
+        
+        breakeven_activated = False
+        max_profit_pips = 0
+        entry_price = None
+        
+        # Obtener precio de entrada
+        try:
+            positions = mt5.positions_get(ticket=ticket)
+            if positions and len(positions) > 0:
+                entry_price = positions[0].price_open
+        except:
+            pass
+        
+        while True:
+            try:
+                # Verificar si la operación sigue abierta
+                positions = mt5.positions_get(ticket=ticket)
+                
+                if not positions or len(positions) == 0:
+                    # Operación cerrada - obtener resultado
+                    deals = mt5.history_deals_get(position=ticket)
+                    if deals and len(deals) > 0:
+                        close_deal = None
+                        for deal in deals:
+                            if deal.entry == 1:  # Cierre
+                                close_deal = deal
+                                break
+                        
+                        if close_deal and logger:
+                            profit = close_deal.profit
+                            close_price = close_deal.price
+                            
+                            # Calcular pips ganados/perdidos
+                            if entry_price:
+                                if direction == 'long':
+                                    pips_result = (close_price - entry_price) * 10000
+                                else:
+                                    pips_result = (entry_price - close_price) * 10000
+                            else:
+                                pips_result = 0
+                            
+                            logger.log(f"[ULTRA SCALPING] ═══════════════════════════════════════")
+                            logger.log(f"[ULTRA SCALPING] OPERACIÓN CERRADA (Ticket: {ticket})")
+                            logger.log(f"[ULTRA SCALPING] Dirección: {direction.upper()}")
+                            logger.log(f"[ULTRA SCALPING] Resultado: {pips_result:.1f} pips")
+                            
+                            if profit > 0:
+                                logger.success(f"[ULTRA SCALPING] ✅ BENEFICIO: ${profit:.2f}")
+                            else:
+                                logger.log(f"[ULTRA SCALPING] ❌ PÉRDIDA: ${abs(profit):.2f}")
+                            
+                            logger.log(f"[ULTRA SCALPING] ═══════════════════════════════════════")
+                    break
+                
+                # Obtener precio actual
+                current_tick = mt5.symbol_info_tick(simulation_instance.symbol)
+                if not current_tick:
+                    time.sleep(1)
+                    continue
+                
+                current_price = current_tick.bid if direction == 'short' else current_tick.ask
+                
+                if entry_price:
+                    # Calcular beneficio en pips
+                    if direction == 'long':
+                        profit_pips = (current_price - entry_price) * 10000
+                    else:
+                        profit_pips = (entry_price - current_price) * 10000
+                    
+                    # Actualizar máximo beneficio
+                    if profit_pips > max_profit_pips:
+                        max_profit_pips = profit_pips
+                    
+                    # Activar breakeven cuando tengamos 50% del TP
+                    if not breakeven_activated and profit_pips >= tp_pips * 0.5:
+                        # Mover SL a breakeven + 1 pip
+                        breakeven_activated = True
+                        if logger:
+                            logger.log(f"[ULTRA SCALPING] Activando breakeven (+{profit_pips:.1f} pips)")
+                    
+                    # Trailing stop: si retrocede más de 3 pips desde el máximo
+                    if max_profit_pips > 5 and (max_profit_pips - profit_pips) > 3:
+                        # Cerrar operación para proteger beneficios
+                        if logger:
+                            logger.log(f"[ULTRA SCALPING] Cerrando por trailing stop (máx: {max_profit_pips:.1f}, actual: {profit_pips:.1f})")
+                        
+                        simulation_instance.close_trade(
+                            ticket, volume, direction, 
+                            strategy_context=f"Trailing stop - Beneficio: {profit_pips:.1f} pips"
+                        )
+                        break
+                
+                # Esperar 2 segundos antes de la siguiente verificación
+                time.sleep(2)
+                
+            except Exception as e:
+                if logger:
+                    logger.error(f"[ULTRA SCALPING] Error en gestión: {e}")
+                break
 
 

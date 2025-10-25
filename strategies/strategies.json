@@ -168,6 +168,9 @@
         },
         "run_pico_y_pala": {
             "selected": false
+        },
+        "run_ultra_scalping_multi_confirm": {
+            "selected": false
         }
     }
 }
