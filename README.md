@@ -1,3 +1,7 @@
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue?logo=paypal&style=for-the-badge)](https://www.paypal.me/jadelmag)
+
+
+
 # Bot Trader MT5 - Sistema Avanzado de Trading Automatizado
 
 Un sofisticado bot de trading para MetaTrader 5 con interfaz gráfica profesional, diseñado para análisis técnico avanzado, ejecución automatizada de estrategias y gestión inteligente de riesgos en los mercados de divisas.
