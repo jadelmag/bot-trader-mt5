@@ -253,7 +253,7 @@ class SignalAnalyzer:
 
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
-                if strategy_name == 'run_pico_y_pala':
+                if strategy_name == 'strategy_scalping_m1':
                     # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=1.0)
                     volume = self.simulation.risk_manager.calculate_volume(
                         risk_multiplier=1.0,
@@ -262,9 +262,14 @@ class SignalAnalyzer:
                     )
                     if volume > 0:
                         self._log(f"[SIGNAL] Lanzando estrategia personalizada '{strategy_name}'.")
+                        # Obtener parámetros de configuración o usar valores por defecto
+                        entry_pct = config.get('entry_pct', 0.05)
+                        exit_pct = config.get('exit_pct', 0.5)
+                        n_bars = config.get('n_bars', 60)
+                        
                         thread = threading.Thread(
-                            target=CustomStrategies.run_pico_y_pala, 
-                            args=(self.simulation, self.simulation.symbol, volume, self.logger)
+                            target=CustomStrategies.strategy_scalping_m1, 
+                            args=(self.simulation.symbol, volume, entry_pct, exit_pct, n_bars, self.logger)
                         )
                         thread.daemon = True
                         thread.start()

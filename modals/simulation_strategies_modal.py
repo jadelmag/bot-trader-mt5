@@ -92,8 +92,8 @@ class SimulationStrategiesModal(tk.Toplevel):
     def _get_custom_strategies(self):
         """Obtiene una lista de todas las estrategias de la clase CustomStrategies."""
         strategy_methods = inspect.getmembers(CustomStrategies, predicate=inspect.isfunction)
-        # Filtra solo los métodos que comienzan con 'run_'
-        strategy_names = [name for name, func in strategy_methods if name.startswith('run_')]
+        # Filtra solo los métodos que comienzan con 'strategy_'
+        strategy_names = [name for name, func in strategy_methods if name.startswith('strategy_')]
         return sorted(strategy_names)
 
     def _build_ui(self):
@@ -351,7 +351,7 @@ class SimulationStrategiesModal(tk.Toplevel):
             chk = ttk.Checkbutton(row_frame, variable=var)
             chk.pack(side=tk.LEFT, padx=(5, 10))
 
-            display_name = strategy_name.replace('run_', '').replace('_', ' ').title()
+            display_name = strategy_name.replace('strategy_', '').replace('_', ' ').title()
             lbl = ttk.Label(row_frame, text=display_name, width=25)
             lbl.pack(side=tk.LEFT, padx=5)
 
