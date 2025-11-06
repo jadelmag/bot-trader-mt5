@@ -1,7 +1,6 @@
 [![PayPal](https://img.shields.io/badge/PayPal-Donate-blue?logo=paypal&style=for-the-badge)](https://www.paypal.me/jadelmag)
 
 
-
 # Bot Trader MT5 - Sistema Avanzado de Trading Automatizado
 
 Un sofisticado bot de trading para MetaTrader 5 con interfaz gráfica profesional, diseñado para análisis técnico avanzado, ejecución automatizada de estrategias y gestión inteligente de riesgos en los mercados de divisas.
@@ -146,21 +145,26 @@ Un sofisticado bot de trading para MetaTrader 5 con interfaz gráfica profesiona
 
 ### Instalación Paso a Paso
 
-1. **Ejecutar la aplicación**:
+1. **Instalar dependencias**:
    ```bash
-   python gui_main.py
+   pip install -r requirements.txt
    ```
 
 2. **Conectar a MT5**: Usar el modal de login con credenciales del `.env`
 
-3. **Configurar parámetros**: 
+3. **Ejecutar la aplicación**:
+   ```bash
+   python gui_main.py
+   ```
+
+4. **Configurar parámetros**: 
    - Acceder a "Configuración" → "Configuración de la Aplicación"
    - Establecer límite de ganancia diaria (ej: 100.0 para 100€)
    - Configurar riesgo por operación y capital mínimo
 
-4. **Seleccionar estrategias**: Elegir patrones de velas y estrategias forex
+5. **Seleccionar estrategias**: Elegir patrones de velas y estrategias forex
 
-5. **Iniciar simulación**: El bot comenzará a analizar y operar automáticamente
+6. **Iniciar simulación**: El bot comenzará a analizar y operar automáticamente
 
 ### Configuración del Límite Diario
 ```
