@@ -152,6 +152,12 @@ Un sofisticado bot de trading para MetaTrader 5 con interfaz gráfica profesiona
 
 2. **Conectar a MT5**: Usar el modal de login con credenciales del `.env`
 
+    ```
+    MT5_ACCOUNT=""
+    MT5_PASSWORD=""
+    MT5_SERVER=""
+    ```
+
 3. **Ejecutar la aplicación**:
    ```bash
    python gui_main.py
