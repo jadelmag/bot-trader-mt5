@@ -164,9 +164,9 @@
     "custom_strategies": {
         "strategy_dual_position": {
             "selected": true,
-            "volume": "0.01",
-            "trend_close": true,
-            "trend_limit": false
+            "volume": "1.0",
+            "trend_close": false,
+            "trend_limit": true
         }
     }
 }

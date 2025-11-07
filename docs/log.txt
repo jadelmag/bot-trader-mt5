@@ -18,3 +18,20 @@ Es importante mostrar en el log:
 - cuando se cierra una operacion con su beneficio o pérdida.
 
 Quiero que esta estrategia se ejecute correctamente, si necesita hilos o lo que sea para que funcione correctamente, que lo haga.
+
+
+
+Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:10] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:10] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:11] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:11] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:12] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:12] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:13] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:13] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:14] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:14] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+[14:24:15] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
+[14:24:15] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+

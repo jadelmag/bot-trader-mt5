@@ -264,10 +264,10 @@ class SignalAnalyzer:
             if config.get('selected'):
                 if strategy_name == 'strategy_dual_position':
                     risk_per_trade_percent = float(self.simulation.general_config.get('risk_per_trade_percent', 1.0))
-                    volume_strategy = config.get('volume', 0.1)
+                    volume_strategy = float(config.get('volume', 0.1)) 
                     volume = (risk_per_trade_percent / 100.0) * volume_strategy
                     if volume > 0:
-                        self._log(f"[SIGNAL] Lanzando estrategia personalizada '{strategy_name}'.")
+                        self._log(f"[SIGNAL] Lanzando estrategia personalizada '{strategy_name}' con volumen {volume}.")
                         # Obtener parámetros de configuración o usar valores por defecto
                         trend_close = config.get('trend_close', False)
                         trend_limit = config.get('trend_limit', True)
