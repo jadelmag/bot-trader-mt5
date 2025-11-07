@@ -264,9 +264,6 @@ class SignalAnalyzer:
         if not custom_strategies_config:
             return
 
-        if CustomStrategies.is_strategy_dual_position_running():
-            return
-
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
                 if strategy_name == 'strategy_dual_position':
