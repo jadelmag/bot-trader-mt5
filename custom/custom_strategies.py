@@ -92,8 +92,6 @@ class CustomStrategies:
                 "volume": volume,
                 "type": mt5.ORDER_TYPE_BUY,
                 "price": mt5.symbol_info_tick(symbol).ask,
-                "sl": 0,  # Sin stop loss inicial
-                "tp": 0,  # Sin take profit inicial
                 "deviation": 20,
                 "magic": 234000,
                 "comment": "Custom_Hedging_LONG",
@@ -124,8 +122,6 @@ class CustomStrategies:
                 "volume": volume,
                 "type": mt5.ORDER_TYPE_SELL,
                 "price": mt5.symbol_info_tick(symbol).bid,
-                "sl": 0,  # Sin stop loss inicial
-                "tp": 0,  # Sin take profit inicial
                 "deviation": 20,
                 "magic": 234000,
                 "comment": "Custom_Hedging_SHORT",
