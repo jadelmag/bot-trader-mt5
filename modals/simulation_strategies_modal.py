@@ -125,10 +125,6 @@ class SimulationStrategiesModal(tk.Toplevel):
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
         candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
 
-        ttk.Label(config_frame, text="Slots Custom:").grid(row=0, column=5, sticky='e', padx=(10, 5), pady=(5,0))
-        self.slots_custom_var = tk.IntVar(value=0)
-        custom_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_custom_var, width=5)
-        custom_slots_entry.grid(row=0, column=6, sticky='w', pady=(5,0))
 
         # --- Frame Inferior para botones de acción (siempre visible) ---
         bottom_frame = ttk.Frame(main_frame)
@@ -511,8 +507,7 @@ class SimulationStrategiesModal(tk.Toplevel):
         config_to_save = {
             'slots': {
                 'forex': self.slots_forex_var.get(),
-                'candle': self.slots_candles_var.get(),
-                'custom': self.slots_custom_var.get()
+                'candle': self.slots_candles_var.get()
             },
             'candle_strategies': {},
             'forex_strategies': {},

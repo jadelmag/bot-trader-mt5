@@ -260,24 +260,6 @@ class SignalAnalyzer:
         if not custom_strategies_config:
             return
 
-        open_positions = mt5.positions_get(symbol=self.simulation.symbol)
-        if open_positions is None: 
-            open_positions = []
-        
-        active_slots = len(open_positions)
-        max_custom_slots = self.simulation.strategies_config.get('slots', {}).get('custom', 0)
-
-        # Verificar si hay slots disponibles para estrategias personalizadas
-        if max_custom_slots == 0:
-            if self.simulation.debug_mode:
-                self._log("[SIGNAL-DEBUG] Slots custom = 0. No se ejecutan estrategias personalizadas.")
-            return
-
-        if active_slots >= max_custom_slots:
-            if self.simulation.debug_mode:
-                self._log(f"[SIGNAL-DEBUG] Slots custom ocupados ({active_slots}/{max_custom_slots}).")
-            return
-
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
                 if strategy_name == 'strategy_scalping_m1':

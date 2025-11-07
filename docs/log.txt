@@ -1,3 +1,18 @@
-es que lo que quiero hacer es la siguiente estrategia.
-quiero que nada mas crearse una vela se abra una operacion short y long al precio actual, y que su stop loss sea el maximo, el volumen se lo paso yo.
-la operacion que da beneficios se cerrara cuando se cree una vela posterior con una tendencia inversa o 
+Quiero hacer es la siguiente estrategia:
+
+Nada mas crearse una vela nueva se abra una operacion short y long al precio actual, 
+y que su stop loss sea el maximo, el volumen y el modo de cierre se lo paso yo (volume, trend_close, trend_limit).
+
+Al abrirse una operacion short y long, por lógica, una de las dos dará beneficios y la otra dará pérdidas.
+
+1. la operacion que da beneficios se cerrara cuando:
+- se cree una vela posterior (no tiene porque ser la siguiente) con una tendencia inversa, es decir que el precio de la vela empice a bajar (trend_close).
+- llegue al limite PL (trend_limit).
+
+2. la operacion que da pérdidas se cerrara cuando llegue a cero.
+
+y asi sucesivamente.
+
+Es importante mostrar en el log:
+- cuando se abre una operacion short y long y su informacion.
+- cuando se cierra una operacion con su beneficio o pérdida.
