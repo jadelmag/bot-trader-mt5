@@ -22,7 +22,7 @@ class CustomStrategies:
     """
 
     @staticmethod
-    def strategy_dual_position(symbol, volume=0.1, trend_limit=True, logger=None):
+    def strategy_dual_position(symbol, volume=0.1, trend_limit=True, logger=None, debug_mode=False):
         """
         Estrategia de hedging optimizada que abre posiciones simultáneas LONG y SHORT.
         

@@ -273,7 +273,7 @@ class SignalAnalyzer:
                         
                         thread = threading.Thread(
                             target=CustomStrategies.strategy_dual_position, 
-                            args=(self.simulation.symbol, volume, trend_limit, self.logger)
+                            args=(self.simulation.symbol, volume, trend_limit, self.logger, self.simulation.debug_mode)
                         )
                         thread.daemon = True
                         thread.start()
