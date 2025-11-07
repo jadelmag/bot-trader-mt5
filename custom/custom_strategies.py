@@ -102,7 +102,7 @@ class CustomStrategies:
             }
             
             long_result = mt5.order_send(long_request)
-            if long_result.retcode == mt5.TRADE_RETCODE_DONE:
+            if long_result and long_result.retcode == mt5.TRADE_RETCODE_DONE:
                 positions_opened.append({
                     'ticket': long_result.order,
                     'type': 'LONG',
@@ -112,8 +112,10 @@ class CustomStrategies:
                 if logger:
                     logger.log(f"✅ LONG abierta - Ticket: {long_result.order}, Precio: {long_result.price}, Volumen: {volume}")
             else:
-                if logger:
+                if long_result:
                     logger.error(f"❌ Error abriendo LONG: {long_result.retcode} - {long_result.comment}")
+                else:
+                    logger.error(f"❌ Error abriendo LONG: mt5.order_send devolvió None. last_error={mt5.last_error()}")
             
             # Abrir posición SHORT
             short_request = {
@@ -132,7 +134,7 @@ class CustomStrategies:
             }
             
             short_result = mt5.order_send(short_request)
-            if short_result.retcode == mt5.TRADE_RETCODE_DONE:
+            if short_result and short_result.retcode == mt5.TRADE_RETCODE_DONE:
                 positions_opened.append({
                     'ticket': short_result.order,
                     'type': 'SHORT',
@@ -142,8 +144,10 @@ class CustomStrategies:
                 if logger:
                     logger.log(f"✅ SHORT abierta - Ticket: {short_result.order}, Precio: {short_result.price}, Volumen: {volume}")
             else:
-                if logger:
+                if short_result:
                     logger.error(f"❌ Error abriendo SHORT: {short_result.retcode} - {short_result.comment}")
+                else:
+                    logger.error(f"❌ Error abriendo SHORT: mt5.order_send devolvió None. last_error={mt5.last_error()}")
             
             return positions_opened
         
@@ -178,15 +182,17 @@ class CustomStrategies:
             }
             
             result = mt5.order_send(close_request)
-            if result.retcode == mt5.TRADE_RETCODE_DONE:
+            if result and result.retcode == mt5.TRADE_RETCODE_DONE:
                 profit = position.profit
                 position_type = "LONG" if position.type == mt5.POSITION_TYPE_BUY else "SHORT"
                 if logger:
                     logger.log(f"🔒 {position_type} cerrada - Ticket: {ticket}, P/L: {profit:.2f}, Razón: {reason}")
                 return True
             else:
-                if logger:
+                if result:
                     logger.error(f"❌ Error cerrando posición {ticket}: {result.retcode} - {result.comment}")
+                else:
+                    logger.error(f"❌ Error cerrando posición {ticket}: mt5.order_send devolvió None. last_error={mt5.last_error()}")
                 return False
         
         def check_trend_reversal(current_candle, previous_candle):
