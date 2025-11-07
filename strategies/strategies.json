@@ -162,7 +162,7 @@
         }
     },
     "custom_strategies": {
-        "strategy_scalping_m1": {
+        "strategy_dual_position": {
             "selected": true,
             "volume": "0.01",
             "trend_close": true,

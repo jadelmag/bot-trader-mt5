@@ -16,3 +16,5 @@ y asi sucesivamente.
 Es importante mostrar en el log:
 - cuando se abre una operacion short y long y su informacion.
 - cuando se cierra una operacion con su beneficio o pérdida.
+
+Quiero que esta estrategia se ejecute correctamente, si necesita hilos o lo que sea para que funcione correctamente, que lo haga.

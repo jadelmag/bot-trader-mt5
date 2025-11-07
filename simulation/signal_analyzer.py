@@ -262,22 +262,19 @@ class SignalAnalyzer:
 
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
-                if strategy_name == 'strategy_scalping_m1':
-                    volume = self.simulation.risk_manager.calculate_volume(
-                        risk_multiplier=1.0,
-                        strategy_name=strategy_name,
-                        stop_loss_pips=config.get('stop_loss_pips', 10.0)
-                    )
+                if strategy_name == 'strategy_dual_position':
+                    risk_per_trade_percent = float(self.simulation.general_config.get('risk_per_trade_percent', 1.0))
+                    volume_strategy = config.get('volume', 0.1)
+                    volume = (risk_per_trade_percent / 100.0) * volume_strategy
                     if volume > 0:
                         self._log(f"[SIGNAL] Lanzando estrategia personalizada '{strategy_name}'.")
                         # Obtener parámetros de configuración o usar valores por defecto
-                        entry_pct = config.get('entry_pct', 0.05)
-                        exit_pct = config.get('exit_pct', 0.5)
-                        n_bars = config.get('n_bars', 60)
+                        trend_close = config.get('trend_close', False)
+                        trend_limit = config.get('trend_limit', True)
                         
                         thread = threading.Thread(
-                            target=CustomStrategies.strategy_scalping_m1, 
-                            args=(self.simulation.symbol, volume, entry_pct, exit_pct, n_bars, self.logger)
+                            target=CustomStrategies.strategy_dual_position, 
+                            args=(self.simulation.symbol, volume, trend_close, trend_limit, self.logger)
                         )
                         thread.daemon = True
                         thread.start()
