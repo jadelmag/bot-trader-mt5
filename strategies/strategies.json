@@ -164,7 +164,7 @@
     "custom_strategies": {
         "strategy_dual_position": {
             "selected": true,
-            "volume": "10.0"
+            "volume": "1.0"
         }
     }
 }
