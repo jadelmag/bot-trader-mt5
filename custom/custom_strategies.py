@@ -58,9 +58,9 @@ class CustomStrategies:
                 logger.warning(f"No se pudo cargar config.json, usando valor por defecto: {e}")
         
         if logger:
-            logger.info(f"strategy_dual_position: Iniciando estrategia para {symbol}")
-            logger.info(f"Parámetros: volume={volume}, trend_close={trend_close}, trend_limit={trend_limit}")
-            logger.info(f"Límite de beneficio (close_custom_limit): {close_custom_limit}")
+            logger.log(f"strategy_dual_position: Iniciando estrategia para {symbol}")
+            logger.log(f"Parámetros: volume={volume}, trend_close={trend_close}, trend_limit={trend_limit}")
+            logger.log(f"Límite de beneficio (close_custom_limit): {close_custom_limit}")
         
         # Variables de control
         active_positions = {}  # {ticket: {'type': 'LONG'/'SHORT', 'open_price': float, 'open_time': datetime}}
@@ -110,7 +110,7 @@ class CustomStrategies:
                     'open_time': datetime.now()
                 })
                 if logger:
-                    logger.info(f"✅ LONG abierta - Ticket: {long_result.order}, Precio: {long_result.price}, Volumen: {volume}")
+                    logger.log(f"✅ LONG abierta - Ticket: {long_result.order}, Precio: {long_result.price}, Volumen: {volume}")
             else:
                 if logger:
                     logger.error(f"❌ Error abriendo LONG: {long_result.retcode} - {long_result.comment}")
@@ -140,7 +140,7 @@ class CustomStrategies:
                     'open_time': datetime.now()
                 })
                 if logger:
-                    logger.info(f"✅ SHORT abierta - Ticket: {short_result.order}, Precio: {short_result.price}, Volumen: {volume}")
+                    logger.log(f"✅ SHORT abierta - Ticket: {short_result.order}, Precio: {short_result.price}, Volumen: {volume}")
             else:
                 if logger:
                     logger.error(f"❌ Error abriendo SHORT: {short_result.retcode} - {short_result.comment}")
@@ -182,7 +182,7 @@ class CustomStrategies:
                 profit = position.profit
                 position_type = "LONG" if position.type == mt5.POSITION_TYPE_BUY else "SHORT"
                 if logger:
-                    logger.info(f"🔒 {position_type} cerrada - Ticket: {ticket}, P/L: {profit:.2f}, Razón: {reason}")
+                    logger.log(f"🔒 {position_type} cerrada - Ticket: {ticket}, P/L: {profit:.2f}, Razón: {reason}")
                 return True
             else:
                 if logger:
@@ -299,7 +299,7 @@ class CustomStrategies:
                             current_price = get_current_price()
                             if current_price:
                                 if logger:
-                                    logger.info(f"📊 Nueva vela detectada - {current_time.strftime('%H:%M:%S')} - Precio: {current_price}")
+                                    logger.log(f"📊 Nueva vela detectada - {current_time.strftime('%H:%M:%S')} - Precio: {current_price}")
                                 
                                 new_positions = open_dual_positions(current_price)
                                 for pos_data in new_positions:
@@ -318,7 +318,7 @@ class CustomStrategies:
         
         # Iniciar la estrategia en un hilo separado
         if logger:
-            logger.info("🚀 Iniciando strategy_hedging_dual_position...")
+            logger.log("🚀 Iniciando strategy_hedging_dual_position...")
         
         try:
             strategy_thread = threading.Thread(target=strategy_loop, daemon=True)
@@ -330,7 +330,7 @@ class CustomStrategies:
                 
         except KeyboardInterrupt:
             if logger:
-                logger.info("⏹️ Deteniendo strategy_hedging_dual_position...")
+                logger.log("⏹️ Deteniendo strategy_hedging_dual_position...")
             running = False
         
         finally:
@@ -338,10 +338,10 @@ class CustomStrategies:
             current_positions = mt5.positions_get(symbol=symbol)
             if current_positions:
                 if logger:
-                    logger.info("🔒 Cerrando todas las posiciones al finalizar...")
+                    logger.log("🔒 Cerrando todas las posiciones al finalizar...")
                 for pos in current_positions:
                     close_position(pos.ticket, "Finalizacion_estrategia")
             
             mt5.shutdown()
             if logger:
-                logger.info("✅ strategy_hedging_dual_position finalizada")
+                logger.log("✅ strategy_hedging_dual_position finalizada")
