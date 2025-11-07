@@ -56,23 +56,27 @@ class SignalAnalyzer:
                 self._log("[SIGNAL-DEBUG] No hay suficientes velas para analizar", 'debug')
             return
 
+        forex_slots = self.simulation.strategies_config.get('slots', {}).get('forex', 0)
+        candle_slots = self.simulation.strategies_config.get('slots', {}).get('candle', 0)
+
         # Calcular indicadores
         self.simulation.candles_df = self.simulation.indicator_calculator.calculate_all_indicators(self.simulation.candles_df)
 
         if self.simulation.debug_mode:
             self._log(f"[SIGNAL-DEBUG] Total de velas: {len(self.simulation.candles_df)}", 'debug')
 
-        # Obtener señales de mercado
-        candle_signal, pattern_name = self.get_candle_signal(analysis_df)
+        if forex_slots > 0 or candle_slots > 0:
+            # Obtener señales de mercado
+            candle_signal, pattern_name = self.get_candle_signal(analysis_df)
 
-        # Lógica de cierre de operaciones
-        self.check_for_closing_signals(candle_signal)
+            # Lógica de cierre de operaciones
+            self.check_for_closing_signals(candle_signal)
 
-        # Aplicar trailing stop
-        self.simulation.position_monitor.apply_trailing_stop()
+            # Aplicar trailing stop
+            self.simulation.position_monitor.apply_trailing_stop()
 
-        # Lógica de apertura de operaciones
-        self.execute_forex_strategies(candle_signal)
+            # Lógica de apertura de operaciones
+            self.execute_forex_strategies(candle_signal)
 
         # Estrategias personalizadas
         self.execute_custom_strategies()
@@ -121,8 +125,8 @@ class SignalAnalyzer:
             open_positions = []
 
         active_slots = len(open_positions)
-        max_forex_slots = self.simulation.strategies_config.get('slots', {}).get('forex', 1)
-        max_candle_slots = self.simulation.strategies_config.get('slots', {}).get('candle', 1)
+        max_forex_slots = self.simulation.strategies_config.get('slots', {}).get('forex', 0)
+        max_candle_slots = self.simulation.strategies_config.get('slots', {}).get('candle', 0)
         total_max_slots = max_forex_slots + max_candle_slots
 
         # Verificar si hay slots disponibles para estrategias forex
@@ -260,6 +264,11 @@ class SignalAnalyzer:
         if not custom_strategies_config:
             return
 
+        print("CustomStrategies.is_strategy_dual_position_running():", CustomStrategies.is_strategy_dual_position_running())
+        if CustomStrategies.is_strategy_dual_position_running():
+            return
+        print("Continuando con la estrategia personalizada")
+
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
                 if strategy_name == 'strategy_dual_position':
@@ -277,6 +286,7 @@ class SignalAnalyzer:
                         )
                         thread.daemon = True
                         thread.start()
+
     
     def check_for_closing_signals(self, candle_signal):
         """Cierra operaciones según configuración y señales de mercado."""

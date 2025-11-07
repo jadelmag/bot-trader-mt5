@@ -21,6 +21,20 @@ class CustomStrategies:
     Clase que contiene estrategias personalizadas
     """
 
+    _strategy_dual_position_running = False
+    _strategy_dual_position_finished = False
+
+    @classmethod
+    def is_strategy_dual_position_running(cls):
+        """Verifica si strategy_dual_position está ejecutándose"""
+        return cls._strategy_dual_position_running and not cls._strategy_dual_position_finished
+    
+    @classmethod
+    def reset_strategy_dual_position_status(cls):
+        """Resetea el estado de strategy_dual_position"""
+        cls._strategy_dual_position_running = False
+        cls._strategy_dual_position_finished = False
+
     @staticmethod
     def strategy_dual_position(symbol, volume=0.1, trend_limit=True, logger=None, debug_mode=False):
         """
@@ -34,6 +48,10 @@ class CustomStrategies:
         - Su par se cierra cuando llega a pérdida cercana a cero
         - Lectura dinámica de configuración sin necesidad de reiniciar
         """
+
+        # Marcar como ejecutándose
+        CustomStrategies._strategy_dual_position_running = True
+        CustomStrategies._strategy_dual_position_finished = False
         
         # Conexión a MT5
         if not mt5.initialize():
@@ -336,11 +354,15 @@ class CustomStrategies:
                         if logger:
                             logger.log(f"📊 Nueva vela M1 detectada - {current_time.strftime('%H:%M:%S')} | Pares activos: {len(position_pairs)}")
                         
-                        # Abrir nuevo par en cada nueva vela
-                        new_pair_id = open_hedging_pair()
-                        if new_pair_id:
+                        # Solo abrir nuevo par si NO hay pares activos (todas las operaciones están cerradas)
+                        if len(position_pairs) == 0:
+                            new_pair_id = open_hedging_pair()
+                            if new_pair_id:
+                                if logger:
+                                    logger.log(f"🆕 Nuevo par {new_pair_id} abierto en vela {current_time.strftime('%H:%M:%S')} - No había pares activos")
+                        else:
                             if logger:
-                                logger.log(f"🆕 Nuevo par {new_pair_id} abierto en vela {current_time.strftime('%H:%M:%S')}")
+                                logger.log(f"⏳ Esperando cierre de pares activos ({len(position_pairs)}) antes de abrir nuevo par")
                     
                     # Monitorear pares existentes
                     monitor_pairs()
@@ -352,7 +374,7 @@ class CustomStrategies:
                     if logger:
                         logger.error(f"Error en strategy_loop: {str(e)}")
                     time.sleep(5)
-        
+
         # Iniciar la estrategia
         try:
             if logger:
@@ -378,8 +400,9 @@ class CustomStrategies:
             current_positions = mt5.positions_get(symbol=symbol)
             if current_positions:
                 for pos in current_positions:
-                    close_position(pos.ticket, "Finalizacion_estrategia")
+                    close_position(pos.ticket, "Finalizacion estrategia")
             
-            mt5.shutdown()
+            CustomStrategies._strategy_dual_position_running = False
+            CustomStrategies._strategy_dual_position_finished = True
             if logger:
                 logger.log("✅ strategy_dual_position finalizada")
