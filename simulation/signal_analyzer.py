@@ -125,69 +125,89 @@ class SignalAnalyzer:
         max_candle_slots = self.simulation.strategies_config.get('slots', {}).get('candle', 1)
         total_max_slots = max_forex_slots + max_candle_slots
 
+        # Verificar si hay slots disponibles para estrategias forex
+        if max_forex_slots == 0:
+            if self.simulation.debug_mode:
+                self._log("[SIGNAL-DEBUG] Slots forex = 0. No se ejecutan estrategias forex.")
+            # Solo procesar estrategias de velas si hay slots disponibles
+            if max_candle_slots == 0:
+                return
+            elif active_slots >= max_candle_slots:
+                if self.simulation.debug_mode:
+                    self._log(f"[SIGNAL-DEBUG] Slots candle ocupados ({active_slots}/{max_candle_slots}).")
+                return
+
         if active_slots >= total_max_slots:
             if self.simulation.debug_mode:
                 self._log(f"[SIGNAL-DEBUG] Slots ocupados ({active_slots}/{total_max_slots}).")
             return
 
         # Analizar estrategias de velas
-        candle_strategies = self.simulation.strategies_config.get('candle_strategies', {})
-        selected_candle_patterns = {name: cfg for name, cfg in candle_strategies.items() if cfg.get('selected')}
+        if max_candle_slots == 0:
+            if self.simulation.debug_mode:
+                self._log("[SIGNAL-DEBUG] Slots candle = 0. No se detectan patrones de velas.")
+        else:
+            candle_strategies = self.simulation.strategies_config.get('candle_strategies', {})
+            selected_candle_patterns = {name: cfg for name, cfg in candle_strategies.items() if cfg.get('selected')}
 
-        if selected_candle_patterns:
-            candle_signal, pattern_name = self.get_candle_signal(self.simulation.candles_df)
-            if candle_signal in ['long', 'short'] and 'candle' not in self.simulation.trade_types_in_current_candle:
-                self._log(f"[SIGNAL] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Verificando...")
-                
-                # Confirmación con indicadores
-                if not self.simulation.indicator_calculator.confirm_signal_with_indicators(self.simulation.candles_df, candle_signal, pattern_name):
-                    if self.simulation.debug_mode:
-                        self._log(f"[SIGNAL-DEBUG] Señal de VELA '{pattern_name}' RECHAZADA")
-                    return
-                
-                pattern_strategy_config = candle_strategies.get(pattern_name, {})
-                strategy_mode = pattern_strategy_config.get('strategy_mode', 'Default')
-                
-                if strategy_mode == 'Custom':
-                    pattern_config = self.simulation.config_loader.load_candle_pattern_config(pattern_name)
-                    if self.simulation.debug_mode:
-                        self._log(f"[SIGNAL-DEBUG] Usando configuración CUSTOM para '{pattern_name}'")
-                else:
-                    pattern_config = {
-                        'use_atr_for_sl_tp': False,
-                        'fixed_sl_pips': 30.0,
-                        'fixed_tp_pips': 60.0,
-                        'percent_ratio': 1.0
-                    }
-                    if self.simulation.debug_mode:
-                        self._log(f"[SIGNAL-DEBUG] Usando configuración DEFAULT para '{pattern_name}'")
-                
-                sl_pips, tp_pips = self.simulation.risk_manager.get_sl_tp_for_candle_pattern(pattern_config)
-                risk_multiplier = pattern_config.get('percent_ratio', 1.0)
+            if selected_candle_patterns:
+                candle_signal, pattern_name = self.get_candle_signal(self.simulation.candles_df)
+                if candle_signal in ['long', 'short'] and 'candle' not in self.simulation.trade_types_in_current_candle:
+                    self._log(f"[SIGNAL] Señal de VELA '{pattern_name}' -> '{candle_signal.upper()}' detectada. Verificando...")
+                    
+                    # Confirmación con indicadores
+                    if not self.simulation.indicator_calculator.confirm_signal_with_indicators(self.simulation.candles_df, candle_signal, pattern_name):
+                        if self.simulation.debug_mode:
+                            self._log(f"[SIGNAL-DEBUG] Señal de VELA '{pattern_name}' RECHAZADA")
+                        return
+                    
+                    pattern_strategy_config = candle_strategies.get(pattern_name, {})
+                    strategy_mode = pattern_strategy_config.get('strategy_mode', 'Default')
+                    
+                    if strategy_mode == 'Custom':
+                        pattern_config = self.simulation.config_loader.load_candle_pattern_config(pattern_name)
+                        if self.simulation.debug_mode:
+                            self._log(f"[SIGNAL-DEBUG] Usando configuración CUSTOM para '{pattern_name}'")
+                    else:
+                        pattern_config = {
+                            'use_atr_for_sl_tp': False,
+                            'fixed_sl_pips': 30.0,
+                            'fixed_tp_pips': 60.0,
+                            'percent_ratio': 1.0
+                        }
+                        if self.simulation.debug_mode:
+                            self._log(f"[SIGNAL-DEBUG] Usando configuración DEFAULT para '{pattern_name}'")
+                    
+                    sl_pips, tp_pips = self.simulation.risk_manager.get_sl_tp_for_candle_pattern(pattern_config)
+                    risk_multiplier = pattern_config.get('percent_ratio', 1.0)
 
-                if sl_pips > 0:
-                    # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
-                    volume = self.simulation.risk_manager.calculate_volume(
-                        risk_multiplier=risk_multiplier,
-                        strategy_name=f"candle_{pattern_name}",
-                        stop_loss_pips=sl_pips
-                    )
-                    if volume > 0:
-                        self._log(f"[SIGNAL] ✅ Señal de VELA '{pattern_name}' CONFIRMADA. Abriendo {candle_signal.upper()}.")
-                        self.simulation.trade_manager.open_trade(
-                            trade_type=candle_signal,
-                            symbol=self.simulation.symbol,
-                            volume=volume,
-                            sl_pips=sl_pips,
-                            tp_pips=tp_pips,
+                    if sl_pips > 0:
+                        volume = self.simulation.risk_manager.calculate_volume(
+                            risk_multiplier=risk_multiplier,
                             strategy_name=f"candle_{pattern_name}",
-                            pattern_config=pattern_config
+                            stop_loss_pips=sl_pips
                         )
-                        self.simulation.trade_types_in_current_candle.append('candle')
-                else:
-                    self._log(f"[SIGNAL-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
+                        if volume > 0:
+                            self._log(f"[SIGNAL] ✅ Señal de VELA '{pattern_name}' CONFIRMADA. Abriendo {candle_signal.upper()}.")
+                            self.simulation.trade_manager.open_trade(
+                                trade_type=candle_signal,
+                                symbol=self.simulation.symbol,
+                                volume=volume,
+                                sl_pips=sl_pips,
+                                tp_pips=tp_pips,
+                                strategy_name=f"candle_{pattern_name}",
+                                pattern_config=pattern_config
+                            )
+                            self.simulation.trade_types_in_current_candle.append('candle')
+                    else:
+                        self._log(f"[SIGNAL-WARN] SL para '{pattern_name}' es 0. Operación no abierta.", 'warn')
 
         # Estrategias Forex
+        if max_forex_slots == 0:
+            if self.simulation.debug_mode:
+                self._log("[SIGNAL-DEBUG] Slots forex = 0. No se ejecutan estrategias forex.")
+            return
+
         forex_strategies = self.simulation.strategies_config.get('forex_strategies', {})
         selected_forex_strategies = {name: cfg for name, cfg in forex_strategies.items() if cfg.get('selected')}
         
@@ -215,7 +235,6 @@ class SignalAnalyzer:
                 rr_ratio = params.get('rr_ratio', 2.0)
                 risk_multiplier = params.get('percent_ratio', 1.0)
 
-                # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=risk_multiplier)
                 volume = self.simulation.risk_manager.calculate_volume(
                     risk_multiplier=risk_multiplier,
                     strategy_name=strategy_name,
@@ -234,7 +253,7 @@ class SignalAnalyzer:
                     )
                     self.simulation.trade_types_in_current_candle.append('forex')
                     break
-    
+
     def execute_custom_strategies(self):
         """Maneja la lógica de ejecución para estrategias personalizadas."""
         custom_strategies_config = self.simulation.strategies_config.get('custom_strategies', {})
@@ -248,13 +267,20 @@ class SignalAnalyzer:
         active_slots = len(open_positions)
         max_custom_slots = self.simulation.strategies_config.get('slots', {}).get('custom', 0)
 
+        # Verificar si hay slots disponibles para estrategias personalizadas
+        if max_custom_slots == 0:
+            if self.simulation.debug_mode:
+                self._log("[SIGNAL-DEBUG] Slots custom = 0. No se ejecutan estrategias personalizadas.")
+            return
+
         if active_slots >= max_custom_slots:
+            if self.simulation.debug_mode:
+                self._log(f"[SIGNAL-DEBUG] Slots custom ocupados ({active_slots}/{max_custom_slots}).")
             return
 
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):
                 if strategy_name == 'strategy_scalping_m1':
-                    # volume = self.simulation.risk_manager.calculate_volume(risk_multiplier=1.0)
                     volume = self.simulation.risk_manager.calculate_volume(
                         risk_multiplier=1.0,
                         strategy_name=strategy_name,

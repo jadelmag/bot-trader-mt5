@@ -1,6 +1,0 @@
-{"timestamp": "2025-10-28T19:01:25.666810", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] AuditLogger habilitado. Logs en: C:\\Users\\Xu\\Documents\\repositories\\bot-trader-mt5\\loggin\\..\\audit\\audit_log_20251028_190108.jsonl"}}
-{"timestamp": "2025-10-28T19:01:25.667152", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
-{"timestamp": "2025-10-28T19:01:25.671989", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 97916247, Balance: 97408.97"}}
-{"timestamp": "2025-10-28T19:01:25.673990", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
-{"timestamp": "2025-10-28T19:01:59.883973", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:02:00 | Balance: $97408.97"}}
-{"timestamp": "2025-10-28T19:01:59.884337", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 20:02:00 | Balance: $97408.97"}}

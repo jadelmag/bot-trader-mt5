@@ -23,7 +23,7 @@ class SimulationStrategiesModal(tk.Toplevel):
     def __init__(self, parent, candles_df, logger):
         super().__init__(parent)
         self.title("Simulador de Estrategias")
-        self.geometry("650x600")
+        self.geometry("700x600")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -45,19 +45,7 @@ class SimulationStrategiesModal(tk.Toplevel):
         self.custom_widgets = {}
 
         # --- Valores por defecto para estrategias Forex ---
-        self.strategy_defaults = {
-            "strategy_price_action_sr": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 15.0},
-            "strategy_ma_crossover": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_momentum_rsi_macd": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 10.0},
-            "strategy_bollinger_bands_breakout": {"percent_ratio": 0.6, "rr_ratio": 2.0, "sl": 15.0},
-            "strategy_fibonacci_reversal": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 12.0},
-            "strategy_scalping_stochrsi_ema": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 8.0},
-            "strategy_candle_pattern_reversal": {"percent_ratio": 0.6, "rr_ratio": 3.0, "sl": 10.0},
-            "strategy_swing_trading_multi_indicator": {"percent_ratio": 0.5, "rr_ratio": 2.5, "sl": 25.0},
-            "strategy_hybrid_optimizer": {"percent_ratio": 0.6, "rr_ratio": 2.5, "sl": 10.0},
-            "strategy_ichimoku_kinko_hyo": {"percent_ratio": 0.5, "rr_ratio": 2.0, "sl": 20.0},
-            "strategy_chart_pattern_breakout": {"percent_ratio": 0.6, "rr_ratio": 2.5, "sl": 12.0},
-        }
+        self.strategy_defaults = {}
 
         # --- UI Components ---
         self.notebook = None
@@ -128,12 +116,12 @@ class SimulationStrategiesModal(tk.Toplevel):
 
         # Fila para Slots
         ttk.Label(config_frame, text="Slots Forex:").grid(row=0, column=1, sticky='e', padx=(0, 5), pady=(5,0))
-        self.slots_forex_var = tk.IntVar(value=5)
+        self.slots_forex_var = tk.IntVar(value=0)
         forex_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_forex_var, width=5)
         forex_slots_entry.grid(row=0, column=2, sticky='w', pady=(5,0))
 
         ttk.Label(config_frame, text="Slots Candle:").grid(row=0, column=3, sticky='e', padx=(10, 5), pady=(5,0))
-        self.slots_candles_var = tk.IntVar(value=5)
+        self.slots_candles_var = tk.IntVar(value=0)
         candle_slots_entry = ttk.Entry(config_frame, textvariable=self.slots_candles_var, width=5)
         candle_slots_entry.grid(row=0, column=4, sticky='w', pady=(5,0))
 
@@ -158,10 +146,17 @@ class SimulationStrategiesModal(tk.Toplevel):
         """Construye el contenido de la pestaña de estrategias Forex."""
         # --- Estrategias a excluir de la selección por defecto ---
         excluded_strategies = [
-            "strategy_swing_trading_multi_indicator",
-            "strategy_chart_pattern_breakout",
+            "strategy_price_action_sr",
+            "strategy_ma_crossover",
+            "strategy_scalping_stochrsi_ema",
             "strategy_fibonacci_reversal",
-            "strategy_ichimoku_kinko_hyo"
+            "strategy_ichimoku_kinko_hyo",
+            "strategy_bollinger_bands_breakout",
+            "strategy_hybrid_optimizer",
+            "strategy_swing_trading_multi_indicator",
+            "strategy_candle_pattern_reversal",
+            "strategy_momentum_rsi_macd",
+            "strategy_chart_pattern_breakout"
         ]
 
         # --- Frame Superior para botones de selección ---
@@ -237,17 +232,7 @@ class SimulationStrategiesModal(tk.Toplevel):
     def _build_candle_tab(self, tab):
         """Construye el contenido de la pestaña de patrones de velas."""
         # --- Patrones de velas a seleccionar por defecto ---
-        default_selected_candles = [
-           "is_harami",
-           "is_three_inside_up_down",
-           "is_piercing_line",
-           "is_doji_reversal",
-           "is_marubozu",
-           "is_three_white_soldiers",
-           "is_engulfing",
-           "is_shooting_star",
-           "is_hammer"
-        ]
+        default_selected_candles = []
 
         # --- Frame Superior para botones de selección ---
         top_frame = ttk.Frame(tab)
@@ -339,25 +324,82 @@ class SimulationStrategiesModal(tk.Toplevel):
 
     def _build_custom_tab(self, tab):
         """Construye el contenido de la pestaña de estrategias personalizadas."""
+        # --- Frame Superior para botones de selección ---
+        top_frame = ttk.Frame(tab)
+        top_frame.pack(fill=tk.X, pady=(0, 10))
+        top_frame.columnconfigure(0, weight=1)  # Empuja los botones a la derecha
+
+        btn_select_all = ttk.Button(top_frame, text="Seleccionar Todos", command=self._select_all_custom)
+        btn_select_all.grid(row=0, column=1, padx=5)
+
+        btn_deselect_all = ttk.Button(top_frame, text="Deseleccionar Todos", command=self._deselect_all_custom)
+        btn_deselect_all.grid(row=0, column=2, padx=5)
+
+        # --- Contenedor para la lista con scroll ---
         list_container = ttk.Frame(tab, borderwidth=1, relief="sunken")
         list_container.pack(fill="both", expand=True, pady=5)
 
-        for i, strategy_name in enumerate(self.custom_strategies):
-            row_frame = ttk.Frame(list_container, padding=(5, 5))
-            row_frame.pack(fill=tk.X, anchor='n')
+        self.custom_canvas = tk.Canvas(list_container, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.custom_canvas.yview)
+        scrollable_frame = ttk.Frame(self.custom_canvas)
 
-            var = tk.BooleanVar(value=False) # Por defecto no seleccionada
-            
+        scrollable_frame.bind("<Configure>", lambda e: self.custom_canvas.configure(scrollregion=self.custom_canvas.bbox("all")))
+        self.custom_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        self.custom_canvas.configure(yscrollcommand=scrollbar.set)
+
+        for i, strategy_name in enumerate(self.custom_strategies):
+            row_frame = ttk.Frame(scrollable_frame, padding=(5, 5))
+            row_frame.pack(fill=tk.X, expand=True)
+
+            # Checkbox de selección
+            var = tk.BooleanVar(value=False)
             chk = ttk.Checkbutton(row_frame, variable=var)
             chk.pack(side=tk.LEFT, padx=(5, 10))
 
+            # Nombre de la estrategia
             display_name = strategy_name.replace('strategy_', '').replace('_', ' ').title()
-            lbl = ttk.Label(row_frame, text=display_name, width=25)
-            lbl.pack(side=tk.LEFT, padx=5)
+            lbl = ttk.Label(row_frame, text=display_name)
+            lbl.pack(side=tk.LEFT, padx=(0, 10))
 
+            # --- Volumen: label -> textbox ---
+            ttk.Label(row_frame, text="Volumen:").pack(side=tk.LEFT, padx=(5, 2))
+            volume_var = tk.StringVar(value="0.01")
+            volume_entry = ttk.Entry(row_frame, textvariable=volume_var, width=8)
+            volume_entry.pack(side=tk.LEFT, padx=(0, 10))
+            # Validación numérica
+            vcmd = (self.register(self._validate_numeric_input), '%P')
+            volume_entry.config(validate="key", validatecommand=vcmd)
+
+            # --- Checkboxes de cierre (mutuamente excluyentes) ---
+            trend_close_var = tk.BooleanVar(value=False)
+            trend_limit_var = tk.BooleanVar(value=False)
+
+            trend_close_chk = ttk.Checkbutton(
+                row_frame,
+                text="Cierre por cambio de tendencia",
+                variable=trend_close_var,
+                command=lambda sv=trend_close_var, lv=trend_limit_var: self._on_trend_close_change(sv, lv)
+            )
+            trend_close_chk.pack(side=tk.LEFT, padx=5)
+
+            trend_limit_chk = ttk.Checkbutton(
+                row_frame,
+                text="Cierre por límite custom",
+                variable=trend_limit_var,
+                command=lambda sv=trend_close_var, lv=trend_limit_var: self._on_trend_limit_change(sv, lv)
+            )
+            trend_limit_chk.pack(side=tk.LEFT, padx=5)
+
+            # Guardar referencias
             self.custom_widgets[strategy_name] = {
-                'checkbox_var': var
+                'checkbox_var': var,
+                'volume_var': volume_var,
+                'trend_close_var': trend_close_var,
+                'trend_limit_var': trend_limit_var
             }
+
+        self.custom_canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
     def _center_window(self):
         """Centra el modal en la ventana principal."""
@@ -379,9 +421,8 @@ class SimulationStrategiesModal(tk.Toplevel):
             canvas_to_scroll = self.forex_canvas
         elif selected_tab_text == "Candle" and self.candle_canvas and self.candle_canvas.winfo_exists():
             canvas_to_scroll = self.candle_canvas
-        elif selected_tab_text == "Custom":
-            # No hay scroll en la pestaña custom por ahora, pero se podría añadir
-            pass
+        elif selected_tab_text == "Custom" and hasattr(self, 'custom_canvas') and self.custom_canvas and self.custom_canvas.winfo_exists():
+            canvas_to_scroll = self.custom_canvas
 
         if canvas_to_scroll:
             canvas_to_scroll.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -395,6 +436,36 @@ class SimulationStrategiesModal(tk.Toplevel):
             # La ventana ya podría estar destruida, así que ignoramos el error
             pass
         self.destroy()
+
+    # --- Funciones de los botones (CUSTOM) ---
+
+    def _select_all_custom(self):
+        for widgets in self.custom_widgets.values():
+            widgets['checkbox_var'].set(True)
+
+    def _deselect_all_custom(self):
+        for widgets in self.custom_widgets.values():
+            widgets['checkbox_var'].set(False)
+
+    def _validate_numeric_input(self, value):
+        """Valida que el input sea un valor numérico válido (positivo)."""
+        if value == "":
+            return True  # Permitir vacío para borrar
+        try:
+            float_val = float(value)
+            return float_val >= 0  # Solo valores positivos o cero
+        except ValueError:
+            return False
+
+    def _on_trend_close_change(self, trend_close_var, trend_limit_var):
+        """Maneja el cambio del checkbox de cierre por tendencia - deselecciona el otro."""
+        if trend_close_var.get():
+            trend_limit_var.set(False)
+
+    def _on_trend_limit_change(self, trend_close_var, trend_limit_var):
+        """Maneja el cambio del checkbox de cierre por límite - deselecciona el otro."""
+        if trend_limit_var.get():
+            trend_close_var.set(False)
 
     # --- Funciones de los botones (CANDLE) ---
 
@@ -467,7 +538,10 @@ class SimulationStrategiesModal(tk.Toplevel):
         # Recopilar datos de la pestaña Custom
         for strategy_name, widgets in self.custom_widgets.items():
             config_to_save['custom_strategies'][strategy_name] = {
-                'selected': widgets['checkbox_var'].get()
+                'selected': widgets['checkbox_var'].get(),
+                'volume': widgets['volume_var'].get(),
+                'trend_close': widgets['trend_close_var'].get(),
+                'trend_limit': widgets['trend_limit_var'].get()
             }
 
         output_path = os.path.join(self.strategies_dir, 'strategies.json')

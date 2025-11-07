@@ -25,6 +25,7 @@ class ConfigAppModal(tk.Toplevel):
         self.daily_profit_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
         self.close_candle_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
         self.close_forex_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
+        self.close_custom_limit_var = tk.StringVar(value="0.0") # Default 0 (sin límite)
 
         # --- Layout --- #
         main_frame = ttk.Frame(self, padding="15")
@@ -35,7 +36,7 @@ class ConfigAppModal(tk.Toplevel):
         self._build_buttons(main_frame)
 
         self._load_config()
-        self._center_window(500, 500)
+        self._center_window(500, 520)
 
         self.protocol("WM_DELETE_WINDOW", self._on_cancel)
         self.grab_set() # Modal behavior
@@ -90,6 +91,12 @@ class ConfigAppModal(tk.Toplevel):
         close_forex_frame.pack(fill="x", pady=5)
         ttk.Label(close_forex_frame, text="Precio (P/L) de autocierre Forex:").pack(side="left", padx=5)
         ttk.Entry(close_forex_frame, textvariable=self.close_forex_limit_var, width=15).pack(side="left")
+
+        # Limite Auto Close Custom
+        close_custom_frame = ttk.Frame(general_frame)
+        close_custom_frame.pack(fill="x", pady=5)
+        ttk.Label(close_custom_frame, text="Precio (P/L) de autocierre Custom:").pack(side="left", padx=5)
+        ttk.Entry(close_custom_frame, textvariable=self.close_custom_limit_var, width=15).pack(side="left")
 
         # Daily Profit Limit
         daily_limit_frame = ttk.Frame(general_frame)
@@ -155,6 +162,10 @@ class ConfigAppModal(tk.Toplevel):
             close_forex_limit = config.get("close_forex_limit", "0.0")
             self.close_forex_limit_var.set(float(close_forex_limit))
 
+            # Cargar límite de ganancia para Custom
+            close_custom_limit = config.get("close_custom_limit", "0.0")
+            self.close_custom_limit_var.set(float(close_custom_limit))
+
         except (json.JSONDecodeError, TypeError):
             messagebox.showerror("Error", f"El archivo de configuración '{os.path.basename(CONFIG_PATH)}' está corrupto.", parent=self)
 
@@ -167,6 +178,7 @@ class ConfigAppModal(tk.Toplevel):
             daily_profit_limit = float(self.daily_profit_limit_var.get()) if self.daily_profit_limit_var.get() else 0.0
             close_candle_limit = float(self.close_candle_limit_var.get()) if self.close_candle_limit_var.get() else 0.0
             close_forex_limit = float(self.close_forex_limit_var.get()) if self.close_forex_limit_var.get() else 0.0
+            close_custom_limit = float(self.close_custom_limit_var.get()) if self.close_custom_limit_var.get() else 0.0
 
             # Validar que el límite de ganancia diaria no sea negativo
             if daily_profit_limit < 0:
@@ -189,7 +201,8 @@ class ConfigAppModal(tk.Toplevel):
                 "risk_per_trade_percent": f"{risk_percent:.8f}",
                 "daily_profit_limit": daily_profit_limit,
                 "close_candle_limit": close_candle_limit,
-                "close_forex_limit": close_forex_limit
+                "close_forex_limit": close_forex_limit,
+                "close_custom_limit": close_custom_limit
             }
 
             # Ensure directory exists
