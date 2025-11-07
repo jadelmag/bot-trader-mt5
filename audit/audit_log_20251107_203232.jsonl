@@ -1,0 +1,8 @@
+{"timestamp": "2025-11-07T20:32:45.660931", "event": "system_event", "data": {"level": "INFO", "message": "Balance: $94618.79 | Estrategia | Manual | SHORT | GANANCIA: +$155.62 (+0.16%) | Ganancias: $155.62 | Pérdidas: $0.00"}}
+{"timestamp": "2025-11-07T20:32:45.661339", "event": "trade_close", "data": {"ticket": 5540980258, "symbol": "EURUSD", "close_price": 1.15667, "profit": 155.62}}
+{"timestamp": "2025-11-07T20:33:01.771475", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:33:00 | Balance: $94618.79"}}
+{"timestamp": "2025-11-07T20:33:01.771788", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:33:00 | Balance: $94618.79"}}
+{"timestamp": "2025-11-07T20:34:10.367913", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:34:00 | Balance: $94618.79"}}
+{"timestamp": "2025-11-07T20:34:10.368225", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:34:00 | Balance: $94618.79"}}
+{"timestamp": "2025-11-07T20:34:59.858089", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:35:00 | Balance: $94618.79"}}
+{"timestamp": "2025-11-07T20:34:59.858402", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:35:00 | Balance: $94618.79"}}

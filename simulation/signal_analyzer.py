@@ -264,10 +264,8 @@ class SignalAnalyzer:
         if not custom_strategies_config:
             return
 
-        print("CustomStrategies.is_strategy_dual_position_running():", CustomStrategies.is_strategy_dual_position_running())
         if CustomStrategies.is_strategy_dual_position_running():
             return
-        print("Continuando con la estrategia personalizada")
 
         for strategy_name, config in custom_strategies_config.items():
             if config.get('selected'):

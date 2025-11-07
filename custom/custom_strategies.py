@@ -272,7 +272,7 @@ class CustomStrategies:
                 long_profit = long_pos.profit
                 short_profit = short_pos.profit
                 
-                # LÓGICA CORREGIDA: Cerrar INMEDIATAMENTE el par cuando una operación llega al límite
+                # LÓGICA MODIFICADA: Cerrar ganadora inmediatamente, perdedora solo cuando P/L <= 1/3 beneficios
                 
                 # Verificar si alguna operación alcanza el límite de beneficio
                 if long_profit >= current_close_limit or short_profit >= current_close_limit:
@@ -291,37 +291,51 @@ class CustomStrategies:
                     # Cerrar operación ganadora primero
                     winner_closed = close_position(winner_ticket, f"Limite_beneficio_{winner_profit:.2f}")
                     
-                    # INMEDIATAMENTE cerrar la operación par (sin importar si tiene beneficios o pérdidas)
                     if winner_closed:
-                        # Pequeña pausa para que MT5 actualice su estado
-                        time.sleep(0.1)
+                        # Guardar información del beneficio obtenido para el cálculo del 1/3
+                        pair_data['winner_profit'] = winner_profit
+                        pair_data['winner_closed'] = True
+                        pair_data['winner_type'] = winner_type
                         
-                        current_positions_updated = mt5.positions_get(symbol=symbol)
-                        pair_still_exists = any(pos.ticket == pair_ticket for pos in current_positions_updated) if current_positions_updated else False
+                        if logger:
+                            logger.log(f"✅ {winner_type} cerrada con beneficio {winner_profit:.2f}. Esperando que {pair_type} llegue a pérdida <= {winner_profit/3:.2f}")
+                
+                # Verificar si hay operaciones ganadoras ya cerradas esperando el cierre de su par
+                if pair_data.get('winner_closed', False) and not pair_data.get('pair_closed', False):
+                    winner_profit = pair_data['winner_profit']
+                    max_loss_threshold = winner_profit / 3  # 1/3 de los beneficios
+                    
+                    # Obtener información actualizada de la posición par
+                    current_positions_updated = mt5.positions_get(symbol=symbol)
+                    pair_still_exists = any(pos.ticket == pair_ticket for pos in current_positions_updated) if current_positions_updated else False
+                    
+                    if pair_still_exists:
+                        pair_position = None
+                        for pos in current_positions_updated:
+                            if pos.ticket == pair_ticket:
+                                pair_position = pos
+                                break
                         
-                        if pair_still_exists:
-                            # Obtener información actualizada de la posición par
-                            pair_position = None
-                            for pos in current_positions_updated:
-                                if pos.ticket == pair_ticket:
-                                    pair_position = pos
-                                    break
+                        if pair_position:
+                            current_pair_profit = pair_position.profit
                             
-                            if pair_position:
-                                updated_pair_profit = pair_position.profit
-                                # Cerrar la operación par INMEDIATAMENTE
-                                if updated_pair_profit >= 0:
-                                    close_position(pair_ticket, f"Par_cerrado_beneficio_{updated_pair_profit:.2f}")
-                                else:
-                                    close_position(pair_ticket, f"Par_cerrado_perdida_{updated_pair_profit:.2f}")
+                            # Solo cerrar si la pérdida es <= 1/3 de los beneficios (o si tiene beneficios)
+                            if current_pair_profit >= 0 or abs(current_pair_profit) <= max_loss_threshold:
+                                close_success = close_position(pair_ticket, f"Par_cerrado_PL_{current_pair_profit:.2f}_limite_{max_loss_threshold:.2f}")
+                                if close_success:
+                                    pair_data['pair_closed'] = True
+                                    pairs_to_remove.append(pair_id)
+                                    if logger:
+                                        logger.log(f"🔒 Par {pair_id} completamente cerrado. Beneficio neto: {winner_profit + current_pair_profit:.2f}")
                             else:
                                 if logger:
-                                    logger.log(f"⚠️ {pair_type} {pair_ticket} no encontrada en posiciones actualizadas")
-                        else:
-                            if logger:
-                                logger.log(f"⚠️ {pair_type} {pair_ticket} ya no existe, probablemente cerrada manualmente")
-                    
-                    pairs_to_remove.append(pair_id)
+                                    logger.log(f"⏳ Par {pair_id}: Esperando... {pair_type} P/L: {current_pair_profit:.2f} > límite: -{max_loss_threshold:.2f}")
+                    else:
+                        # La posición par ya no existe (cerrada manualmente)
+                        pair_data['pair_closed'] = True
+                        pairs_to_remove.append(pair_id)
+                        if logger:
+                            logger.log(f"⚠️ {pair_type} {pair_ticket} ya no existe, probablemente cerrada manualmente")
             
             # Remover pares cerrados del tracking
             for pair_id in pairs_to_remove:

@@ -32,9 +32,10 @@ class PositionMonitor:
         if not mt5 or not mt5.terminal_info():
             return
         
-        # Obtener el límite configurado de close_candle_limit
+        # Obtener los límites configurados
         close_candle_limit = self.simulation.general_config.get('close_candle_limit', 0.0)
         close_forex_limit = self.simulation.general_config.get('close_forex_limit', 0.0)
+        close_custom_limit = self.simulation.general_config.get('close_custom_limit', 0.0)
         if close_candle_limit <= 0:
             pass  # Sin límite configurado para velas
             
@@ -47,8 +48,15 @@ class PositionMonitor:
             
             # Solo aplicar a patrones de vela (verificando si están en candle_pattern_configs)
             if ticket not in self.simulation.candle_pattern_configs:
-                # Si no es vela y hay límite para Forex, verificar Forex
-                if close_forex_limit and close_forex_limit > 0:
+                # Determinar si es operación custom o forex por el comentario
+                is_custom_operation = "Hedge_" in (position.comment or "")
+                
+                if is_custom_operation and close_custom_limit and close_custom_limit > 0:
+                    # Operación custom - SKIP: custom_strategies.py maneja su propia lógica de cierre
+                    # No interferir con el sistema interno de custom_strategies.py
+                    pass
+                elif not is_custom_operation and close_forex_limit and close_forex_limit > 0:
+                    # Operación forex - usar close_forex_limit
                     profit_fx = position.profit
                     if profit_fx >= close_forex_limit:
                         trade_type_fx = 'long' if position.type == mt5.POSITION_TYPE_BUY else 'short'

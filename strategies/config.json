@@ -9,5 +9,5 @@
     "daily_profit_limit": 0.0,
     "close_candle_limit": 10.0,
     "close_forex_limit": 10.0,
-    "close_custom_limit": 200.0
+    "close_custom_limit": 150.0
 }

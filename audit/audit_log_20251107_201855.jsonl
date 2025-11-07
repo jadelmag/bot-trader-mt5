@@ -1,0 +1,14 @@
+{"timestamp": "2025-11-07T20:19:07.905583", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-11-07T20:19:07.910278", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 97916247, Balance: 94722.58"}}
+{"timestamp": "2025-11-07T20:19:07.912219", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-11-07T20:19:44.687629", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Modo Debug ACTIVADO"}}
+{"timestamp": "2025-11-07T20:20:00.325128", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:20:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:20:00.325478", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:20:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:21:03.781235", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:21:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:21:03.781583", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:21:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:22:00.280538", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:22:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:22:00.280868", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:22:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:23:02.823710", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:23:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:23:02.824061", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:23:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:24:01.389863", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:24:00 | Balance: $94722.58"}}
+{"timestamp": "2025-11-07T20:24:01.390208", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 21:24:00 | Balance: $94722.58"}}
