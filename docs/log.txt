@@ -21,17 +21,10 @@ Quiero que esta estrategia se ejecute correctamente, si necesita hilos o lo que 
 
 
 
-Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:10] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:10] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:11] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:11] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:12] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:12] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:13] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:13] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:14] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:14] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
-[14:24:15] [SIM] 📊 Nueva vela M1 a las 15:24:00 | Balance: $97239.55
-[14:24:15] Error en el bucle de simulación: can't multiply sequence by non-int of type 'float'
+no es lo que yo quiero porque yo quiero poder jugar con diferentes volumenes.
+1. quiero que las operaciones que se habran duren meses abiertas.
+2. se abren dos operaciones.... una short y una long. que se guarden de la forma mas optima para recurrir a todos los que se van creando.
+3. cuando una de las dos operaciones llegue a close_custom_limit se cierra indicando el beneficio y la otra operacion que se abrio junto a esta se cerrara cuando llegue a cero.
+
+Y asi por cada vela que se cree.
 

@@ -366,32 +366,10 @@ class SimulationStrategiesModal(tk.Toplevel):
             vcmd = (self.register(self._validate_numeric_input), '%P')
             volume_entry.config(validate="key", validatecommand=vcmd)
 
-            # --- Checkboxes de cierre (mutuamente excluyentes) ---
-            trend_close_var = tk.BooleanVar(value=False)
-            trend_limit_var = tk.BooleanVar(value=False)
-
-            trend_close_chk = ttk.Checkbutton(
-                row_frame,
-                text="Cierre por cambio de tendencia",
-                variable=trend_close_var,
-                command=lambda sv=trend_close_var, lv=trend_limit_var: self._on_trend_close_change(sv, lv)
-            )
-            trend_close_chk.pack(side=tk.LEFT, padx=5)
-
-            trend_limit_chk = ttk.Checkbutton(
-                row_frame,
-                text="Cierre por límite custom",
-                variable=trend_limit_var,
-                command=lambda sv=trend_close_var, lv=trend_limit_var: self._on_trend_limit_change(sv, lv)
-            )
-            trend_limit_chk.pack(side=tk.LEFT, padx=5)
-
             # Guardar referencias
             self.custom_widgets[strategy_name] = {
                 'checkbox_var': var,
-                'volume_var': volume_var,
-                'trend_close_var': trend_close_var,
-                'trend_limit_var': trend_limit_var
+                'volume_var': volume_var
             }
 
         self.custom_canvas.pack(side="left", fill="both", expand=True)
@@ -452,16 +430,6 @@ class SimulationStrategiesModal(tk.Toplevel):
             return float_val >= 0  # Solo valores positivos o cero
         except ValueError:
             return False
-
-    def _on_trend_close_change(self, trend_close_var, trend_limit_var):
-        """Maneja el cambio del checkbox de cierre por tendencia - deselecciona el otro."""
-        if trend_close_var.get():
-            trend_limit_var.set(False)
-
-    def _on_trend_limit_change(self, trend_close_var, trend_limit_var):
-        """Maneja el cambio del checkbox de cierre por límite - deselecciona el otro."""
-        if trend_limit_var.get():
-            trend_close_var.set(False)
 
     # --- Funciones de los botones (CANDLE) ---
 
@@ -534,9 +502,7 @@ class SimulationStrategiesModal(tk.Toplevel):
         for strategy_name, widgets in self.custom_widgets.items():
             config_to_save['custom_strategies'][strategy_name] = {
                 'selected': widgets['checkbox_var'].get(),
-                'volume': widgets['volume_var'].get(),
-                'trend_close': widgets['trend_close_var'].get(),
-                'trend_limit': widgets['trend_limit_var'].get()
+                'volume': widgets['volume_var'].get()
             }
 
         output_path = os.path.join(self.strategies_dir, 'strategies.json')
