@@ -1,0 +1,7 @@
+{"timestamp": "2025-11-07T15:54:38.714547", "event": "system_event", "data": {"level": "INFO", "message": "Inicio simulación EURUSD M1"}}
+{"timestamp": "2025-11-07T15:54:38.719782", "event": "log_message", "data": {"level": "SUCCESS", "message": "[SIM] Conectado a MetaTrader 5. Cuenta: 97916247, Balance: 95977.07"}}
+{"timestamp": "2025-11-07T15:54:38.721730", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] Cargadas 200 velas históricas para EURUSD en M1."}}
+{"timestamp": "2025-11-07T15:54:59.930925", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:55:00 | Balance: $95977.07"}}
+{"timestamp": "2025-11-07T15:54:59.931483", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:55:00 | Balance: $95977.07"}}
+{"timestamp": "2025-11-07T15:56:00.512187", "event": "log_message", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:56:00 | Balance: $95977.07"}}
+{"timestamp": "2025-11-07T15:56:00.512531", "event": "system_event", "data": {"level": "INFO", "message": "[SIM] 📊 Nueva vela M1 a las 16:56:00 | Balance: $95977.07"}}

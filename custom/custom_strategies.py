@@ -254,28 +254,18 @@ class CustomStrategies:
                 long_profit = long_pos.profit
                 short_profit = short_pos.profit
                 
-                # LÓGICA CORREGIDA: Cerrar la PRIMERA operación que llegue a beneficios
+                # LÓGICA CORREGIDA: Cerrar INMEDIATAMENTE el par cuando una operación llega al límite
                 
-                # Caso 1: CUALQUIER operación alcanza el límite de beneficio
+                # Verificar si alguna operación alcanza el límite de beneficio
                 if long_profit >= current_close_limit or short_profit >= current_close_limit:
                     
-                    # Determinar cuál cerrar primero (la que tiene más beneficio)
-                    if long_profit >= current_close_limit and short_profit >= current_close_limit:
-                        # Ambas tienen beneficios - cerrar la que tenga más
-                        if long_profit >= short_profit:
-                            winner_ticket, winner_profit, winner_type = long_ticket, long_profit, "LONG"
-                            loser_ticket, loser_profit, loser_type = short_ticket, short_profit, "SHORT"
-                        else:
-                            winner_ticket, winner_profit, winner_type = short_ticket, short_profit, "SHORT"
-                            loser_ticket, loser_profit, loser_type = long_ticket, long_profit, "LONG"
-                    elif long_profit >= current_close_limit:
-                        # Solo LONG tiene beneficios
+                    # Determinar cuál es la ganadora
+                    if long_profit >= current_close_limit:
                         winner_ticket, winner_profit, winner_type = long_ticket, long_profit, "LONG"
-                        loser_ticket, loser_profit, loser_type = short_ticket, short_profit, "SHORT"
+                        pair_ticket, pair_profit, pair_type = short_ticket, short_profit, "SHORT"
                     else:
-                        # Solo SHORT tiene beneficios
                         winner_ticket, winner_profit, winner_type = short_ticket, short_profit, "SHORT"
-                        loser_ticket, loser_profit, loser_type = long_ticket, long_profit, "LONG"
+                        pair_ticket, pair_profit, pair_type = long_ticket, long_profit, "LONG"
                     
                     if logger:
                         logger.log(f"🎯 Par {pair_id}: {winner_type} alcanzó límite de beneficio ({winner_profit:.2f})")
@@ -283,64 +273,35 @@ class CustomStrategies:
                     # Cerrar operación ganadora primero
                     winner_closed = close_position(winner_ticket, f"Limite_beneficio_{winner_profit:.2f}")
                     
-                    # Verificar que la operación perdedora aún existe antes de cerrarla
+                    # INMEDIATAMENTE cerrar la operación par (sin importar si tiene beneficios o pérdidas)
                     if winner_closed:
-                        current_positions_updated = mt5.positions_get(symbol=symbol)
-                        loser_still_exists = any(pos.ticket == loser_ticket for pos in current_positions_updated) if current_positions_updated else False
+                        # Pequeña pausa para que MT5 actualice su estado
+                        time.sleep(0.1)
                         
-                        if loser_still_exists:
-                            # Si la perdedora también tiene beneficios, cerrarla con beneficio
-                            if loser_profit > 0:
-                                close_position(loser_ticket, f"Par_cerrado_beneficio_{loser_profit:.2f}")
+                        current_positions_updated = mt5.positions_get(symbol=symbol)
+                        pair_still_exists = any(pos.ticket == pair_ticket for pos in current_positions_updated) if current_positions_updated else False
+                        
+                        if pair_still_exists:
+                            # Obtener información actualizada de la posición par
+                            pair_position = None
+                            for pos in current_positions_updated:
+                                if pos.ticket == pair_ticket:
+                                    pair_position = pos
+                                    break
+                            
+                            if pair_position:
+                                updated_pair_profit = pair_position.profit
+                                # Cerrar la operación par INMEDIATAMENTE
+                                if updated_pair_profit >= 0:
+                                    close_position(pair_ticket, f"Par_cerrado_beneficio_{updated_pair_profit:.2f}")
+                                else:
+                                    close_position(pair_ticket, f"Par_cerrado_perdida_{updated_pair_profit:.2f}")
                             else:
-                                close_position(loser_ticket, f"Par_cerrado_perdida_{loser_profit:.2f}")
+                                if logger:
+                                    logger.log(f"⚠️ {pair_type} {pair_ticket} no encontrada en posiciones actualizadas")
                         else:
                             if logger:
-                                logger.log(f"⚠️ {loser_type} {loser_ticket} ya no existe, probablemente cerrada manualmente")
-                    
-                    pairs_to_remove.append(pair_id)
-                
-                # Caso 2: Ninguna tiene beneficios suficientes, pero alguna llegó cerca de cero
-                elif long_profit <= -current_close_limit * 0.9 or short_profit <= -current_close_limit * 0.9:
-                    
-                    # Determinar cuál está más cerca de cero
-                    if long_profit <= -current_close_limit * 0.9 and short_profit <= -current_close_limit * 0.9:
-                        # Ambas están cerca de cero - cerrar la que tenga más pérdida
-                        if long_profit <= short_profit:
-                            loser_ticket, loser_profit, loser_type = long_ticket, long_profit, "LONG"
-                            other_ticket, other_profit, other_type = short_ticket, short_profit, "SHORT"
-                        else:
-                            loser_ticket, loser_profit, loser_type = short_ticket, short_profit, "SHORT"
-                            other_ticket, other_profit, other_type = long_ticket, long_profit, "LONG"
-                    elif long_profit <= -current_close_limit * 0.9:
-                        # Solo LONG está cerca de cero
-                        loser_ticket, loser_profit, loser_type = long_ticket, long_profit, "LONG"
-                        other_ticket, other_profit, other_type = short_ticket, short_profit, "SHORT"
-                    else:
-                        # Solo SHORT está cerca de cero
-                        loser_ticket, loser_profit, loser_type = short_ticket, short_profit, "SHORT"
-                        other_ticket, other_profit, other_type = long_ticket, long_profit, "LONG"
-                    
-                    if logger:
-                        logger.log(f"⚠️ Par {pair_id}: {loser_type} llegó cerca de cero ({loser_profit:.2f})")
-                    
-                    # Cerrar operación perdedora primero
-                    loser_closed = close_position(loser_ticket, f"Stop_loss_cero_{loser_profit:.2f}")
-                    
-                    # Verificar que la otra operación aún existe antes de cerrarla
-                    if loser_closed:
-                        current_positions_updated = mt5.positions_get(symbol=symbol)
-                        other_still_exists = any(pos.ticket == other_ticket for pos in current_positions_updated) if current_positions_updated else False
-                        
-                        if other_still_exists:
-                            # Cerrar la otra operación con su resultado actual
-                            if other_profit > 0:
-                                close_position(other_ticket, f"Par_cerrado_beneficio_{other_profit:.2f}")
-                            else:
-                                close_position(other_ticket, f"Par_cerrado_perdida_{other_profit:.2f}")
-                        else:
-                            if logger:
-                                logger.log(f"⚠️ {other_type} {other_ticket} ya no existe, probablemente cerrada manualmente")
+                                logger.log(f"⚠️ {pair_type} {pair_ticket} ya no existe, probablemente cerrada manualmente")
                     
                     pairs_to_remove.append(pair_id)
             
