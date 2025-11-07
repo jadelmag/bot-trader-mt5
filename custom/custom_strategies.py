@@ -36,16 +36,3 @@ class CustomStrategies:
 
         
 
-            # Cerrar todas las posiciones al finalizar
-            if logger:
-                logger.log("🔒 Finalizando estrategia - cerrando todas las posiciones...")
-            
-            current_positions = mt5.positions_get(symbol=symbol)
-            if current_positions:
-                for pos in current_positions:
-                    close_position(pos.ticket, "Finalizacion estrategia")
-            
-            CustomStrategies._strategy_dual_position_running = False
-            CustomStrategies._strategy_dual_position_finished = True
-            if logger:
-                logger.log("✅ strategy_dual_position finalizada")
